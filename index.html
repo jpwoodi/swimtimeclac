@@ -166,12 +166,16 @@
             return seconds >= 0 && seconds <= 59.9;
         }
 
+        function formatNumberWithCommas(number) {
+            return number.toLocaleString();
+        }
+
         function updateTimeLabel() {
             const distance = document.getElementById('distance').value;
             const timeLabel = document.getElementById('time-label');
 
             if (distance) {
-                timeLabel.innerText = `${distance}m Time:`;
+                timeLabel.innerText = `${formatNumberWithCommas(distance)}m Time:`;
             } else {
                 timeLabel.innerText = 'Time:';
             }
@@ -179,10 +183,10 @@
 
         function calculate() {
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
-            let paceMins = document.getElementById("pace-mins").value;
-            let paceSecs = document.getElementById("pace-secs").value;
-            let timeMins = document.getElementById("time-mins").value;
-            let timeSecs = document.getElementById("time-secs").value;
+            let paceMins = document.getElementById("pace-mins").value || 0;
+            let paceSecs = document.getElementById("pace-secs").value || 0;
+            let timeMins = document.getElementById("time-mins").value || 0;
+            let timeSecs = document.getElementById("time-secs").value || 0;
             let distance = document.getElementById("distance").value;
             let errorMessage = document.getElementById("error-message");
 
@@ -206,7 +210,7 @@
                 let mins = Math.floor(totalTime / 60);
                 let secs = (totalTime % 60).toFixed(0);
 
-                document.getElementById("result").innerText = "Time: " + mins + " min " + secs + " sec";
+                document.getElementById("result").innerText = "Time: " + formatNumberWithCommas(mins) + " min " + formatNumberWithCommas(secs) + " sec";
             } else if (mode === 'pace') {
                 // Convert time to total seconds
                 let totalTime = (parseInt(timeMins) * 60) + parseFloat(timeSecs);
@@ -218,7 +222,7 @@
                 let paceMin = Math.floor(totalPace / 60);
                 let paceSec = (totalPace % 60).toFixed(0);
 
-                document.getElementById("result").innerText = "Pace: " + paceMin + " min " + paceSec + " sec /100m";
+                document.getElementById("result").innerText = "Pace: " + formatNumberWithCommas(paceMin) + " min " + formatNumberWithCommas(paceSec) + " sec /100m";
             }
         }
 
