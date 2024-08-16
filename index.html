@@ -23,7 +23,7 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            width: 320px;
+            width: 280px; /* Adjusted to fit inputs */
             text-align: center;
         }
 
@@ -36,17 +36,19 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            flex-wrap: wrap; /* Ensure inputs wrap if necessary */
         }
 
         label {
-            width: 100px;
+            width: 100%; /* Make label span across the width */
             text-align: left;
             display: flex;
             align-items: center;
+            margin-bottom: 5px; /* Add spacing between label and inputs */
         }
 
         input[type="text"] {
-            width: 100px;
+            width: 80px; /* Adjust input width to fit within the container */
             padding: 5px;
             margin: 5px;
             border-radius: 5px;
@@ -117,16 +119,17 @@
                 <input type="text" id="distance" name="distance" placeholder="Metres" oninput="formatInputWithCommas(this); updateTimeLabel();">
             </div>
 
-            <div class="form-group">
+            <div class="form-group hidden" id="time-group">
+                <label for="time-hours" id="time-label">Time:</label>
+                <input type="text" id="time-hours" name="time-hours" placeholder="Hours" oninput="formatInputWithCommas(this);">
+                <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
+                <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
+            </div>
+
+            <div class="form-group" id="pace-group">
                 <label for="pace-mins">Pace (/100m):</label>
                 <input type="text" id="pace-mins" name="pace-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
                 <input type="text" id="pace-secs" name="pace-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
-            </div>
-
-            <div class="form-group hidden" id="time-group">
-                <label for="time-mins" id="time-label">Time:</label>
-                <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
-                <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
             </div>
 
             <button type="button" onclick="calculate()">Calculate</button>
@@ -140,7 +143,7 @@
         function toggleMode() {
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
             const timeGroup = document.getElementById('time-group');
-            const paceInputs = document.getElementById('pace-mins').parentElement;
+            const paceInputs = document.getElementById('pace-group');
 
             if (mode === 'time') {
                 timeGroup.classList.add('hidden');
@@ -157,6 +160,10 @@
 
         function validateSeconds(seconds) {
             return seconds >= 0 && seconds <= 59.9;
+        }
+
+        function validateInputs(hours, mins, secs) {
+            return (hours > 0 || mins > 0 || secs > 0);
         }
 
         function formatNumberWithCommas(number) {
@@ -185,14 +192,15 @@
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
             let paceMins = document.getElementById("pace-mins").value.replace(/,/g, '') || 0;
             let paceSecs = document.getElementById("pace-secs").value.replace(/,/g, '') || 0;
+            let timeHours = document.getElementById("time-hours").value.replace(/,/g, '') || 0;
             let timeMins = document.getElementById("time-mins").value.replace(/,/g, '') || 0;
             let timeSecs = document.getElementById("time-secs").value.replace(/,/g, '') || 0;
             let distance = document.getElementById("distance").value.replace(/,/g, '');
             let errorMessage = document.getElementById("error-message");
 
-            // Validate seconds input
-            if ((!validateSeconds(parseFloat(paceSecs)) && mode === 'time') || (!validateSeconds(parseFloat(timeSecs)) && mode === 'pace')) {
-                errorMessage.innerText = "Seconds must be between 0 and 59.9.";
+            // Validate that at least one of the time inputs is non-zero
+            if ((!validateInputs(0, paceMins, paceSecs) && mode === 'time') || (!validateInputs(timeHours, timeMins, timeSecs) && mode === 'pace')) {
+                errorMessage.innerText = "Please enter a valid time or pace.";
                 errorMessage.classList.remove('hidden');
                 return; // Stop calculation if validation fails
             } else {
@@ -206,23 +214,28 @@
                 // Calculate time required for the specified distance
                 let totalTime = (distance / 100) * totalPace;
 
-                // Convert total time back to minutes and seconds
+                // Convert total time to hours, minutes, and seconds if applicable
+                let hours = Math.floor(totalTime / 3600);
+                totalTime %= 3600;
                 let mins = Math.floor(totalTime / 60);
                 let secs = (totalTime % 60).toFixed(0);
 
-                document.getElementById("result").innerText = "Time: " + formatNumberWithCommas(mins) + " min " + formatNumberWithCommas(secs) + " sec";
+                let resultText = hours > 0 ? `${formatNumberWithCommas(hours)} hr ` : "";
+                resultText += `${formatNumberWithCommas(mins)} min ${formatNumberWithCommas(secs)} sec`;
+
+                document.getElementById("result").innerText = "Time: " + resultText;
             } else if (mode === 'pace') {
                 // Convert time to total seconds
-                let totalTime = (parseInt(timeMins) * 60) + parseFloat(timeSecs);
+                let totalTime = (parseInt(timeHours) * 3600) + (parseInt(timeMins) * 60) + parseFloat(timeSecs);
 
                 // Calculate pace based on distance and time
                 let totalPace = totalTime / (distance / 100);
 
                 // Convert total pace back to minutes and seconds
-                let paceMin = Math.floor(totalPace / 60);
-                let paceSec = (totalPace % 60).toFixed(0);
+                let paceMins = Math.floor(totalPace / 60);
+                let paceSecs = (totalPace % 60).toFixed(0);
 
-                document.getElementById("result").innerText = "Pace: " + formatNumberWithCommas(paceMin) + " min " + formatNumberWithCommas(paceSec) + " sec /100m";
+                document.getElementById("result").innerText = "Pace: " + formatNumberWithCommas(paceMins) + " min " + formatNumberWithCommas(paceSecs) + " sec /100m";
             }
         }
 
