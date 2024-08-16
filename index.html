@@ -119,6 +119,11 @@
         </div>
 
         <form id="calculator-form">
+            <div class="form-group" id="distance-group">
+                <label for="distance">Distance:</label>
+                <input type="number" id="distance" name="distance" placeholder="Metres" oninput="updateTimeLabel()">
+            </div>
+
             <div class="form-group">
                 <label for="pace-mins">Pace (/100m):</label>
                 <input type="number" id="pace-mins" name="pace-mins" placeholder="Minutes">
@@ -126,14 +131,9 @@
             </div>
 
             <div class="form-group" id="time-group" class="hidden">
-                <label for="time-mins">Time:</label>
+                <label for="time-mins" id="time-label">Time:</label>
                 <input type="number" id="time-mins" name="time-mins" placeholder="Minutes">
                 <input type="number" id="time-secs" name="time-secs" placeholder="Seconds">
-            </div>
-
-            <div class="form-group" id="distance-group">
-                <label for="distance">Distance:</label>
-                <input type="number" id="distance" name="distance" placeholder="Metres">
             </div>
 
             <button type="button" onclick="calculate()">Calculate</button>
@@ -159,10 +159,22 @@
 
             document.getElementById('result').innerText = ''; // Clear the result when switching modes
             document.getElementById('error-message').classList.add('hidden'); // Clear any previous error messages
+            updateTimeLabel(); // Update the time label based on the current distance value
         }
 
         function validateSeconds(seconds) {
             return seconds >= 0 && seconds <= 59.9;
+        }
+
+        function updateTimeLabel() {
+            const distance = document.getElementById('distance').value;
+            const timeLabel = document.getElementById('time-label');
+
+            if (distance) {
+                timeLabel.innerText = `${distance}m Time:`;
+            } else {
+                timeLabel.innerText = 'Time:';
+            }
         }
 
         function calculate() {
