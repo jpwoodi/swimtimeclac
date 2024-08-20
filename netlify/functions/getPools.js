@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-    const baseId = 'HlKACTnR2r7DGk'; // Your Airtable Base ID
+    const baseId = 'appHlKACTnR2r7DGk'; // Your Airtable Base ID
     const token = process.env.AIRTABLE_TOKEN;    // Ensure this is set in your Netlify environment variables
     const tableName = 'SwimmingPools';           // Your Airtable Table Name
 
