@@ -6,24 +6,25 @@
     <title>Swim Calculator: Time and Pace</title>
     <style>
         body {
-    font-family: Arial, sans-serif;
-    background-image: url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-}
+            font-family: Arial, sans-serif;
+            background-image: url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
 
         .calculator-container {
             background-color: rgba(255, 255, 255, 0.9);
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            width: 280px; /* Adjusted to fit inputs */
+            width: 280px;
             text-align: center;
         }
 
@@ -36,19 +37,19 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            flex-wrap: wrap; /* Ensure inputs wrap if necessary */
+            flex-wrap: wrap;
         }
 
         label {
-            width: 100%; /* Make label span across the width */
+            width: 100%;
             text-align: left;
             display: flex;
             align-items: center;
-            margin-bottom: 5px; /* Add spacing between label and inputs */
+            margin-bottom: 5px;
         }
 
         input[type="text"] {
-            width: 80px; /* Adjust input width to fit within the container */
+            width: 80px;
             padding: 5px;
             margin: 5px;
             border-radius: 5px;
@@ -99,6 +100,24 @@
             color: red;
             font-size: 14px;
         }
+
+        .link-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .link-container a {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .link-container a:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -137,6 +156,11 @@
         
         <p id="result"></p>
         <p id="error-message" class="error hidden"></p>
+    </div>
+
+    <!-- Link to Pools Page -->
+    <div class="link-container">
+        <a href="pools.html">View Swimming Pools in London</a>
     </div>
 
     <script>
