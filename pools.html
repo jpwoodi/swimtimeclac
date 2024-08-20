@@ -74,8 +74,8 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Address</th>
-                <th>Contact</th>
+                <th>Length (m)</th>
+                <th>Borough</th>
             </tr>
         </thead>
         <tbody id="pool-table-body">
@@ -92,8 +92,8 @@
                     tableBody.innerHTML = data.records.map(record => `
                         <tr>
                             <td>${record.fields.Name}</td>
-                            <td>${record.fields.Address}</td>
-                            <td>${record.fields.Contact}</td>
+                            <td>${record.fields.Length}</td>
+                            <td>${record.fields.Borough}</td>
                         </tr>
                     `).join('');
                 });
