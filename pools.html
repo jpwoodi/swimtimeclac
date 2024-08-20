@@ -146,17 +146,23 @@
         function sortTable(columnIndex) {
             const table = document.querySelector('table tbody');
             const rowsArray = Array.from(table.rows);
-            const isAscending = table.querySelectorAll('th')[columnIndex].classList.toggle('sort-asc');
+            const headers = document.querySelectorAll('th');
+            const isAscending = headers[columnIndex].classList.toggle('sort-asc');
+            headers.forEach((header, index) => {
+                if (index !== columnIndex) {
+                    header.classList.remove('sort-asc', 'sort-desc');
+                }
+            });
+
+            headers[columnIndex].classList.toggle('sort-desc', !isAscending);
 
             rowsArray.sort((a, b) => {
                 const cellA = a.cells[columnIndex].innerText.toLowerCase();
                 const cellB = b.cells[columnIndex].innerText.toLowerCase();
 
-                if (isAscending) {
-                    return cellA > cellB ? 1 : -1;
-                } else {
-                    return cellA < cellB ? 1 : -1;
-                }
+                if (cellA < cellB) return isAscending ? -1 : 1;
+                if (cellA > cellB) return isAscending ? 1 : -1;
+                return 0;
             });
 
             table.innerHTML = '';
