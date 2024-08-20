@@ -37,10 +37,10 @@
             width: 100%;
             padding: 40px;
             text-align: center;
-            height: 500px; /* Fixed height to prevent resizing */
+            min-height: 600px; /* Increased height to accommodate results */
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
         }
 
         h1 {
@@ -118,6 +118,10 @@
             color: #495057;
         }
 
+        .toggle-container input[type="radio"] {
+            margin-right: 8px; /* Space between radio button and text */
+        }
+
         .error {
             color: red;
             font-size: 0.9em;
@@ -126,7 +130,7 @@
         @media (max-width: 576px) {
             .calculator-container {
                 padding: 20px;
-                height: auto;
+                min-height: auto; /* Adjust height for smaller screens */
             }
 
             h1 {
@@ -165,9 +169,9 @@
                 <input type="text" id="distance" name="distance" placeholder="Enter distance" oninput="formatInputWithCommas(this); updateTimeLabel();">
             </div>
 
-            <div class="form-group hidden" id="time-group">
+            <div class="form-group" id="time-group">
                 <label for="time-hours" id="time-label">Time:</label>
-                <input type="text" id="time-hours" name="time-hours" placeholder="Hours" oninput="formatInputWithCommas(this);">
+                <input type="text" id="time-hours" name="time-hours" placeholder="Hours" class="hidden">
                 <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
                 <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
             </div>
@@ -188,14 +192,14 @@
     <script>
         function toggleMode() {
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
-            const timeGroup = document.getElementById('time-group');
+            const timeHoursInput = document.getElementById('time-hours');
             const paceGroup = document.getElementById('pace-group');
 
             if (mode === 'time') {
-                timeGroup.classList.add('hidden');
+                timeHoursInput.classList.add('hidden');
                 paceGroup.classList.remove('hidden');
             } else {
-                timeGroup.classList.remove('hidden');
+                timeHoursInput.classList.remove('hidden');
                 paceGroup.classList.add('hidden');
             }
 
