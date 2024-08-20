@@ -4,32 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swim Calculator: Time and Pace</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH2N2X1XVjH7l+htjJ8e5t4Xh+WwzQocIJcXxYKmqKJ4h7ZQ0lwnzC4BnSXZAh1I8T/r3Hg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-image: url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        .calculator-container {
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #212529;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            width: 280px;
+        }
+
+        .calculator-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
+            padding: 40px;
             text-align: center;
+            height: 500px; /* Fixed height to prevent resizing */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         h1 {
             margin-bottom: 20px;
+            color: #007BFF;
+            font-size: 2em;
         }
 
         .form-group {
@@ -43,29 +60,32 @@
         label {
             width: 100%;
             text-align: left;
-            display: flex;
-            align-items: center;
             margin-bottom: 5px;
+            font-weight: 600;
+            color: #343A40;
         }
 
         input[type="text"] {
-            width: 80px;
-            padding: 5px;
-            margin: 5px;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
             border-radius: 5px;
-            border: 1px solid #ccc;
+            border: 1px solid #ced4da;
             text-align: center;
+            font-size: 1em;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 12px 20px;
             background-color: #007BFF;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 20px;
             width: 100%;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
@@ -74,7 +94,8 @@
 
         p {
             margin-top: 20px;
-            font-size: 18px;
+            font-size: 1.2em;
+            color: #495057;
         }
 
         .hidden {
@@ -93,30 +114,36 @@
             margin-right: 10px;
             display: flex;
             align-items: center;
-            width: auto;
+            font-weight: 600;
+            color: #495057;
         }
 
         .error {
             color: red;
-            font-size: 14px;
+            font-size: 0.9em;
         }
 
-        .link-container {
-            margin-top: 20px;
-            text-align: center;
-        }
+        @media (max-width: 576px) {
+            .calculator-container {
+                padding: 20px;
+                height: auto;
+            }
 
-        .link-container a {
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            display: inline-block;
-        }
+            h1 {
+                font-size: 1.5em;
+            }
 
-        .link-container a:hover {
-            background-color: #0056b3;
+            button {
+                font-size: 0.9em;
+            }
+
+            input[type="text"] {
+                font-size: 0.9em;
+            }
+
+            p {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
@@ -134,8 +161,8 @@
 
         <form id="calculator-form">
             <div class="form-group" id="distance-group">
-                <label for="distance">Distance:</label>
-                <input type="text" id="distance" name="distance" placeholder="Metres" oninput="formatInputWithCommas(this); updateTimeLabel();">
+                <label for="distance">Distance (meters):</label>
+                <input type="text" id="distance" name="distance" placeholder="Enter distance" oninput="formatInputWithCommas(this); updateTimeLabel();">
             </div>
 
             <div class="form-group hidden" id="time-group">
@@ -158,23 +185,18 @@
         <p id="error-message" class="error hidden"></p>
     </div>
 
-    <!-- Link to Pools Page -->
-    <div class="link-container">
-        <a href="pools.html">View Swimming Pools in London</a>
-    </div>
-
     <script>
         function toggleMode() {
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
             const timeGroup = document.getElementById('time-group');
-            const paceInputs = document.getElementById('pace-group');
+            const paceGroup = document.getElementById('pace-group');
 
             if (mode === 'time') {
                 timeGroup.classList.add('hidden');
-                paceInputs.classList.remove('hidden');
+                paceGroup.classList.remove('hidden');
             } else {
                 timeGroup.classList.remove('hidden');
-                paceInputs.classList.add('hidden');
+                paceGroup.classList.add('hidden');
             }
 
             document.getElementById('result').innerText = ''; // Clear the result when switching modes
