@@ -4,140 +4,179 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swimming Pools in London</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH2N2X1XVjH7l+htjJ8e5t4Xh+WwzQocIJcXxYKmqKJ4h7ZQ0lwnzC4BnSXZAh1I8T/r3Hg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: 'Roboto', sans-serif;
-            background-image: url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            font-family: 'Poppins', sans-serif;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
             background-size: cover;
             background-position: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 10px;
-            margin: 0;
+            color: #212529;
             min-height: 100vh;
-            box-sizing: border-box;
-            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+            margin-top: 20px;
+        }
+
         h1 {
             text-align: center;
-            margin-bottom: 20px;
-            color: #fff;
-            font-weight: 500;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        table {
-            width: 100%;
-            max-width: 700px; /* Reduced width */
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: rgba(255, 255, 255, 0.95);
-            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        table:hover {
-            transform: translateY(-5px);
-        }
-        th, td {
-            padding: 12px 15px; /* Slightly reduced padding */
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        th {
-            background: linear-gradient(135deg, #4e54c8, #8f94fb);
-            color: white;
-            cursor: pointer;
-            user-select: none;
-            position: relative;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            transition: background 0.3s ease;
-        }
-        th.sort-asc::after, th.sort-desc::after {
-            position: absolute;
-            right: 10px;
-            content: '';
-            border: 8px solid transparent;
-        }
-        th.sort-asc::after {
-            border-bottom-color: white; /* Up arrow */
-        }
-        th.sort-desc::after {
-            border-top-color: white; /* Down arrow */
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .back-link {
-            display: block;
-            margin-bottom: 20px;
-            text-align: center;
+            margin-bottom: 30px;
             color: #007BFF;
+            font-size: 2.5em;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
             text-decoration: none;
-            font-weight: 500;
+            color: #007BFF;
+            font-weight: 600;
             transition: color 0.3s ease;
         }
+
         .back-link:hover {
             color: #0056b3;
         }
-        input#search {
-            padding: 10px 15px; /* Slightly reduced padding */
-            margin-bottom: 20px;
+
+        #search {
             width: 100%;
-            max-width: 350px; /* Reduced width */
-            border-radius: 25px;
-            border: 1px solid #ccc;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s ease;
-        }
-        input#search:focus {
+            max-width: 400px;
+            padding: 12px 20px;
+            margin-bottom: 30px;
+            border: 1px solid #ced4da;
+            border-radius: 50px;
+            font-size: 1em;
             outline: none;
-            box-shadow: 0px 4px 15px rgba(0, 123, 255, 0.4);
+            transition: border-color 0.3s ease;
+        }
+
+        #search:focus {
+            border-color: #007BFF;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        thead {
+            background-color: #343A40;
+        }
+
+        th {
+            color: #ffffff;
+            text-align: left;
+            padding: 15px;
+            font-weight: 600;
+            position: relative;
+            user-select: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        th:hover {
+            background-color: #495057;
+        }
+
+        th i {
+            margin-left: 10px;
+            opacity: 0.7;
+            transition: transform 0.3s ease;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #dee2e6;
+            transition: background-color 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+
+        td {
+            padding: 15px;
+            color: #495057;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            th, td {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            #search {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <a href="index.html" class="back-link">Back to Swim Calculator</a>
-    <h1>Swimming Pools in London</h1>
-    <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
-
-    <table>
-        <thead>
-            <tr>
-                <th onclick="sortTable(0)">Name</th>
-                <th onclick="sortTable(1)">Length (m)</th>
-                <th onclick="sortTable(2)">Borough</th>
-            </tr>
-        </thead>
-        <tbody id="pool-table-body">
-            <!-- Data will be dynamically inserted here -->
-        </tbody>
-    </table>
+    <div class="container">
+        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Swim Calculator</a>
+        <h1>Swimming Pools in London</h1>
+        <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
+        <table>
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Name <i class="fas fa-sort"></i></th>
+                    <th onclick="sortTable(1)">Length (m) <i class="fas fa-sort"></i></th>
+                    <th onclick="sortTable(2)">Borough <i class="fas fa-sort"></i></th>
+                </tr>
+            </thead>
+            <tbody id="pool-table-body">
+                <!-- Data will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             fetch('/.netlify/functions/getPools')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     if (data.records) {
                         const tableBody = document.getElementById('pool-table-body');
                         tableBody.innerHTML = data.records.map(record => `
                             <tr>
-                                <td>${record.fields.Name}</td>
-                                <td>${record.fields.Length}</td>
-                                <td>${record.fields.Borough}</td>
+                                <td>${record.fields.Name || 'N/A'}</td>
+                                <td>${record.fields.Length || 'N/A'}</td>
+                                <td>${record.fields.Borough || 'N/A'}</td>
                             </tr>
                         `).join('');
                     } else {
@@ -151,46 +190,50 @@
         });
 
         function filterPools() {
-            let input = document.getElementById('search').value.toLowerCase();
-            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            const input = document.getElementById('search').value.toLowerCase();
+            const rows = document.querySelectorAll('#pool-table-body tr');
 
-            for (let i = 0; i < rows.length; i++) {
-                let cells = rows[i].getElementsByTagName('td');
-                let match = false;
-                for (let j = 0; j < cells.length; j++) {
-                    if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
-                        match = true;
-                        break;
-                    }
-                }
-                rows[i].style.display = match ? '' : 'none';
-            }
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const match = Array.from(cells).some(td => td.innerText.toLowerCase().includes(input));
+                row.style.display = match ? '' : 'none';
+            });
         }
 
         function sortTable(columnIndex) {
-            const table = document.querySelector('table tbody');
-            const rowsArray = Array.from(table.rows);
+            const tableBody = document.getElementById('pool-table-body');
+            const rows = Array.from(tableBody.querySelectorAll('tr'));
             const headers = document.querySelectorAll('th');
-            const isAscending = headers[columnIndex].classList.toggle('sort-asc');
-            headers.forEach((header, index) => {
-                if (index !== columnIndex) {
-                    header.classList.remove('sort-asc', 'sort-desc');
+            const currentIsAscending = headers[columnIndex].classList.contains('asc');
+
+            rows.sort((a, b) => {
+                const cellA = a.querySelectorAll('td')[columnIndex].innerText.toLowerCase();
+                const cellB = b.querySelectorAll('td')[columnIndex].innerText.toLowerCase();
+
+                if (!isNaN(cellA) && !isNaN(cellB)) {
+                    return currentIsAscending ? cellA - cellB : cellB - cellA;
+                } else {
+                    return currentIsAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
                 }
             });
 
-            headers[columnIndex].classList.toggle('sort-desc', !isAscending);
-
-            rowsArray.sort((a, b) => {
-                const cellA = a.cells[columnIndex].innerText.toLowerCase();
-                const cellB = b.cells[columnIndex].innerText.toLowerCase();
-
-                if (cellA < cellB) return isAscending ? -1 : 1;
-                if (cellA > cellB) return isAscending ? 1 : -1;
-                return 0;
+            // Remove asc and desc classes from all headers
+            headers.forEach(header => {
+                header.classList.remove('asc', 'desc');
+                header.querySelector('i').classList.remove('fa-sort-up', 'fa-sort-down');
+                header.querySelector('i').classList.add('fa-sort');
             });
 
-            table.innerHTML = '';
-            table.append(...rowsArray);
+            // Add appropriate class to the sorted header
+            headers[columnIndex].classList.toggle('asc', !currentIsAscending);
+            headers[columnIndex].classList.toggle('desc', currentIsAscending);
+            headers[columnIndex].querySelector('i').classList.toggle('fa-sort-up', !currentIsAscending);
+            headers[columnIndex].querySelector('i').classList.toggle('fa-sort-down', currentIsAscending);
+            headers[columnIndex].querySelector('i').classList.remove('fa-sort');
+
+            // Append sorted rows to the table body
+            tableBody.innerHTML = '';
+            tableBody.append(...rows);
         }
     </script>
 </body>
