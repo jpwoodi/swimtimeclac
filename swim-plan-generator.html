@@ -204,12 +204,13 @@
                 if (response.ok) {
                     // Make sure the response is a string
                     let planText = data.plan;
+                    console.log(planText);  // Debug: Log the response
                     if (typeof planText !== 'string') {
                         planText = planText.toString();  // Convert it to a string if it's not already
                     }
 
                     swimPlans = parseSwimPlan(planText, duration);  // Parse the response into weeks
-                    totalWeeks = duration;  // Based on user input
+                    totalWeeks = swimPlans.length;  // Ensure totalWeeks is accurate
                     currentWeek = 1;
                     displayWeek(currentWeek);
                     resultsContainer.style.display = 'block';
@@ -222,9 +223,18 @@
         }
 
         function parseSwimPlan(planText, duration) {
-            // Assuming the response is a string with weeks separated by double newlines
-            const weeklyPlans = planText.split('\n\n').slice(0, duration);
-            return weeklyPlans.map(week => week.split('\n').filter(day => day.trim() !== ''));
+            const weeklyPlans = []; // To store each week's plan
+
+            // Split the response by "Week " to get each week's plan separately
+            const weeks = planText.split(/Week \d+:/).filter(week => week.trim() !== '');
+
+            weeks.slice(0, duration).forEach(week => {
+                // Split each week's plan by "Day " to separate each day's workout
+                const days = week.split(/Day \d+:/).filter(day => day.trim() !== '');
+                weeklyPlans.push(days);
+            });
+
+            return weeklyPlans;
         }
 
         function displayWeek(weekNumber) {
