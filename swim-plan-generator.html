@@ -216,9 +216,11 @@
 
                 if (response.ok) {
                     const planText = data.plan;
-                    console.log(planText);  // Debugging
+                    console.log("Plan Text:", planText);  // Debugging
 
                     swimPlans = parseSwimPlan(planText);  // Parse the plan into weeks
+                    console.log("Parsed Swim Plans:", swimPlans);  // Debugging
+
                     totalWeeks = swimPlans.length;  // Ensure totalWeeks is accurate
                     currentWeek = 1;
                     displayWeek(currentWeek);
@@ -232,9 +234,18 @@
         }
 
         function parseSwimPlan(planText) {
-            // Split by "Week " and then process each week's sessions
-            const weeklyPlans = planText.split(/Week \d+:/).filter(week => week.trim() !== '');
-            return weeklyPlans.map(week => week.trim().split('\n').filter(line => line.trim() !== ''));
+            const weeklyPlans = []; // To store each week's plan
+
+            // Split the response by "Week " to get each week's plan separately
+            const weeks = planText.split(/Week \d+:/).filter(week => week.trim() !== '');
+            console.log("Weekly Plans:", weeks);  // Debugging
+
+            weeks.forEach(week => {
+                const sessions = week.trim().split('\n').filter(line => line.trim() !== '');
+                weeklyPlans.push(sessions);
+            });
+
+            return weeklyPlans;
         }
 
         function displayWeek(weekNumber) {
@@ -243,6 +254,7 @@
             const weekLabel = document.getElementById('week-label');
 
             weekLabel.innerText = `Week ${weekNumber}`;
+            console.log("Week Data:", weekData);  // Debugging
 
             // Generate table content
             let tableContent = `
@@ -260,6 +272,7 @@
             `;
 
             weekData.forEach((session, index) => {
+                console.log("Session:", session);  // Debugging
                 const parts = session.split('|');  // Assuming OpenAI returns data separated by "|"
                 if (parts.length === 6) {
                     tableContent += `
@@ -272,6 +285,8 @@
                             <td>${parts[5].trim()}</td>
                         </tr>
                     `;
+                } else {
+                    console.error("Unexpected session format:", session);
                 }
             });
 
