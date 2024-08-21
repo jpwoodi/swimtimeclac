@@ -245,7 +245,7 @@
                 // Ignore the header lines (first two lines in this case)
                 if (index > 1) {
                     const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
-                    
+
                     // If the first part is a number, it's the week number
                     if (parts.length > 0 && !isNaN(parts[0])) {
                         if (currentWeek.length > 0) {
@@ -269,7 +269,17 @@
         }
 
         function displayWeek(weekNumber) {
+            if (weekNumber <= 0 || weekNumber > swimPlans.length) {
+                console.error("Invalid week number:", weekNumber);
+                return;
+            }
+
             const weekData = swimPlans[weekNumber - 1];
+            if (!weekData) {
+                console.error("Week data is undefined for week number:", weekNumber);
+                return;
+            }
+
             const table = document.getElementById('swim-plan-table');
             const weekLabel = document.getElementById('week-label');
 
