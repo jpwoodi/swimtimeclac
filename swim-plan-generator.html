@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swim Plan Generator</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            color: #212529;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #007BFF;
+            font-size: 2em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #343A40;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            font-size: 1em;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #plan-result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #495057;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Generate Your Swim Plan</h1>
+        <form id="swim-plan-form">
+            <div class="form-group">
+                <label for="goal">Swim Goal</label>
+                <input type="text" id="goal" name="goal" placeholder="E.g., Improve endurance, build speed">
+            </div>
+            <div class="form-group">
+                <label for="experience">Experience Level</label>
+                <select id="experience" name="experience">
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sessions">Number of Sessions per Week</label>
+                <input type="number" id="sessions" name="sessions" placeholder="E.g., 3">
+            </div>
+            <div class="form-group">
+                <label for="duration">Session Duration (minutes)</label>
+                <input type="number" id="duration" name="duration" placeholder="E.g., 60">
+            </div>
+            <button type="button" onclick="generateSwimPlan()">Generate Plan</button>
+        </form>
+        <div id="plan-result"></div>
+        <div class="loading-spinner" id="loading-spinner">Generating your swim plan...</div>
+    </div>
+
+    <script>
+        async function generateSwimPlan() {
+            const goal = document.getElementById('goal').value;
+            const experience = document.getElementById('experience').value;
+            const sessions = document.getElementById('sessions').value;
+            const duration = document.getElementById('duration').value;
+            const resultDiv = document.getElementById('plan-result');
+            const spinner = document.getElementById('loading-spinner');
+
+            if (!goal || !experience || !sessions || !duration) {
+                resultDiv.innerHTML = "<p>Please fill out all fields.</p>";
+                return;
+            }
+
+            // Show loading spinner
+            spinner.style.display = 'block';
+
+            try {
+                const response = await fetch('/.netlify/functions/generateSwimPlan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ goal, experience, sessions, duration })
+                });
+
+                const data = await response.json();
+                spinner.style.display = 'none'; // Hide spinner after receiving response
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<p>${data.plan}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                }
+            } catch (error) {
+                spinner.style.display = 'none';
+                resultDiv.innerHTML = `<p>An error occurred: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
