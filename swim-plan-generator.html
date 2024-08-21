@@ -202,8 +202,13 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Assuming data.plan is an array of weekly plans
-                    swimPlans = parseSwimPlan(data.plan, duration);  // Parse the response into weeks
+                    // Make sure the response is a string
+                    let planText = data.plan;
+                    if (typeof planText !== 'string') {
+                        planText = planText.toString();  // Convert it to a string if it's not already
+                    }
+
+                    swimPlans = parseSwimPlan(planText, duration);  // Parse the response into weeks
                     totalWeeks = duration;  // Based on user input
                     currentWeek = 1;
                     displayWeek(currentWeek);
