@@ -1,8 +1,10 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
-    const { goal, css, duration, sessions, sessionDuration } = JSON.parse(event.body);
+    const { goal, cssMinutes, cssSeconds, duration, sessions, sessionDuration } = JSON.parse(event.body);
     const apiKey = process.env.OPENAI_API_KEY;  // Ensure you set this in your environment variables
+
+    const cssTime = `${cssMinutes} minutes ${cssSeconds} seconds per 100m`;
 
     const messages = [
         {
@@ -11,7 +13,7 @@ exports.handler = async function(event, context) {
         },
         {
             role: "user",
-            content: `Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${css} m/s. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes.`
+            content: `Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes. Please include drills in the Build Set and vary the skills across sessions. Format the output as a table with the following headers: "Session Number", "Warm Up", "Build Set", "Main Set", "Cool Down", and "Total Distance".`
         }
     ];
 
@@ -24,7 +26,7 @@ exports.handler = async function(event, context) {
         body: JSON.stringify({
             model: 'gpt-3.5-turbo',
             messages: messages,
-            max_tokens: 2000,  // Adjust this based on the expected length of the response
+            max_tokens: 1000,  // Adjust based on the expected length of the response
             temperature: 0.7
         })
     });
@@ -34,7 +36,7 @@ exports.handler = async function(event, context) {
     if (response.ok) {
         return {
             statusCode: 200,
-            body: JSON.stringify({ plan: data.choices[0].message.content.trim().split('\n\n') }) // Splitting into weeks based on double new lines
+            body: JSON.stringify({ plan: data.choices[0].message.content.trim() })
         };
     } else {
         return {
