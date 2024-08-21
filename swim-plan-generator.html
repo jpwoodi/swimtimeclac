@@ -234,70 +234,85 @@
         }
 
         function parseSwimPlan(planText) {
-            const weeklyPlans = []; // To store each week's plan
+    const weeklyPlans = []; // To store each week's plan
 
-            // Split the response by lines
-            const lines = planText.split('\n').filter(line => line.trim() !== '');
-            console.log("Lines:", lines);  // Debugging
+    // Split the response by lines
+    const lines = planText.split('\n').filter(line => line.trim() !== '');
+    console.log("Lines:", lines);  // Debugging
 
-            const sessions = [];  // Array to store each session
-            lines.forEach((line, index) => {
-                // Ignore the header lines (first two lines in this case)
-                if (index > 1) {
-                    const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
-                    if (parts.length === 6) {
-                        sessions.push(parts);
-                    }
+    let currentWeek = [];
+    lines.forEach((line, index) => {
+        // Ignore the header lines (first two lines in this case)
+        if (index > 1) {
+            const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
+            
+            // If the first part is a number, it's the week number
+            if (parts.length > 0 && !isNaN(parts[0])) {
+                if (currentWeek.length > 0) {
+                    weeklyPlans.push(currentWeek);
                 }
-            });
+                currentWeek = []; // Start a new week
+                parts.shift(); // Remove the week number
+            }
 
-            return [sessions];  // Return as a single week array to match the original logic
+            if (parts.length === 6) {
+                currentWeek.push(parts);
+            }
         }
+    });
 
-        function displayWeek(weekNumber) {
-            const weekData = swimPlans[weekNumber - 1];
-            const table = document.getElementById('swim-plan-table');
-            const weekLabel = document.getElementById('week-label');
+    if (currentWeek.length > 0) {
+        weeklyPlans.push(currentWeek); // Add the last week
+    }
 
-            weekLabel.innerText = `Week ${weekNumber}`;
-            console.log("Week Data:", weekData);  // Debugging
+    return weeklyPlans;
+}
 
-            // Generate table content
-            let tableContent = `
-                <thead>
-                    <tr>
-                        <th>Session Number</th>
-                        <th>Warm Up</th>
-                        <th>Build Set</th>
-                        <th>Main Set</th>
-                        <th>Cool Down</th>
-                        <th>Total Distance</th>
-                    </tr>
-                </thead>
-                <tbody>
+function displayWeek(weekNumber) {
+    const weekData = swimPlans[weekNumber - 1];
+    const table = document.getElementById('swim-plan-table');
+    const weekLabel = document.getElementById('week-label');
+
+    weekLabel.innerText = `Week ${weekNumber}`;
+    console.log("Week Data:", weekData);  // Debugging
+
+    // Generate table content
+    let tableContent = `
+        <thead>
+            <tr>
+                <th>Session Number</th>
+                <th>Warm Up</th>
+                <th>Build Set</th>
+                <th>Main Set</th>
+                <th>Cool Down</th>
+                <th>Total Distance</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+    weekData.forEach((session, index) => {
+        console.log("Session:", session);  // Debugging
+        if (session.length === 5) { // Now session has 5 parts after removing the week number
+            tableContent += `
+                <tr>
+                    <td>Session ${index + 1}</td>
+                    <td>${session[0]}</td>
+                    <td>${session[1]}</td>
+                    <td>${session[2]}</td>
+                    <td>${session[3]}</td>
+                    <td>${session[4]}</td>
+                </tr>
             `;
-
-            weekData.forEach((session, index) => {
-                console.log("Session:", session);  // Debugging
-                if (session.length === 6) {
-                    tableContent += `
-                        <tr>
-                            <td>${session[0]}</td>
-                            <td>${session[1]}</td>
-                            <td>${session[2]}</td>
-                            <td>${session[3]}</td>
-                            <td>${session[4]}</td>
-                            <td>${session[5]}</td>
-                        </tr>
-                    `;
-                } else {
-                    console.error("Unexpected session format:", session);
-                }
-            });
-
-            tableContent += `</tbody>`;
-            table.innerHTML = tableContent;
+        } else {
+            console.error("Unexpected session format:", session);
         }
+    });
+
+    tableContent += `</tbody>`;
+    table.innerHTML = tableContent;
+}
+
 
         function previousWeek() {
             if (currentWeek > 1) {
