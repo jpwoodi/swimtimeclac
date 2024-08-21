@@ -233,66 +233,70 @@
             }
         }
 
-        function parseSwimPlan(planText) {
-            const weeklyPlans = []; // To store each week's plan
+       function parseSwimPlan(planText) {
+    // Split the response by lines
+    const lines = planText.split('\n').filter(line => line.trim() !== '');
+    console.log("Lines:", lines);  // Debugging
 
-            // Split the response by "Week " to get each week's plan separately
-            const weeks = planText.split(/Week \d+:/).filter(week => week.trim() !== '');
-            console.log("Weekly Plans:", weeks);  // Debugging
-
-            weeks.forEach(week => {
-                const sessions = week.trim().split('\n').filter(line => line.trim() !== '');
-                weeklyPlans.push(sessions);
-            });
-
-            return weeklyPlans;
+    const sessions = [];  // Array to store each session
+    lines.forEach((line, index) => {
+        // Ignore the header lines (first two lines in this case)
+        if (index > 1) {
+            const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
+            if (parts.length === 6) {
+                sessions.push(parts);
+            }
         }
+    });
 
-        function displayWeek(weekNumber) {
-            const weekData = swimPlans[weekNumber - 1];
-            const table = document.getElementById('swim-plan-table');
-            const weekLabel = document.getElementById('week-label');
+    return [sessions];  // Return as a single week array to match the original logic
+}
 
-            weekLabel.innerText = `Week ${weekNumber}`;
-            console.log("Week Data:", weekData);  // Debugging
+function displayWeek(weekNumber) {
+    const weekData = swimPlans[weekNumber - 1];
+    const table = document.getElementById('swim-plan-table');
+    const weekLabel = document.getElementById('week-label');
 
-            // Generate table content
-            let tableContent = `
-                <thead>
-                    <tr>
-                        <th>Session Number</th>
-                        <th>Warm Up</th>
-                        <th>Build Set</th>
-                        <th>Main Set</th>
-                        <th>Cool Down</th>
-                        <th>Total Distance</th>
-                    </tr>
-                </thead>
-                <tbody>
+    weekLabel.innerText = `Week ${weekNumber}`;
+    console.log("Week Data:", weekData);  // Debugging
+
+    // Generate table content
+    let tableContent = `
+        <thead>
+            <tr>
+                <th>Session Number</th>
+                <th>Warm Up</th>
+                <th>Build Set</th>
+                <th>Main Set</th>
+                <th>Cool Down</th>
+                <th>Total Distance</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+    weekData.forEach((session, index) => {
+        console.log("Session:", session);  // Debugging
+        if (session.length === 6) {
+            tableContent += `
+                <tr>
+                    <td>${session[0]}</td>
+                    <td>${session[1]}</td>
+                    <td>${session[2]}</td>
+                    <td>${session[3]}</td>
+                    <td>${session[4]}</td>
+                    <td>${session[5]}</td>
+                </tr>
             `;
-
-            weekData.forEach((session, index) => {
-                console.log("Session:", session);  // Debugging
-                const parts = session.split('|');  // Assuming OpenAI returns data separated by "|"
-                if (parts.length === 6) {
-                    tableContent += `
-                        <tr>
-                            <td>${parts[0].trim()}</td>
-                            <td>${parts[1].trim()}</td>
-                            <td>${parts[2].trim()}</td>
-                            <td>${parts[3].trim()}</td>
-                            <td>${parts[4].trim()}</td>
-                            <td>${parts[5].trim()}</td>
-                        </tr>
-                    `;
-                } else {
-                    console.error("Unexpected session format:", session);
-                }
-            });
-
-            tableContent += `</tbody>`;
-            table.innerHTML = tableContent;
+        } else {
+            console.error("Unexpected session format:", session);
         }
+    });
+
+    tableContent += `</tbody>`;
+    table.innerHTML = tableContent;
+}
+
 
         function previousWeek() {
             if (currentWeek > 1) {
