@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swim Plan Generator</title>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Custom Styles -->
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -19,6 +17,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            flex-direction: column;
         }
 
         .form-container {
@@ -30,6 +29,7 @@
             padding: 40px;
             text-align: center;
             color: #212529;
+            margin-bottom: 20px;
         }
 
         h1 {
@@ -75,17 +75,61 @@
             background-color: #0056b3;
         }
 
-        #plan-result {
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: #495057;
+        .results-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            color: #212529;
+            display: none;
         }
 
-        .loading-spinner {
-            display: none;
-            margin-top: 20px;
+        .week-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .week-navigation button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
             font-size: 1.2em;
-            color: #007BFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
@@ -115,26 +159,35 @@
             </div>
             <button type="button" onclick="generateSwimPlan()">Generate Plan</button>
         </form>
-        <div id="plan-result"></div>
-        <div class="loading-spinner" id="loading-spinner">Generating your swim plan...</div>
+    </div>
+
+    <div class="results-container" id="results-container">
+        <div class="week-navigation">
+            <button onclick="previousWeek()">&larr;</button>
+            <span id="week-label">Week 1</span>
+            <button onclick="nextWeek()">&rarr;</button>
+        </div>
+        <table id="swim-plan-table">
+            <!-- Table content will be dynamically inserted here -->
+        </table>
     </div>
 
     <script>
+        let currentWeek = 1;
+        let totalWeeks = 4;  // Example: assuming a 4-week plan
+        let swimPlans = [];  // This will store the plans for each week
+
         async function generateSwimPlan() {
             const goal = document.getElementById('goal').value;
             const experience = document.getElementById('experience').value;
             const sessions = document.getElementById('sessions').value;
             const duration = document.getElementById('duration').value;
-            const resultDiv = document.getElementById('plan-result');
-            const spinner = document.getElementById('loading-spinner');
+            const resultsContainer = document.getElementById('results-container');
 
             if (!goal || !experience || !sessions || !duration) {
-                resultDiv.innerHTML = "<p>Please fill out all fields.</p>";
+                alert("Please fill out all fields.");
                 return;
             }
-
-            // Show loading spinner
-            spinner.style.display = 'block';
 
             try {
                 const response = await fetch('/.netlify/functions/generateSwimPlan', {
@@ -146,16 +199,64 @@
                 });
 
                 const data = await response.json();
-                spinner.style.display = 'none'; // Hide spinner after receiving response
 
                 if (response.ok) {
-                    resultDiv.innerHTML = `<p>${data.plan}</p>`;
+                    // Assuming data.plan is an array of weekly plans
+                    swimPlans = data.plan;  // Update this with actual response data
+                    totalWeeks = swimPlans.length;  // Update based on actual data
+                    currentWeek = 1;
+                    displayWeek(currentWeek);
+                    resultsContainer.style.display = 'block';
                 } else {
-                    resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                    alert(`Error: ${data.error}`);
                 }
             } catch (error) {
-                spinner.style.display = 'none';
-                resultDiv.innerHTML = `<p>An error occurred: ${error.message}</p>`;
+                alert(`An error occurred: ${error.message}`);
+            }
+        }
+
+        function displayWeek(weekNumber) {
+            const weekData = swimPlans[weekNumber - 1];
+            const table = document.getElementById('swim-plan-table');
+            const weekLabel = document.getElementById('week-label');
+
+            weekLabel.innerText = `Week ${weekNumber}`;
+
+            // Generate table content
+            let tableContent = `
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Workout</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            for (let i = 0; i < weekData.length; i++) {
+                tableContent += `
+                    <tr>
+                        <td>Day ${i + 1}</td>
+                        <td>${weekData[i]}</td>
+                    </tr>
+                `;
+            }
+
+            tableContent += `</tbody>`;
+            table.innerHTML = tableContent;
+        }
+
+        function previousWeek() {
+            if (currentWeek > 1) {
+                currentWeek--;
+                displayWeek(currentWeek);
+            }
+        }
+
+        function nextWeek() {
+            if (currentWeek < totalWeeks) {
+                currentWeek++;
+                displayWeek(currentWeek);
             }
         }
     </script>
