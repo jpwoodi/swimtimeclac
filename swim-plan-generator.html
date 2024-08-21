@@ -59,6 +59,15 @@
             font-size: 1em;
         }
 
+        .css-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .css-input input {
+            width: 50%;
+        }
+
         button {
             padding: 12px 20px;
             background-color: #007BFF;
@@ -79,7 +88,7 @@
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            max-width: 500px;
+            max-width: 800px;
             width: 100%;
             padding: 20px;
             text-align: center;
@@ -142,8 +151,11 @@
                 <input type="text" id="goal" name="goal" placeholder="E.g., Improve endurance, build speed">
             </div>
             <div class="form-group">
-                <label for="css">Critical Swim Speed (m/s)</label>
-                <input type="number" step="0.01" id="css" name="css" placeholder="Enter your CSS in m/s">
+                <label for="cssMinutes">Critical Swim Speed</label>
+                <div class="css-input">
+                    <input type="number" id="cssMinutes" name="cssMinutes" placeholder="Minutes per 100m" min="0">
+                    <input type="number" id="cssSeconds" name="cssSeconds" placeholder="Seconds per 100m" min="0" max="59">
+                </div>
             </div>
             <div class="form-group">
                 <label for="duration">Plan Duration (weeks)</label>
@@ -179,13 +191,14 @@
 
         async function generateSwimPlan() {
             const goal = document.getElementById('goal').value;
-            const css = document.getElementById('css').value;
+            const cssMinutes = document.getElementById('cssMinutes').value;
+            const cssSeconds = document.getElementById('cssSeconds').value;
             const duration = document.getElementById('duration').value;
             const sessions = document.getElementById('sessions').value;
             const sessionDuration = document.getElementById('session-duration').value;
             const resultsContainer = document.getElementById('results-container');
 
-            if (!goal || !css || !duration || !sessions || !sessionDuration) {
+            if (!goal || !cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
                 alert("Please fill out all fields.");
                 return;
             }
@@ -196,20 +209,16 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ goal, css, duration, sessions, sessionDuration })
+                    body: JSON.stringify({ goal, cssMinutes, cssSeconds, duration, sessions, sessionDuration })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Make sure the response is a string
-                    let planText = data.plan;
-                    console.log(planText);  // Debug: Log the response
-                    if (typeof planText !== 'string') {
-                        planText = planText.toString();  // Convert it to a string if it's not already
-                    }
+                    const planText = data.plan;
+                    console.log(planText);  // Debugging
 
-                    swimPlans = parseSwimPlan(planText, duration);  // Parse the response into weeks
+                    swimPlans = parseSwimPlan(planText);  // Parse the plan into weeks
                     totalWeeks = swimPlans.length;  // Ensure totalWeeks is accurate
                     currentWeek = 1;
                     displayWeek(currentWeek);
@@ -222,19 +231,10 @@
             }
         }
 
-        function parseSwimPlan(planText, duration) {
-            const weeklyPlans = []; // To store each week's plan
-
-            // Split the response by "Week " to get each week's plan separately
-            const weeks = planText.split(/Week \d+:/).filter(week => week.trim() !== '');
-
-            weeks.slice(0, duration).forEach(week => {
-                // Split each week's plan by "Day " to separate each day's workout
-                const days = week.split(/Day \d+:/).filter(day => day.trim() !== '');
-                weeklyPlans.push(days);
-            });
-
-            return weeklyPlans;
+        function parseSwimPlan(planText) {
+            // Split by "Week " and then process each week's sessions
+            const weeklyPlans = planText.split(/Week \d+:/).filter(week => week.trim() !== '');
+            return weeklyPlans.map(week => week.trim().split('\n').filter(line => line.trim() !== ''));
         }
 
         function displayWeek(weekNumber) {
@@ -248,20 +248,31 @@
             let tableContent = `
                 <thead>
                     <tr>
-                        <th>Day</th>
-                        <th>Workout</th>
+                        <th>Session Number</th>
+                        <th>Warm Up</th>
+                        <th>Build Set</th>
+                        <th>Main Set</th>
+                        <th>Cool Down</th>
+                        <th>Total Distance</th>
                     </tr>
                 </thead>
                 <tbody>
             `;
 
-            weekData.forEach((day, index) => {
-                tableContent += `
-                    <tr>
-                        <td>Day ${index + 1}</td>
-                        <td>${day}</td>
-                    </tr>
-                `;
+            weekData.forEach((session, index) => {
+                const parts = session.split('|');  // Assuming OpenAI returns data separated by "|"
+                if (parts.length === 6) {
+                    tableContent += `
+                        <tr>
+                            <td>${parts[0].trim()}</td>
+                            <td>${parts[1].trim()}</td>
+                            <td>${parts[2].trim()}</td>
+                            <td>${parts[3].trim()}</td>
+                            <td>${parts[4].trim()}</td>
+                            <td>${parts[5].trim()}</td>
+                        </tr>
+                    `;
+                }
             });
 
             tableContent += `</tbody>`;
