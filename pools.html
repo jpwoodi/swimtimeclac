@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,7 +38,7 @@
             flex: 1;
             padding: 20px;
             box-sizing: border-box;
-            overflow: hidden;
+            overflow-y: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -46,7 +47,6 @@
             text-align: center;
             margin-bottom: 20px;
             color: #007BFF;
-            font-size: 24px;
             font-weight: 600;
         }
 
@@ -59,11 +59,14 @@
             overflow: hidden;
         }
 
-        table, th, td {
+        table,
+        th,
+        td {
             border: 1px solid #ddd;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px;
             text-align: left;
             color: #212529;
@@ -88,16 +91,16 @@
             content: " \2193";
         }
 
-        tr:hover {
-            background-color: #e2e6ea;
+        tr {
+            height: 40px;
         }
 
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
 
-        tr {
-            height: 40px;
+        tr:hover {
+            background-color: #ddd;
         }
 
         input#search {
@@ -109,7 +112,7 @@
             box-sizing: border-box;
         }
 
-        .table-body-container {
+        .table-wrapper {
             flex: 1;
             overflow-y: auto;
         }
@@ -124,28 +127,22 @@
             height: 100%;
         }
 
-        .popup-container {
+        .popup-card {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 10px;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            display: none;
+            border-top: 2px solid #007BFF;
             z-index: 1000;
+            display: none;
         }
 
-        .popup-container h2 {
-            margin: 0 0 10px;
-            font-size: 18px;
+        .popup-card h2 {
+            margin-top: 0;
             color: #007BFF;
-        }
-
-        .popup-container p {
-            margin: 5px 0;
-            font-size: 14px;
         }
 
         @media (max-width: 768px) {
@@ -160,12 +157,13 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="table-container">
             <h1>Swimming Pools in London</h1>
             <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
-            <div class="table-body-container">
+            <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
@@ -182,7 +180,9 @@
         </div>
         <div class="map-container">
             <div id="map"></div>
-            <div id="popup" class="popup-container"></div>
+            <div id="popup-card" class="popup-card">
+                <!-- Popup content will be dynamically inserted here -->
+            </div>
         </div>
     </div>
 
@@ -191,10 +191,10 @@
     <script>
         let map;
         let markers = [];
-        let popup = document.getElementById('popup');
+        let activeMarker = null;
 
         function initMap() {
-            map = L.map('map').setView([51.5074, -0.1278], 12);
+            map = L.map('map').setView([51.5074, -0.1278], 12); // London coordinates
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -204,114 +204,91 @@
             fetch('/.netlify/functions/getPools')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Fetched data:', data);
+                    console.log('Fetched data:', data); // Debugging log
 
                     const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map((record, index) => `
-                        <tr onclick="focusOnPool(${index})">
+                    tableBody.innerHTML = data.records.map(record => `
+                        <tr onclick="focusOnMarker(${record.fields.Latitude}, ${record.fields.Longitude}, ${record.id})">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
                         </tr>
                     `).join('');
 
+                    // Add markers to the map
                     data.records.forEach((record, index) => {
                         if (record.fields.Latitude && record.fields.Longitude) {
-                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude])
-                                .addTo(map)
-                                .bindPopup(`<strong><a href="${record.fields.Website}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
-                            
-                            marker.on('click', function () {
-                                focusOnPool(index);
-                            });
-
-                            markers.push(marker);
+                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
+                            marker.bindPopup(`<strong><a href="${record.fields.Website}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
+                            markers.push({ marker, record });
                         }
                     });
 
-                    sortTable(0); // Sort by Name A-Z by default
-
-                    map.on('click', resetMap); // Reset map on click
+                    sortTable(0); // Default sort by Name
                 })
                 .catch(error => {
-                    console.error('Error fetching data:', error);
+                    console.error('Error fetching data:', error); // Debugging log
                 });
+
+            map.on('click', resetMap);
         }
 
-        function focusOnPool(index) {
-            const record = markers[index];
-            const marker = markers[index];
-            if (record) {
-                map.setView(marker.getLatLng(), 14);
-                marker.openPopup();
-                highlightMarker(marker);
-
-                const popupContent = `
-                    <h2>${record.options.title}</h2>
-                    <p><strong>Length:</strong> ${record.options.length} m</p>
-                    <p><strong>Borough:</strong> ${record.options.borough}</p>
-                    <p><strong>Address:</strong> ${record.options.address}</p>
-                    <p><strong>Opening Hours:</strong> ${record.options.openingHours}</p>
-                    <p><strong>Price (Non-Member):</strong> ${record.options.price}</p>
-                `;
-
-                popup.innerHTML = popupContent;
-                popup.style.display = 'block';
+        function focusOnMarker(lat, lng, recordId) {
+            if (activeMarker) {
+                activeMarker.setIcon(L.icon({ iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }));
             }
-        }
 
-        function highlightMarker(marker) {
-            markers.forEach(m => m.setIcon(L.icon({
-                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            })));
-            
-            marker.setIcon(L.icon({
-                iconUrl: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            }));
+            const markerData = markers.find(m => m.record.id === recordId);
+            if (markerData) {
+                map.setView([lat, lng], 15);
+                markerData.marker.setIcon(L.icon({ iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon-red.png', iconSize: [25, 41], iconAnchor: [12, 41] }));
+                activeMarker = markerData.marker;
+
+                // Display popup
+                const popupCard = document.getElementById('popup-card');
+                popupCard.innerHTML = `
+                    <h2>${markerData.record.fields.Name}</h2>
+                    <p><strong>Length:</strong> ${markerData.record.fields.Length}m</p>
+                    <p><strong>Borough:</strong> ${markerData.record.fields.Borough}</p>
+                    <p><strong>Address:</strong> ${markerData.record.fields.Address}</p>
+                    <p><strong>Opening Hours:</strong> ${markerData.record.fields.OpeningHours}</p>
+                    <p><strong>Price (Non-Member):</strong> ${markerData.record.fields.Price}</p>
+                `;
+                popupCard.style.display = 'block';
+                document.querySelector('.map-container').style.height = '70%';
+            }
         }
 
         function resetMap() {
             map.setView([51.5074, -0.1278], 12);
-            popup.style.display = 'none';
-
-            markers.forEach(marker => marker.setIcon(L.icon({
-                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            })));
+            if (activeMarker) {
+                activeMarker.setIcon(L.icon({ iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png', iconSize: [25, 41], iconAnchor: [12, 41] }));
+                activeMarker = null;
+            }
+            document.getElementById('popup-card').style.display = 'none';
+            document.querySelector('.map-container').style.height = '100%';
         }
 
-function filterPools() {
-    const input = document.getElementById('search').value.toLowerCase();
-    const rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
-    let bounds = new L.LatLngBounds();
+        function filterPools() {
+            const input = document.getElementById('search').value.toLowerCase();
+            const rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            let bounds = new L.LatLngBounds();
 
-    markers.forEach(({ marker, record }, index) => {
-        const row = rows[index];
-        const name = record.fields.Name.toLowerCase();
-        const borough = record.fields.Borough.toLowerCase();
-        const matches = name.includes(input) || borough.includes(input);
+            markers.forEach(({ marker, record }, index) => {
+                const row = rows[index];
+                const name = record.fields.Name.toLowerCase();
+                const borough = record.fields.Borough.toLowerCase();
+                const matches = name.includes(input) || borough.includes(input);
 
-        if (matches) {
-            row.style.display = '';
-            marker.setOpacity(1);
-            bounds.extend(marker.getLatLng());
-        } else {
-            row.style.display = 'none';
-            marker.setOpacity(0);
-        }
-    });
-
-    if (!bounds.isEmpty()) {
-        map.fitBounds(bounds);
-    } else {
-        map.setView([51.5074, -0.1278], 12);
-    }
-}
+                if (matches) {
+                    row.style.display = '';
+                    marker.setOpacity(1);
+                    bounds.extend(marker.getLatLng());
+                } else {
+                    row.style.display = 'none';
+                    marker.setOpacity(0);
+                }
+            });
 
             if (!bounds.isEmpty()) {
                 map.fitBounds(bounds);
@@ -338,7 +315,11 @@ function filterPools() {
                 const cellA = a.cells[columnIndex].innerText.toLowerCase();
                 const cellB = b.cells[columnIndex].innerText.toLowerCase();
 
-                return isAscending ? (cellA > cellB ? 1 : -1) : (cellA < cellB ? 1 : -1);
+                if (isAscending) {
+                    return cellA > cellB ? 1 : -1;
+                } else {
+                    return cellA < cellB ? 1 : -1;
+                }
             });
 
             table.innerHTML = '';
@@ -348,4 +329,5 @@ function filterPools() {
         document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
+
 </html>
