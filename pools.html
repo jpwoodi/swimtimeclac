@@ -285,24 +285,33 @@
             })));
         }
 
-        function filterPools() {
-            const input = document.getElementById('search').value.toLowerCase();
-            const rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
-            let bounds = new L.LatLngBounds();
+function filterPools() {
+    const input = document.getElementById('search').value.toLowerCase();
+    const rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+    let bounds = new L.LatLngBounds();
 
-            markers.forEach((marker, index) => {
-                const row = rows[index];
-                const text = row.innerText.toLowerCase();
+    markers.forEach(({ marker, record }, index) => {
+        const row = rows[index];
+        const name = record.fields.Name.toLowerCase();
+        const borough = record.fields.Borough.toLowerCase();
+        const matches = name.includes(input) || borough.includes(input);
 
-                if (text.includes(input)) {
-                    row.style.display = '';
-                    marker.setOpacity(1);
-                    bounds.extend(marker.getLatLng());
-                } else {
-                    row.style.display = 'none';
-                    marker.setOpacity(0);
-                }
-            });
+        if (matches) {
+            row.style.display = '';
+            marker.setOpacity(1);
+            bounds.extend(marker.getLatLng());
+        } else {
+            row.style.display = 'none';
+            marker.setOpacity(0);
+        }
+    });
+
+    if (!bounds.isEmpty()) {
+        map.fitBounds(bounds);
+    } else {
+        map.setView([51.5074, -0.1278], 12);
+    }
+}
 
             if (!bounds.isEmpty()) {
                 map.fitBounds(bounds);
