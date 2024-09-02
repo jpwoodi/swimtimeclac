@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swim Calculator: Time and Pace</title>
+    <title>Car Specs Extractor</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH2N2X1XVjH7l+htjJ8e5t4Xh+WwzQocIJcXxYKmqKJ4h7ZQ0lwnzC4BnSXZAh1I8T/r3Hg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Global Styles */
         * {
@@ -18,7 +18,7 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://your-background-image-url.com'); /* Replace with your background image */
             background-size: cover;
             background-position: center;
             color: #212529;
@@ -27,20 +27,17 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            flex-direction: column;
         }
 
-        .calculator-container {
+        .container {
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            max-width: 400px;
+            max-width: 600px;
             width: 100%;
             padding: 40px;
             text-align: center;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
 
         h1 {
@@ -51,27 +48,23 @@
 
         .form-group {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
             margin-bottom: 15px;
-            flex-wrap: wrap;
         }
 
         label {
-            width: 100%;
             text-align: left;
             margin-bottom: 5px;
             font-weight: 600;
             color: #343A40;
         }
 
-        input[type="text"] {
-            width: 100%;
+        input[type="file"] {
             padding: 10px;
-            margin: 5px 0;
             border-radius: 5px;
             border: 1px solid #ced4da;
-            text-align: center;
+            background-color: #f8f9fa;
+            cursor: pointer;
             font-size: 1em;
         }
 
@@ -92,62 +85,40 @@
             background-color: #0056b3;
         }
 
-        p {
+        .results {
             margin-top: 20px;
-            font-size: 1.2em;
-            color: #495057;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .toggle-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
             width: 100%;
         }
 
-        .toggle-container label {
-            white-space: nowrap;
-            margin-right: 10px;
-            display: flex;
-            align-items: center;
-            font-weight: 600;
-            color: #495057;
+        .result-card {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: left;
         }
 
-        .toggle-container input[type="radio"] {
-            margin-right: 8px; /* Space between radio button and text */
+        .result-card img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-bottom: 10px;
         }
 
-        .error {
-            color: red;
-            font-size: 0.9em;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            text-decoration: none;
+        .result-card h3 {
+            margin-bottom: 10px;
             color: #007BFF;
-            font-weight: 600;
-            transition: color 0.3s ease;
         }
 
-        .back-link:hover {
-            color: #0056b3;
-        }
-
-        .back-link i {
-            margin-right: 8px;
+        .result-card p {
+            margin-bottom: 5px;
+            color: #343A40;
         }
 
         @media (max-width: 576px) {
-            .calculator-container {
+            .container {
                 padding: 20px;
-                min-height: auto; /* Adjust height for smaller screens */
+                max-width: 100%;
             }
 
             h1 {
@@ -158,145 +129,95 @@
                 font-size: 0.9em;
             }
 
-            input[type="text"] {
+            input[type="file"] {
                 font-size: 0.9em;
             }
 
-            p {
-                font-size: 1em;
+            .result-card {
+                padding: 15px;
+            }
+
+            .result-card h3 {
+                font-size: 1.2em;
+            }
+
+            .result-card p {
+                font-size: 0.9em;
             }
         }
     </style>
 </head>
 <body>
-    <div class="calculator-container">
-        <h1>Swim Calculator</h1>
-        <div class="toggle-container">
-            <label>
-                <input type="radio" name="calculation-mode" value="time" checked onclick="toggleMode()"> Calculate Time
-            </label>
-            <label>
-                <input type="radio" name="calculation-mode" value="pace" onclick="toggleMode()"> Calculate Pace
-            </label>
-        </div>
-
-        <form id="calculator-form">
-            <div class="form-group" id="distance-group">
-                <label for="distance">Distance (meters):</label>
-                <input type="text" id="distance" name="distance" placeholder="Enter distance" oninput="formatInputWithCommas(this); updateTimeLabel();">
+    <div class="container">
+        <h1>Car Specs Extractor</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="imageInput">Upload Car Images:</label>
+                <input type="file" name="images" id="imageInput" accept="image/*" multiple>
             </div>
-
-            <div class="form-group hidden" id="time-group">
-                <label for="time-hours">Hours:</label>
-                <input type="text" id="time-hours" name="time-hours" placeholder="Hours" oninput="formatInputWithCommas(this);">
-                <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
-                <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
-            </div>
-
-            <div class="form-group" id="pace-group">
-                <label for="pace-mins">Pace (/100m):</label>
-                <input type="text" id="pace-mins" name="pace-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
-                <input type="text" id="pace-secs" name="pace-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
-            </div>
-
-            <button type="button" onclick="calculate()">Calculate</button>
+            <button type="submit">Upload</button>
         </form>
-        
-        <p id="result"></p>
-        <p id="error-message" class="error hidden"></p>
 
-        <a href="pools.html" class="back-link">
-            <i class="fas fa-swimming-pool"></i> View Swimming Pools in London
-        </a>
+        <div id="results" class="results"></div>
     </div>
 
     <script>
-        function toggleMode() {
-            const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
-            const timeGroup = document.getElementById('time-group');
-            const paceGroup = document.getElementById('pace-group');
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-            if (mode === 'time') {
-                timeGroup.classList.add('hidden');
-                paceGroup.classList.remove('hidden');
-            } else {
-                timeGroup.classList.remove('hidden');
-                paceGroup.classList.add('hidden');
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = ''; // Clear previous results
+
+            const formData = new FormData();
+            const files = document.getElementById('imageInput').files;
+
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
             }
 
-            document.getElementById('result').innerText = ''; // Clear the result when switching modes
-            document.getElementById('error-message').classList.add('hidden'); // Clear any previous error messages
-        }
+            fetch('/.netlify/functions/get-car-specs', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else if (data.specs && data.specs.length > 0) {
+                    data.specs.forEach((spec, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'result-card';
 
-        function validateSeconds(seconds) {
-            return seconds >= 0 && seconds <= 59.9;
-        }
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(files[index]); // Show the uploaded image
+                        card.appendChild(img);
 
-        function validateInputs(hours, mins, secs) {
-            return (hours > 0 || mins > 0 || secs > 0);
-        }
+                        const title = document.createElement('h3');
+                        title.innerText = `Car ${index + 1} Specifications:`;
+                        card.appendChild(title);
 
-        function formatNumberWithCommas(number) {
-            return Number(number).toLocaleString();
-        }
+                        if (spec.error) {
+                            const errorText = document.createElement('p');
+                            errorText.innerText = spec.error;
+                            card.appendChild(errorText);
+                        } else {
+                            for (let key in spec) {
+                                const p = document.createElement('p');
+                                p.innerText = `${key}: ${spec[key]}`;
+                                card.appendChild(p);
+                            }
+                        }
 
-        function formatInputWithCommas(input) {
-            let value = input.value.replace(/,/g, ''); // Remove existing commas
-            if (!isNaN(value) && value !== '') {
-                input.value = formatNumberWithCommas(value);
-            }
-        }
-
-        function calculate() {
-            const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
-            let paceMins = document.getElementById("pace-mins").value.replace(/,/g, '') || 0;
-            let paceSecs = document.getElementById("pace-secs").value.replace(/,/g, '') || 0;
-            let timeHours = document.getElementById("time-hours").value.replace(/,/g, '') || 0;
-            let timeMins = document.getElementById("time-mins").value.replace(/,/g, '') || 0;
-            let timeSecs = document.getElementById("time-secs").value.replace(/,/g, '') || 0;
-            let distance = document.getElementById("distance").value.replace(/,/g, '');
-            let errorMessage = document.getElementById("error-message");
-
-            // Validate that at least one of the time inputs is non-zero
-            if ((mode === 'pace' && !validateInputs(timeHours, timeMins, timeSecs)) || (mode === 'time' && (!validateSeconds(paceMins) || !validateSeconds(paceSecs)))) {
-                errorMessage.innerText = "Please enter a valid pace or time.";
-                errorMessage.classList.remove('hidden');
-                return; // Stop calculation if validation fails
-            } else {
-                errorMessage.classList.add('hidden'); // Hide error message if validation passes
-            }
-
-            if (mode === 'time') {
-                // Convert pace to total seconds per 100 meters
-                let totalPace = (parseInt(paceMins) * 60) + parseFloat(paceSecs);
-
-                // Calculate time required for the specified distance
-                let totalTime = (distance / 100) * totalPace;
-
-                // Convert total time to hours, minutes, and seconds if applicable
-                let hours = Math.floor(totalTime / 3600);
-                totalTime %= 3600;
-                let mins = Math.floor(totalTime / 60);
-                let secs = (totalTime % 60).toFixed(0);
-
-                let resultText = hours > 0 ? `${formatNumberWithCommas(hours)} hr ` : "";
-                resultText += `${formatNumberWithCommas(mins)} min ${formatNumberWithCommas(secs)} sec`;
-
-                document.getElementById("result").innerText = "Time: " + resultText;
-            } else if (mode === 'pace') {
-                // Convert time to total seconds
-                let totalTime = (parseInt(timeHours) * 3600) + (parseInt(timeMins) * 60) + parseFloat(timeSecs);
-
-                // Calculate pace based on distance and time
-                let totalPace = totalTime / (distance / 100);
-
-                // Convert total pace back to minutes and seconds
-                let paceMins = Math.floor(totalPace / 60);
-                let paceSecs = (totalPace % 60).toFixed(0);
-
-                document.getElementById("result").innerText = "Pace: " + formatNumberWithCommas(paceMins) + " min " + formatNumberWithCommas(paceSecs) + " sec /100m";
-            }
-        }
+                        resultsContainer.appendChild(card);
+                    });
+                } else {
+                    const noResultsText = document.createElement('p');
+                    noResultsText.innerText = 'No specifications found.';
+                    resultsContainer.appendChild(noResultsText);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
     </script>
 </body>
 </html>
