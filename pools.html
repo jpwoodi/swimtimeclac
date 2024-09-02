@@ -148,61 +148,69 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         function initMap() {
-            const map = L.map('map').setView([51.5074, -0.1278], 10); // London coordinates
+    const map = L.map('map').setView([51.5074, -0.1278], 10); // London coordinates
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-            fetch('/.netlify/functions/getPools')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Fetched data:', data); // Debugging log
+    fetch('/.netlify/functions/getPools')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Fetched data:', data); // Debugging log
 
-                    const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map(record => `
-                        <tr>
-                            <td>${record.fields.Name}</td>
-                            <td>${record.fields.Length}</td>
-                            <td>${record.fields.Borough}</td>
-                        </tr>
-                    `).join('');
+            const tableBody = document.getElementById('pool-table-body');
+            tableBody.innerHTML = data.records.map(record => `
+                <tr>
+                    <td>${record.fields.Name}</td>
+                    <td>${record.fields.Length}</td>
+                    <td>${record.fields.Borough}</td>
+                </tr>
+            `).join('');
 
-                    // Add markers to the map
-                    data.records.forEach(record => {
-                        console.log('Processing record:', record); // Debugging log
-                        if (record.fields.Latitude && record.fields.Longitude) {
-                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
-                            marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
-                        } else if (record.fields.Address) {
-                            // Geocode the address if lat/lng is not available
-                            geocodeAddress(record.fields.Address, map, record.fields.Name, record.fields.Borough);
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error); // Debugging log
-                });
-        }
+            // Add markers to the map
+            data.records.forEach((record, index) => {
+                console.log(`Processing record ${index + 1}:`, record); // Debugging log
 
-        function geocodeAddress(address, map, name, borough) {
-            console.log('Geocoding address:', address); // Debugging log
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const lat = data[0].lat;
-                        const lon = data[0].lon;
-                        console.log(`Geocoded ${name}: ${lat}, ${lon}`); // Debugging log
-                        const marker = L.marker([lat, lon]).addTo(map);
-                        marker.bindPopup(`<strong>${name}</strong><br>${borough}`);
-                    } else {
-                        console.warn(`No results found for ${address}`); // Debugging log
-                    }
-                })
-                .catch(error => console.error('Error fetching geocode:', error)); // Debugging log
+                if (record.fields.Latitude && record.fields.Longitude) {
+                    // Add marker with latitude and longitude
+                    const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
+                    marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
+                    console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
+                } else if (record.fields.Address) {
+                    // Geocode the address if lat/lng is not available
+                    geocodeAddress(record.fields.Address, map, record.fields.Name, record.fields.Borough);
+                } else {
+                    console.warn(`Record ${index + 1} has no coordinates or address:`, record);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error); // Debugging log
+        });
+}
+
+function geocodeAddress(address, map, name, borough) {
+    console.log('Geocoding address:', address); // Debugging log
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                const lat = data[0].lat;
+                const lon = data[0].lon;
+                console.log(`Geocoded ${name}: ${lat}, ${lon}`); // Debugging log
+                const marker = L.marker([lat, lon]).addTo(map);
+                marker.bindPopup(`<strong>${name}</strong><br>${borough}`);
+            } else {
+                console.warn(`No results found for ${address}`); // Debugging log
+            }
+        })
+        .catch(error => console.error('Error fetching geocode:', error)); // Debugging log
+}
+
+        
         }
 
         function filterPools() {
