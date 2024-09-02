@@ -174,9 +174,6 @@
                             const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
                             marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
                             console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
-                        } else if (record.fields.Address) {
-                            // Geocode the address if lat/lng is not available
-                            geocodeAddress(record.fields.Address, map, record.fields.Name, record.fields.Borough);
                         } else {
                             console.warn(`Record ${index + 1} has no coordinates or address:`, record);
                         }
@@ -187,29 +184,7 @@
                 });
         }
 
-function geocodeAddress(address, map, name, borough) {
-    console.log('Geocoding address:', address); // Debugging log
-    const url = `/api/geocode?q=${encodeURIComponent(address)}`;
-    
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.length > 0) {
-                const lat = data[0].lat;
-                const lon = data[0].lon;
-                console.log(`Geocoded ${name}: ${lat}, ${lon}`); // Debugging log
-                
-                // Add marker with the geocoded latitude and longitude
-                const marker = L.marker([lat, lon]).addTo(map);
-                marker.bindPopup(`<strong>${name}</strong><br>${borough}`);
-            } else {
-                console.warn(`No results found for ${address}`); // Debugging log
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching geocode:', error); // Debugging log
-        });
-}
+
 
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
