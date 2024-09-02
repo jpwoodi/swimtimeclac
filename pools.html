@@ -34,39 +34,27 @@
         }
 
         .table-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    box-sizing: border-box;
-    position: relative; /* Add this to position the scrollbar */
-}
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
 
-/* Hide scrollbar for WebKit browsers (Chrome, Safari) */
-.table-container::-webkit-scrollbar {
-    width: 0;
-    background: transparent;
-}
+        .table-header {
+            margin-bottom: 10px;
+        }
 
-/* Hide scrollbar for Firefox */
-.table-container {
-    scrollbar-width: none; /* For Firefox */
-}
-
-/* Hide scrollbar for Edge */
-.table-container {
-    -ms-overflow-style: none; /* For Internet Explorer and Edge */
-}
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #007BFF;
+        .scrollable-body {
+            flex: 1;
+            overflow-y: auto;
+            border-top: 1px solid #ddd;
+            padding-right: 10px; /* Adjust padding to avoid scrollbar overlap */
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
             background-color: white;
             border-radius: 10px;
             overflow: hidden;
@@ -77,10 +65,10 @@
         }
 
         th, td {
-            padding: 10px; /* Fixed padding for consistent row height */
+            padding: 8px; /* Smaller padding */
             text-align: left;
-            color: #212529;
-            font-size: 14px;
+            color: #212529; /* Text color set to black */
+            font-size: 14px; /* Smaller font size */
         }
 
         th {
@@ -91,29 +79,24 @@
         }
 
         th.sort-asc::after {
-            content: " \2191";
+            content: " \2191"; /* Up arrow */
         }
 
         th.sort-desc::after {
-            content: " \2193";
+            content: " \2193"; /* Down arrow */
+        }
+
+        tr {
+            height: 40px; /* Fixed row height */
         }
 
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
 
-        tr {
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        tr:hover {
-            background-color: #e9ecef;
-        }
-
         input#search {
             padding: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             width: 100%;
             border-radius: 5px;
             border: 1px solid #ccc;
@@ -128,28 +111,42 @@
         #map {
             width: 100%;
             height: 100%;
-            transition: height 0.3s ease;
         }
 
         .popup-card {
             position: absolute;
             bottom: 0;
-            left: 0;
             width: 100%;
             background-color: white;
-            padding: 10px; /* Reduced padding for a narrower gap */
-            box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.3);
+            border-top: 2px solid #007BFF;
+            border-radius: 10px 10px 0 0;
+            padding: 10px;
+            box-sizing: border-box;
             display: none;
+            overflow-y: auto;
             z-index: 1000;
-            transition: padding 0.3s ease;
+            transition: bottom 0.3s ease; /* Smooth transition */
+        }
+
+        .popup-card.visible {
+            display: block;
+        }
+
+        .popup-card h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #007BFF;
         }
 
         .popup-card p {
             margin: 5px 0;
+            font-size: 14px;
+            color: #212529;
         }
 
-        .popup-card strong {
+        .popup-card a {
             color: #007BFF;
+            text-decoration: none;
         }
 
         @media (max-width: 768px) {
@@ -167,31 +164,29 @@
 <body>
     <div class="container">
         <div class="table-container">
-            <h1>Swimming Pools in London</h1>
-            <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
-
-            <table>
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Name</th>
-                        <th onclick="sortTable(1)">Length (m)</th>
-                        <th onclick="sortTable(2)">Borough</th>
-                    </tr>
-                </thead>
-                <tbody id="pool-table-body">
-                    <!-- Data will be dynamically inserted here -->
-                </tbody>
-            </table>
+            <div class="table-header">
+                <h1>Swimming Pools in London</h1>
+                <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
+            </div>
+            <div class="scrollable-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Name</th>
+                            <th onclick="sortTable(1)">Length (m)</th>
+                            <th onclick="sortTable(2)">Borough</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pool-table-body">
+                        <!-- Data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div class="map-container">
             <div id="map"></div>
-            <div class="popup-card" id="popup-card">
-                <p><strong id="popup-name"></strong></p>
-                <p>Length: <span id="popup-length"></span> m</p>
-                <p>Borough: <span id="popup-borough"></span></p>
-                <p>Address: <span id="popup-address"></span></p>
-                <p>Opening Hours: <span id="popup-hours"></span></p>
-                <p>Price (Non-member): £<span id="popup-price"></span></p>
+            <div id="popup-card" class="popup-card">
+                <!-- Popup content will be dynamically inserted here -->
             </div>
         </div>
     </div>
@@ -201,17 +196,15 @@
     <script>
         let map;
         let markers = [];
-        let originalView;
+        let lastFocusedMarker = null;
 
         function initMap() {
-            map = L.map('map').setView([51.5074, -0.1278], 12); // London coordinates
+            map = L.map('map').setView([51.5074, -0.1278], 12); // Zoomed in one notch
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-
-            originalView = map.getCenter();
 
             fetch('/.netlify/functions/getPools')
                 .then(response => response.json())
@@ -219,36 +212,45 @@
                     console.log('Fetched data:', data); // Debugging log
 
                     const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map((record, index) => `
-                        <tr onclick="focusMarker(${index})">
+                    tableBody.innerHTML = data.records.map(record => `
+                        <tr data-id="${record.id}">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
                         </tr>
                     `).join('');
 
-                    data.records.forEach((record, index) => {
+                    // Add markers to the map
+                    markers = data.records.map((record) => {
                         if (record.fields.Latitude && record.fields.Longitude) {
-                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude])
-                                .addTo(map)
-                                .bindPopup(`<strong><a href="${record.fields.Website}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
-
-                            marker.on('click', function() {
-                                focusMarker(index);
-                            });
-
-                            markers.push({
-                                marker,
-                                fields: record.fields
-                            });
+                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
+                            marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
+                            marker.on('click', () => focusOnMarker(record.id));
+                            return { id: record.id, marker };
                         }
-                    });
+                    }).filter(marker => marker); // Filter out undefined markers
 
-                    map.on('click', resetMap);
+                    // Default sort table A-Z
+                    sortTable(0);
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error); // Debugging log
                 });
+
+            map.on('click', () => {
+                if (lastFocusedMarker) {
+                    lastFocusedMarker.marker.setIcon(L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
+                        shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    }));
+                    lastFocusedMarker = null;
+                    document.getElementById('popup-card').classList.remove('visible');
+                }
+            });
         }
 
         function filterPools() {
@@ -269,94 +271,60 @@
         }
 
         function sortTable(columnIndex) {
-            const table = document.querySelector('table tbody');
-            const rowsArray = Array.from(table.rows);
-            const thElements = document.querySelectorAll('th');
-            const isAscending = thElements[columnIndex].classList.toggle('sort-asc');
+            let table = document.querySelector('table');
+            let rows = Array.from(table.querySelectorAll('tbody tr'));
+            let isAscending = table.querySelectorAll('th')[columnIndex].classList.contains('sort-asc');
 
-            thElements.forEach((th, index) => {
-                if (index !== columnIndex) {
-                    th.classList.remove('sort-asc', 'sort-desc');
-                }
+            rows.sort((a, b) => {
+                let cellA = a.children[columnIndex].innerText.toLowerCase();
+                let cellB = b.children[columnIndex].innerText.toLowerCase();
+                if (cellA < cellB) return isAscending ? -1 : 1;
+                if (cellA > cellB) return isAscending ? 1 : -1;
+                return 0;
             });
 
-            thElements[columnIndex].classList.toggle('sort-desc', !isAscending);
+            rows.forEach(row => table.querySelector('tbody').appendChild(row));
 
-            rowsArray.sort((a, b) => {
-                const cellA = a.cells[columnIndex].innerText.toLowerCase();
-                const cellB = b.cells[columnIndex].innerText.toLowerCase();
-
-                if (isAscending) {
-                    return cellA > cellB ? 1 : -1;
-                } else {
-                    return cellA < cellB ? 1 : -1;
-                }
-            });
-
-            table.innerHTML = '';
-            table.append(...rowsArray);
+            table.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+            table.querySelectorAll('th')[columnIndex].classList.add(isAscending ? 'sort-desc' : 'sort-asc');
         }
 
-        function focusMarker(index) {
-            const { marker, fields } = markers[index];
-            const lat = marker.getLatLng().lat;
-            const lng = marker.getLatLng().lng;
-
-            map.setView([lat, lng], 15);
-
-            markers.forEach(m => {
-                if (m.marker.getLatLng().lat === lat && m.marker.getLatLng().lng === lng) {
-                    m.marker.setIcon(L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    }));
-                } else {
-                    m.marker.setIcon(L.icon({
-                        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    }));
-                }
-            });
-
-            const popupCard = document.getElementById('popup-card');
-            document.getElementById('popup-name').innerText = fields.Name;
-            document.getElementById('popup-length').innerText = fields.Length;
-            document.getElementById('popup-borough').innerText = fields.Borough;
-            document.getElementById('popup-address').innerText = fields.Address;
-            document.getElementById('popup-hours').innerText = fields.OpeningHours;
-            document.getElementById('popup-price').innerText = fields.PriceNonMember;
-
-            popupCard.style.display = 'block';
-            document.getElementById('map').style.height = '70%'; // Adjusted height for narrower gap
-            map.invalidateSize();
-        }
-
-        function resetMap() {
-            map.setView(originalView, 12);
-
-            markers.forEach(marker => {
-                marker.marker.setIcon(L.icon({
-                    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        function focusOnMarker(id) {
+            if (lastFocusedMarker) {
+                lastFocusedMarker.marker.setIcon(L.icon({
+                    iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
+                    shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
                     iconSize: [25, 41],
                     iconAnchor: [12, 41],
                     popupAnchor: [1, -34],
                     shadowSize: [41, 41]
                 }));
-            });
+            }
 
-            const popupCard = document.getElementById('popup-card');
-            popupCard.style.display = 'none';
-            document.getElementById('map').style.height = '100%'; // Reset map height
-            map.invalidateSize();
+            let focusedMarker = markers.find(marker => marker.id === id);
+            if (focusedMarker) {
+                focusedMarker.marker.setIcon(L.icon({
+                    iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon-2x.png', // Change to a red marker
+                    shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                }));
+
+                map.setView(focusedMarker.marker.getLatLng(), 15); // Adjust zoom level as needed
+                lastFocusedMarker = focusedMarker;
+
+                document.getElementById('popup-card').innerHTML = `
+                    <h2>${focusedMarker.marker.getPopup().getContent().split('<br>')[0].replace('<strong>', '').replace('</strong>', '')}</h2>
+                    <p><strong>Length:</strong> ${data.records.find(record => record.id === id).fields.Length} meters</p>
+                    <p><strong>Borough:</strong> ${data.records.find(record => record.id === id).fields.Borough}</p>
+                    <p><strong>Address:</strong> ${data.records.find(record => record.id === id).fields.Address}</p>
+                    <p><strong>Opening Hours:</strong> ${data.records.find(record => record.id === id).fields.Opening_Hours}</p>
+                    <p><strong>Price (Non-member):</strong> ${data.records.find(record => record.id === id).fields.Price}</p>
+                `;
+                document.getElementById('popup-card').classList.add('visible');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', initMap);
