@@ -3,32 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swim Calculator</title>
+    <title>Swim Calculator: Time and Pace</title>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH2N2X1XVjH7l+htjJ8e5t4Xh+WwzQocIJcXxYKmqKJ4h7ZQ0lwnzC4BnSXZAh1I8T/r3Hg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
             background-size: cover;
             background-position: center;
-            color: #ffffff;
+            color: #212529;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            flex-direction: column;
         }
 
         .calculator-container {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: #ffffff;
             border-radius: 10px;
-            padding: 40px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
             max-width: 400px;
             width: 100%;
+            padding: 40px;
             text-align: center;
-            margin-bottom: 20px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         h1 {
@@ -38,24 +50,29 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
         label {
-            display: block;
-            margin-bottom: 8px;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 5px;
             font-weight: 600;
             color: #343A40;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"] {
             width: 100%;
             padding: 10px;
-            margin-top: 5px;
+            margin: 5px 0;
             border-radius: 5px;
             border: 1px solid #ced4da;
+            text-align: center;
             font-size: 1em;
-            box-sizing: border-box;
         }
 
         button {
@@ -65,10 +82,10 @@
             border: none;
             border-radius: 50px;
             cursor: pointer;
+            margin-top: 20px;
             width: 100%;
             font-size: 1em;
             transition: background-color 0.3s ease;
-            margin-top: 10px;
         }
 
         button:hover {
@@ -78,7 +95,7 @@
         p {
             margin-top: 20px;
             font-size: 1.2em;
-            color: #343A40;
+            color: #495057;
         }
 
         .hidden {
@@ -89,32 +106,65 @@
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+            width: 100%;
         }
 
         .toggle-container label {
+            white-space: nowrap;
             margin-right: 10px;
             display: flex;
             align-items: center;
-            color: #343A40;
+            font-weight: 600;
+            color: #495057;
         }
 
-        .back-link, .pools-link {
-            display: block;
-            margin-top: 20px;
-            text-align: center;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-
-        .back-link:hover, .pools-link:hover {
-            text-decoration: underline;
+        .toggle-container input[type="radio"] {
+            margin-right: 8px; /* Space between radio button and text */
         }
 
         .error {
             color: red;
-            font-size: 14px;
+            font-size: 0.9em;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #0056b3;
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        @media (max-width: 576px) {
+            .calculator-container {
+                padding: 20px;
+                min-height: auto; /* Adjust height for smaller screens */
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            button {
+                font-size: 0.9em;
+            }
+
+            input[type="text"] {
+                font-size: 0.9em;
+            }
+
+            p {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
@@ -132,21 +182,21 @@
 
         <form id="calculator-form">
             <div class="form-group" id="distance-group">
-                <label for="distance">Distance (Meters):</label>
-                <input type="number" id="distance" name="distance" placeholder="Enter distance">
+                <label for="distance">Distance (meters):</label>
+                <input type="text" id="distance" name="distance" placeholder="Enter distance" oninput="formatInputWithCommas(this); updateTimeLabel();">
             </div>
 
             <div class="form-group hidden" id="time-group">
-                <label for="time-hours">Time:</label>
-                <input type="number" id="time-hours" name="time-hours" placeholder="Hours" min="0">
-                <input type="number" id="time-mins" name="time-mins" placeholder="Minutes" min="0" max="59">
-                <input type="number" id="time-secs" name="time-secs" placeholder="Seconds" min="0" max="59">
+                <label for="time-hours">Hours:</label>
+                <input type="text" id="time-hours" name="time-hours" placeholder="Hours" oninput="formatInputWithCommas(this);">
+                <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
+                <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
             </div>
 
             <div class="form-group" id="pace-group">
                 <label for="pace-mins">Pace (/100m):</label>
-                <input type="number" id="pace-mins" name="pace-mins" placeholder="Minutes" min="0">
-                <input type="number" id="pace-secs" name="pace-secs" placeholder="Seconds" min="0" max="59">
+                <input type="text" id="pace-mins" name="pace-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
+                <input type="text" id="pace-secs" name="pace-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
             </div>
 
             <button type="button" onclick="calculate()">Calculate</button>
@@ -154,77 +204,99 @@
         
         <p id="result"></p>
         <p id="error-message" class="error hidden"></p>
-    </div>
 
-    <a href="pools.html" class="pools-link">Find Swimming Pools in London</a>
+        <a href="pools.html" class="back-link">
+            <i class="fas fa-swimming-pool"></i> View Swimming Pools in London
+        </a>
+    </div>
 
     <script>
         function toggleMode() {
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
             const timeGroup = document.getElementById('time-group');
             const paceGroup = document.getElementById('pace-group');
-            const distanceGroup = document.getElementById('distance-group');
 
             if (mode === 'time') {
                 timeGroup.classList.add('hidden');
                 paceGroup.classList.remove('hidden');
-                distanceGroup.querySelector('label').textContent = 'Distance (Meters):';
             } else {
                 timeGroup.classList.remove('hidden');
                 paceGroup.classList.add('hidden');
-                distanceGroup.querySelector('label').textContent = 'Distance (Meters):';
             }
 
             document.getElementById('result').innerText = ''; // Clear the result when switching modes
             document.getElementById('error-message').classList.add('hidden'); // Clear any previous error messages
         }
 
-        function calculate() {
-            const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
-            const distance = parseFloat(document.getElementById("distance").value) || 0;
-            const paceMins = parseFloat(document.getElementById("pace-mins").value) || 0;
-            const paceSecs = parseFloat(document.getElementById("pace-secs").value) || 0;
-            const timeHours = parseFloat(document.getElementById("time-hours").value) || 0;
-            const timeMins = parseFloat(document.getElementById("time-mins").value) || 0;
-            const timeSecs = parseFloat(document.getElementById("time-secs").value) || 0;
-            const resultElement = document.getElementById('result');
-            const errorElement = document.getElementById('error-message');
-
-            if (mode === 'time') {
-                if (paceMins === 0 && paceSecs === 0) {
-                    errorElement.innerText = "Please enter a valid pace.";
-                    errorElement.classList.remove('hidden');
-                    return;
-                }
-
-                const totalPace = (paceMins * 60) + paceSecs;
-                const totalTime = (distance / 100) * totalPace;
-
-                const hours = Math.floor(totalTime / 3600);
-                const minutes = Math.floor((totalTime % 3600) / 60);
-                const seconds = Math.floor(totalTime % 60);
-
-                resultElement.innerText = `Time: ${hours} hr ${minutes} min ${seconds} sec`;
-            } else if (mode === 'pace') {
-                if (timeHours === 0 && timeMins === 0 && timeSecs === 0) {
-                    errorElement.innerText = "Please enter a valid time.";
-                    errorElement.classList.remove('hidden');
-                    return;
-                }
-
-                const totalTime = (timeHours * 3600) + (timeMins * 60) + timeSecs;
-                const totalPace = totalTime / (distance / 100);
-
-                const paceMinutes = Math.floor(totalPace / 60);
-                const paceSeconds = Math.floor(totalPace % 60);
-
-                resultElement.innerText = `Pace: ${paceMinutes} min ${paceSeconds} sec per 100m`;
-            }
-
-            errorElement.classList.add('hidden');
+        function validateSeconds(seconds) {
+            return seconds >= 0 && seconds <= 59.9;
         }
 
-        toggleMode();  // Initialize the form on load
+        function validateInputs(hours, mins, secs) {
+            return (hours > 0 || mins > 0 || secs > 0);
+        }
+
+        function formatNumberWithCommas(number) {
+            return Number(number).toLocaleString();
+        }
+
+        function formatInputWithCommas(input) {
+            let value = input.value.replace(/,/g, ''); // Remove existing commas
+            if (!isNaN(value) && value !== '') {
+                input.value = formatNumberWithCommas(value);
+            }
+        }
+
+        function calculate() {
+            const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
+            let paceMins = document.getElementById("pace-mins").value.replace(/,/g, '') || 0;
+            let paceSecs = document.getElementById("pace-secs").value.replace(/,/g, '') || 0;
+            let timeHours = document.getElementById("time-hours").value.replace(/,/g, '') || 0;
+            let timeMins = document.getElementById("time-mins").value.replace(/,/g, '') || 0;
+            let timeSecs = document.getElementById("time-secs").value.replace(/,/g, '') || 0;
+            let distance = document.getElementById("distance").value.replace(/,/g, '');
+            let errorMessage = document.getElementById("error-message");
+
+            // Validate that at least one of the time inputs is non-zero
+            if ((mode === 'pace' && !validateInputs(timeHours, timeMins, timeSecs)) || (mode === 'time' && (!validateSeconds(paceMins) || !validateSeconds(paceSecs)))) {
+                errorMessage.innerText = "Please enter a valid pace or time.";
+                errorMessage.classList.remove('hidden');
+                return; // Stop calculation if validation fails
+            } else {
+                errorMessage.classList.add('hidden'); // Hide error message if validation passes
+            }
+
+            if (mode === 'time') {
+                // Convert pace to total seconds per 100 meters
+                let totalPace = (parseInt(paceMins) * 60) + parseFloat(paceSecs);
+
+                // Calculate time required for the specified distance
+                let totalTime = (distance / 100) * totalPace;
+
+                // Convert total time to hours, minutes, and seconds if applicable
+                let hours = Math.floor(totalTime / 3600);
+                totalTime %= 3600;
+                let mins = Math.floor(totalTime / 60);
+                let secs = (totalTime % 60).toFixed(0);
+
+                let resultText = hours > 0 ? `${formatNumberWithCommas(hours)} hr ` : "";
+                resultText += `${formatNumberWithCommas(mins)} min ${formatNumberWithCommas(secs)} sec`;
+
+                document.getElementById("result").innerText = "Time: " + resultText;
+            } else if (mode === 'pace') {
+                // Convert time to total seconds
+                let totalTime = (parseInt(timeHours) * 3600) + (parseInt(timeMins) * 60) + parseFloat(timeSecs);
+
+                // Calculate pace based on distance and time
+                let totalPace = totalTime / (distance / 100);
+
+                // Convert total pace back to minutes and seconds
+                let paceMins = Math.floor(totalPace / 60);
+                let paceSecs = (totalPace % 60).toFixed(0);
+
+                document.getElementById("result").innerText = "Pace: " + formatNumberWithCommas(paceMins) + " min " + formatNumberWithCommas(paceSecs) + " sec /100m";
+            }
+        }
     </script>
 </body>
 </html>
