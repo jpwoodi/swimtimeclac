@@ -143,49 +143,48 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        function initMap() {
-            const map = L.map('map').setView([51.5074, -0.1278], 11); // London coordinates
+function initMap() {
+    const map = L.map('map').setView([51.5074, -0.1278], 12); // Adjusted zoom level from 11 to 12
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-            fetch('/.netlify/functions/getPools')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Fetched data:', data); // Debugging log
+    fetch('/.netlify/functions/getPools')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Fetched data:', data); // Debugging log
 
-                    const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map(record => `
-                        <tr>
-                            <td>${record.fields.Name}</td>
-                            <td>${record.fields.Length}</td>
-                            <td>${record.fields.Borough}</td>
-                        </tr>
-                    `).join('');
+            const tableBody = document.getElementById('pool-table-body');
+            tableBody.innerHTML = data.records.map(record => `
+                <tr>
+                    <td>${record.fields.Name}</td>
+                    <td>${record.fields.Length}</td>
+                    <td>${record.fields.Borough}</td>
+                </tr>
+            `).join('');
 
-                    // Add markers to the map
-                    data.records.forEach((record, index) => {
-                        console.log(`Processing record ${index + 1}:`, record); // Debugging log
+            // Add markers to the map
+            data.records.forEach((record, index) => {
+                console.log(`Processing record ${index + 1}:`, record); // Debugging log
 
-                        if (record.fields.Latitude && record.fields.Longitude) {
-                            // Add marker with latitude and longitude
-                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
-                            marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
-                            console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
-                        } else {
-                            console.warn(`Record ${index + 1} has no coordinates or address:`, record);
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error); // Debugging log
-                });
-        }
+                if (record.fields.Latitude && record.fields.Longitude) {
+                    const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
 
-
-
+                    // Assuming there's a Website field in the record fields
+                    const websiteUrl = record.fields.Website || '#';
+                    marker.bindPopup(`<strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
+                    console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
+                } else {
+                    console.warn(`Record ${index + 1} has no coordinates or address:`, record);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error); // Debugging log
+        });
+}
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
