@@ -35,73 +35,74 @@
 
         .table-container {
             flex: 1;
-            display: flex;
-            flex-direction: column;
+            overflow-y: auto;
             padding: 20px;
             box-sizing: border-box;
         }
 
-        .table-header {
-            margin-bottom: 10px;
-        }
-
-        .scrollable-body {
-            flex: 1;
-            overflow-y: auto;
-            border-top: 1px solid #ddd;
-            padding-right: 10px; /* Adjust padding to avoid scrollbar overlap */
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007BFF;
+            font-size: 24px;
+            font-weight: 600;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 20px;
             background-color: white;
             border-radius: 10px;
             overflow: hidden;
+            display: block;
+            max-height: 100%;
         }
 
         table, th, td {
             border: 1px solid #ddd;
         }
 
+        th, td {
+            padding: 8px;
+            text-align: left;
+            color: #212529;
+            font-size: 14px;
+        }
+
         th {
-            position: sticky;
-            top: 0;
             background-color: #007BFF;
             color: white;
             cursor: pointer;
             user-select: none;
-            z-index: 10;
-            padding: 8px; /* Smaller padding */
-            text-align: left;
-            font-size: 14px; /* Smaller font size */
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
 
-        td {
-            padding: 8px; /* Smaller padding */
-            text-align: left;
-            color: #212529; /* Text color set to black */
-            font-size: 14px; /* Smaller font size */
-            height: 40px; /* Fixed height for all rows */
-            
+        th.sort-asc::after {
+            content: " \2191";
         }
 
-        tr {
-            height: 40px; /* Fixed row height */
+        th.sort-desc::after {
+            content: " \2193";
+        }
+
+        tr:hover {
+            background-color: #e2e6ea;
         }
 
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
 
-        tr:hover {
-            background-color: #e2e6ea; /* A light gray background color on hover */
+        tr {
+            height: 40px; /* Ensures all rows are the same height */
         }
-
 
         input#search {
             padding: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             width: 100%;
             border-radius: 5px;
             border: 1px solid #ccc;
@@ -118,40 +119,28 @@
             height: 100%;
         }
 
-        .popup-card {
+        .popup-container {
             position: absolute;
-            bottom: 0;
-            width: 100%;
-            background-color: white;
-            border-top: 2px solid #007BFF;
-            border-radius: 10px 10px 0 0;
-            padding: 10px;
-            box-sizing: border-box;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             display: none;
-            overflow-y: auto;
             z-index: 1000;
-            transition: bottom 0.3s ease; /* Smooth transition */
         }
 
-        .popup-card.visible {
-            display: block;
-        }
-
-        .popup-card h2 {
-            margin: 0;
+        .popup-container h2 {
+            margin: 0 0 10px;
             font-size: 18px;
             color: #007BFF;
         }
 
-        .popup-card p {
+        .popup-container p {
             margin: 5px 0;
             font-size: 14px;
-            color: #212529;
-        }
-
-        .popup-card a {
-            color: #007BFF;
-            text-decoration: none;
         }
 
         @media (max-width: 768px) {
@@ -169,30 +158,25 @@
 <body>
     <div class="container">
         <div class="table-container">
-            <div class="table-header">
-                <h1>Swimming Pools in London</h1>
-                <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
-            </div>
-            <div class="scrollable-body">
-                <table>
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable(0)">Name</th>
-                            <th onclick="sortTable(1)">Length (m)</th>
-                            <th onclick="sortTable(2)">Borough</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pool-table-body">
-                        <!-- Data will be dynamically inserted here -->
-                    </tbody>
-                </table>
-            </div>
+            <h1>Swimming Pools in London</h1>
+            <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Name</th>
+                        <th onclick="sortTable(1)">Length (m)</th>
+                        <th onclick="sortTable(2)">Borough</th>
+                    </tr>
+                </thead>
+                <tbody id="pool-table-body">
+                    <!-- Data will be dynamically inserted here -->
+                </tbody>
+            </table>
         </div>
         <div class="map-container">
             <div id="map"></div>
-            <div id="popup-card" class="popup-card">
-                <!-- Popup content will be dynamically inserted here -->
-            </div>
+            <div id="popup" class="popup-container"></div>
         </div>
     </div>
 
@@ -201,11 +185,10 @@
     <script>
         let map;
         let markers = [];
-        let lastFocusedMarker = null;
-        let allMarkers = [];
+        let popup = document.getElementById('popup');
 
         function initMap() {
-            map = L.map('map').setView([51.5074, -0.1278], 12); // Zoomed in one notch
+            map = L.map('map').setView([51.5074, -0.1278], 12);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -215,55 +198,108 @@
             fetch('/.netlify/functions/getPools')
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Fetched data:', data); // Debugging log
+                    console.log('Fetched data:', data);
 
                     const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map(record => `
-                        <tr data-id="${record.id}">
+                    tableBody.innerHTML = data.records.map((record, index) => `
+                        <tr onclick="focusOnPool(${index})">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
                         </tr>
                     `).join('');
 
-                    allMarkers = data.records.map(record => {
+                    data.records.forEach((record, index) => {
                         if (record.fields.Latitude && record.fields.Longitude) {
-                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
-                            marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
-                            marker.on('click', () => focusOnMarker(record.id));
-                            return { id: record.id, marker };
+                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude])
+                                .addTo(map)
+                                .bindPopup(`<strong><a href="${record.fields.Website}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
+                            
+                            marker.on('click', function () {
+                                focusOnPool(index);
+                            });
+
+                            markers.push(marker);
                         }
-                    }).filter(marker => marker); // Filter out undefined markers
+                    });
 
-                    markers = [...allMarkers]; // Initially show all markers
-
-                    // Default sort table A-Z
-                    sortTable(0);
+                    sortTable(0); // Sort by Name A-Z by default
                 })
                 .catch(error => {
-                    console.error('Error fetching data:', error); // Debugging log
+                    console.error('Error fetching data:', error);
                 });
+        }
 
-            map.on('click', () => {
-                if (lastFocusedMarker) {
-                    lastFocusedMarker.marker.setIcon(L.icon({
-                        iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
-                        shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                    }));
-                    lastFocusedMarker = null;
-                    document.getElementById('popup-card').classList.remove('visible');
+        function focusOnPool(index) {
+            const record = markers[index];
+            const marker = markers[index];
+            if (record) {
+                map.setView(marker.getLatLng(), 14);
+                marker.openPopup();
+                highlightMarker(marker);
+
+                const popupContent = `
+                    <h2>${record.options.title}</h2>
+                    <p><strong>Length:</strong> ${record.fields.Length} m</p>
+                    <p><strong>Borough:</strong> ${record.fields.Borough}</p>
+                    <p><strong>Address:</strong> ${record.fields.Address}</p>
+                    <p><strong>Opening Hours:</strong> ${record.fields.OpeningHours}</p>
+                    <p><strong>Price (Non-Member):</strong> ${record.fields.Price}</p>
+                `;
+
+                popup.innerHTML = popupContent;
+                popup.style.display = 'block';
+            }
+        }
+
+        function highlightMarker(marker) {
+            markers.forEach(m => m.setIcon(L.icon({
+                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+            })));
+
+            marker.setIcon(L.icon({
+                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+            }));
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.querySelector('table tbody');
+            const rowsArray = Array.from(table.rows);
+            const thElements = document.querySelectorAll('th');
+            const isAscending = thElements[columnIndex].classList.toggle('sort-asc');
+
+            thElements.forEach((th, index) => {
+                if (index !== columnIndex) {
+                    th.classList.remove('sort-asc', 'sort-desc');
                 }
             });
+
+            thElements[columnIndex].classList.toggle('sort-desc', !isAscending);
+
+            rowsArray.sort((a, b) => {
+                const cellA = a.cells[columnIndex].innerText.toLowerCase();
+                const cellB = b.cells[columnIndex].innerText.toLowerCase();
+
+                if (isAscending) {
+                    return cellA > cellB ? 1 : -1;
+                } else {
+                    return cellA < cellB ? 1 : -1;
+                }
+            });
+
+            table.innerHTML = '';
+            table.append(...rowsArray);
         }
 
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
-            let filteredMarkers = [];
 
             for (let i = 0; i < rows.length; i++) {
                 let cells = rows[i].getElementsByTagName('td');
@@ -275,75 +311,20 @@
                     }
                 }
                 rows[i].style.display = match ? '' : 'none';
-
-                let id = rows[i].getAttribute('data-id');
-                if (match) {
-                    let marker = allMarkers.find(m => m.id === id);
-                    if (marker) filteredMarkers.push(marker);
-                }
-            }
-
-            markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
-            markers = filteredMarkers; // Update markers to show filtered ones
-            markers.forEach(m => m.marker.addTo(map)); // Add filtered markers to map
-        }
-
-        function sortTable(columnIndex) {
-            let table = document.querySelector('table');
-            let rows = Array.from(table.querySelectorAll('tbody tr'));
-            let isAscending = table.querySelectorAll('th')[columnIndex].classList.contains('sort-asc');
-
-            rows.sort((a, b) => {
-                let cellA = a.children[columnIndex].innerText.toLowerCase();
-                let cellB = b.children[columnIndex].innerText.toLowerCase();
-                if (cellA < cellB) return isAscending ? -1 : 1;
-                if (cellA > cellB) return isAscending ? 1 : -1;
-                return 0;
-            });
-
-            rows.forEach(row => table.querySelector('tbody').appendChild(row));
-
-            table.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
-            table.querySelectorAll('th')[columnIndex].classList.add(isAscending ? 'sort-desc' : 'sort-asc');
-        }
-
-        function focusOnMarker(id) {
-            if (lastFocusedMarker) {
-                lastFocusedMarker.marker.setIcon(L.icon({
-                    iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
-                    shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                }));
-            }
-
-            let focusedMarker = markers.find(marker => marker.id === id);
-            if (focusedMarker) {
-                focusedMarker.marker.setIcon(L.icon({
-                    iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon-2x.png', // Red marker
-                    shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
-                }));
-
-                map.setView(focusedMarker.marker.getLatLng(), 15); // Adjust zoom level as needed
-                lastFocusedMarker = focusedMarker;
-
-                document.getElementById('popup-card').innerHTML = `
-                    <h2>${document.querySelector(`tr[data-id="${id}"] td:first-child`).innerText}</h2>
-                    <p><strong>Length:</strong> ${document.querySelector(`tr[data-id="${id}"] td:nth-child(2)`).innerText} meters</p>
-                    <p><strong>Borough:</strong> ${document.querySelector(`tr[data-id="${id}"] td:nth-child(3)`).innerText}</p>
-                    <p><strong>Address:</strong> ${allMarkers.find(marker => marker.id === id).marker.getPopup().getContent().split('<br>')[1]}</p>
-                    <p><strong>Opening Hours:</strong> ${data.records.find(record => record.id === id).fields.Opening_Hours}</p>
-                    <p><strong>Price (Non-member):</strong> ${data.records.find(record => record.id === id).fields.Price}</p>
-                `;
-                document.getElementById('popup-card').classList.add('visible');
+                markers[i].setOpacity(match ? 1 : 0);
             }
         }
+
+        map.on('click', function () {
+            popup.style.display = 'none';
+            map.setView([51.5074, -0.1278], 12);
+            markers.forEach(marker => marker.setIcon(L.icon({
+                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+            })));
+        });
 
         document.addEventListener('DOMContentLoaded', initMap);
     </script>
