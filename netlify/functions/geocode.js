@@ -1,6 +1,8 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
+    console.log('Function triggered');  // Simple log to verify execution
+
     const address = event.queryStringParameters.q;
 
     if (!address) {
@@ -38,3 +40,4 @@ exports.handler = async function(event, context) {
         };
     }
 };
+
