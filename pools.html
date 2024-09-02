@@ -55,8 +55,6 @@
             background-color: white;
             border-radius: 10px;
             overflow: hidden;
-            display: block;
-            max-height: 100%;
         }
 
         table, th, td {
@@ -97,7 +95,7 @@
         }
 
         tr {
-            height: 40px; /* Ensures all rows are the same height */
+            height: 40px;
         }
 
         input#search {
@@ -240,11 +238,11 @@
 
                 const popupContent = `
                     <h2>${record.options.title}</h2>
-                    <p><strong>Length:</strong> ${record.fields.Length} m</p>
-                    <p><strong>Borough:</strong> ${record.fields.Borough}</p>
-                    <p><strong>Address:</strong> ${record.fields.Address}</p>
-                    <p><strong>Opening Hours:</strong> ${record.fields.OpeningHours}</p>
-                    <p><strong>Price (Non-Member):</strong> ${record.fields.Price}</p>
+                    <p><strong>Length:</strong> ${record.options.length} m</p>
+                    <p><strong>Borough:</strong> ${record.options.borough}</p>
+                    <p><strong>Address:</strong> ${record.options.address}</p>
+                    <p><strong>Opening Hours:</strong> ${record.options.openingHours}</p>
+                    <p><strong>Price (Non-Member):</strong> ${record.options.price}</p>
                 `;
 
                 popup.innerHTML = popupContent;
@@ -286,11 +284,7 @@
                 const cellA = a.cells[columnIndex].innerText.toLowerCase();
                 const cellB = b.cells[columnIndex].innerText.toLowerCase();
 
-                if (isAscending) {
-                    return cellA > cellB ? 1 : -1;
-                } else {
-                    return cellA < cellB ? 1 : -1;
-                }
+                return isAscending ? (cellA > cellB ? 1 : -1) : (cellA < cellB ? 1 : -1);
             });
 
             table.innerHTML = '';
@@ -298,33 +292,30 @@
         }
 
         function filterPools() {
-            let input = document.getElementById('search').value.toLowerCase();
-            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            const input = document.getElementById('search').value.toLowerCase();
+            const rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            let bounds = new L.LatLngBounds();
 
-            for (let i = 0; i < rows.length; i++) {
-                let cells = rows[i].getElementsByTagName('td');
-                let match = false;
-                for (let j = 0; j < cells.length; j++) {
-                    if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
-                        match = true;
-                        break;
-                    }
+            markers.forEach((marker, index) => {
+                const row = rows[index];
+                const text = row.innerText.toLowerCase();
+
+                if (text.includes(input)) {
+                    row.style.display = '';
+                    marker.setOpacity(1);
+                    bounds.extend(marker.getLatLng());
+                } else {
+                    row.style.display = 'none';
+                    marker.setOpacity(0);
                 }
-                rows[i].style.display = match ? '' : 'none';
-                markers[i].setOpacity(match ? 1 : 0);
+            });
+
+            if (!bounds.isEmpty()) {
+                map.fitBounds(bounds);
+            } else {
+                map.setView([51.5074, -0.1278], 12);
             }
         }
-
-        map.on('click', function () {
-            popup.style.display = 'none';
-            map.setView([51.5074, -0.1278], 12);
-            markers.forEach(marker => marker.setIcon(L.icon({
-                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-            })));
-        });
 
         document.addEventListener('DOMContentLoaded', initMap);
     </script>
