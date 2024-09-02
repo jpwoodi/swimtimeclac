@@ -266,7 +266,17 @@
         function sortTable(columnIndex) {
             const table = document.querySelector('table tbody');
             const rowsArray = Array.from(table.rows);
-            const isAscending = table.querySelectorAll('th')[columnIndex].classList.toggle('sort-asc');
+            const thElements = document.querySelectorAll('th');
+            const isAscending = thElements[columnIndex].classList.toggle('sort-asc');
+
+            // Remove the sort-asc and sort-desc classes from all other columns
+            thElements.forEach((th, index) => {
+                if (index !== columnIndex) {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                }
+            });
+
+            thElements[columnIndex].classList.toggle('sort-desc', !isAscending);
 
             rowsArray.sort((a, b) => {
                 const cellA = a.cells[columnIndex].innerText.toLowerCase();
