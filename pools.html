@@ -151,39 +151,44 @@ function initMap() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    fetch('/.netlify/functions/getPools')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Fetched data:', data); // Debugging log
+fetch('/.netlify/functions/getPools')
+    .then(response => response.json())
+    .then(data => {
+        console.log('Fetched data:', data); // Debugging log
 
-            const tableBody = document.getElementById('pool-table-body');
-            tableBody.innerHTML = data.records.map(record => `
-                <tr>
-                    <td>${record.fields.Name}</td>
-                    <td>${record.fields.Length}</td>
-                    <td>${record.fields.Borough}</td>
-                </tr>
-            `).join('');
+        const tableBody = document.getElementById('pool-table-body');
+        tableBody.innerHTML = data.records.map(record => `
+            <tr>
+                <td>${record.fields.Name}</td>
+                <td>${record.fields.Length}</td>
+                <td>${record.fields.Borough}</td>
+            </tr>
+        `).join('');
 
-            // Add markers to the map
-            data.records.forEach((record, index) => {
-                console.log(`Processing record ${index + 1}:`, record); // Debugging log
+        // Add markers to the map
+        data.records.forEach((record, index) => {
+            console.log(`Processing record ${index + 1}:`, record); // Debugging log
 
-                if (record.fields.Latitude && record.fields.Longitude) {
-                    const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
+            if (record.fields.Latitude && record.fields.Longitude) {
+                const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
 
-                    // Assuming there's a Website field in the record fields
-                    const websiteUrl = record.fields.Website || '#';
-                    marker.bindPopup(`<strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
-                    console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
-                } else {
-                    console.warn(`Record ${index + 1} has no coordinates or address:`, record);
+                let websiteUrl = record.fields.Website || '#';
+
+                // Ensure the URL starts with http:// or https://
+                if (websiteUrl && !websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+                    websiteUrl = 'http://' + websiteUrl;
                 }
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error); // Debugging log
+
+                marker.bindPopup(`<strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
+                console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
+            } else {
+                console.warn(`Record ${index + 1} has no coordinates or address:`, record);
+            }
         });
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error); // Debugging log
+    });
 }
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
