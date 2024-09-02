@@ -208,7 +208,7 @@
 
                     const tableBody = document.getElementById('pool-table-body');
                     tableBody.innerHTML = data.records.map(record => `
-                        <tr onclick="focusOnMarker(${record.fields.Latitude}, ${record.fields.Longitude}, ${record.id})">
+                        <tr onclick="focusOnMarker(${record.fields.Latitude}, ${record.fields.Longitude}, '${record.id}')">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
@@ -240,7 +240,7 @@
 
             const markerData = markers.find(m => m.record.id === recordId);
             if (markerData) {
-                map.setView([lat, lng], 15);
+                map.setView([lat, lng], 15); // Restored the zoom-in functionality
                 markerData.marker.setIcon(L.icon({ iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon-red.png', iconSize: [25, 41], iconAnchor: [12, 41] }));
                 activeMarker = markerData.marker;
 
