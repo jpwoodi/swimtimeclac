@@ -60,7 +60,7 @@
         }
 
         th, td {
-            padding: 8px;
+            padding: 10px; /* Fixed padding for consistent row height */
             text-align: left;
             color: #212529;
             font-size: 14px;
@@ -83,6 +83,15 @@
 
         tr:nth-child(even) {
             background-color: #f2f2f2;
+        }
+
+        tr {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        tr:hover {
+            background-color: #e9ecef;
         }
 
         input#search {
@@ -159,9 +168,9 @@
             <div id="map"></div>
             <div class="popup-card" id="popup-card">
                 <p><strong id="popup-name"></strong></p>
-                <p><span id="popup-length"></span> m</p>
-                <p><span id="popup-borough"></span></p>
-                <p><span id="popup-address"></span></p>
+                <p>Length: <span id="popup-length"></span> m</p>
+                <p>Borough: <span id="popup-borough"></span></p>
+                <p>Address: <span id="popup-address"></span></p>
                 <p>Opening Hours: <span id="popup-hours"></span></p>
                 <p>Price (Non-member): £<span id="popup-price"></span></p>
             </div>
@@ -191,8 +200,8 @@
                     console.log('Fetched data:', data); // Debugging log
 
                     const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map(record => `
-                        <tr onclick="focusMarker(${record.fields.Latitude}, ${record.fields.Longitude}, '${record.fields.Name}', ${record.id})">
+                    tableBody.innerHTML = data.records.map((record, index) => `
+                        <tr onclick="focusMarker(${index})">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
@@ -206,10 +215,13 @@
                                 .bindPopup(`<strong><a href="${record.fields.Website}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
 
                             marker.on('click', function() {
-                                focusMarker(record.fields.Latitude, record.fields.Longitude, record.fields.Name, record.fields);
+                                focusMarker(index);
                             });
 
-                            markers.push(marker);
+                            markers.push({
+                                marker,
+                                fields: record.fields
+                            });
                         }
                     });
 
@@ -266,12 +278,16 @@
             table.append(...rowsArray);
         }
 
-        function focusMarker(lat, lng, name, fields) {
+        function focusMarker(index) {
+            const { marker, fields } = markers[index];
+            const lat = marker.getLatLng().lat;
+            const lng = marker.getLatLng().lng;
+
             map.setView([lat, lng], 15);
 
-            markers.forEach(marker => {
-                if (marker.getLatLng().lat === lat && marker.getLatLng().lng === lng) {
-                    marker.setIcon(L.icon({
+            markers.forEach(m => {
+                if (m.marker.getLatLng().lat === lat && m.marker.getLatLng().lng === lng) {
+                    m.marker.setIcon(L.icon({
                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
                         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
                         iconSize: [25, 41],
@@ -280,7 +296,7 @@
                         shadowSize: [41, 41]
                     }));
                 } else {
-                    marker.setIcon(L.icon({
+                    m.marker.setIcon(L.icon({
                         iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
                         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
                         iconSize: [25, 41],
@@ -292,7 +308,7 @@
             });
 
             const popupCard = document.getElementById('popup-card');
-            document.getElementById('popup-name').innerText = name;
+            document.getElementById('popup-name').innerText = fields.Name;
             document.getElementById('popup-length').innerText = fields.Length;
             document.getElementById('popup-borough').innerText = fields.Borough;
             document.getElementById('popup-address').innerText = fields.Address;
@@ -308,7 +324,7 @@
             map.setView(originalView, 12);
 
             markers.forEach(marker => {
-                marker.setIcon(L.icon({
+                marker.marker.setIcon(L.icon({
                     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
                     iconSize: [25, 41],
