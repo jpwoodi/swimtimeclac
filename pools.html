@@ -34,11 +34,28 @@
         }
 
         .table-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative; /* Add this to position the scrollbar */
+}
+
+/* Hide scrollbar for WebKit browsers (Chrome, Safari) */
+.table-container::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+
+/* Hide scrollbar for Firefox */
+.table-container {
+    scrollbar-width: none; /* For Firefox */
+}
+
+/* Hide scrollbar for Edge */
+.table-container {
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
 
         h1 {
             text-align: center;
