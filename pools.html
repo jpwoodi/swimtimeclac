@@ -93,6 +93,11 @@
             background-color: #f2f2f2;
         }
 
+        tr:hover {
+            background-color: #ddd;
+            cursor: pointer;
+        }
+
         input#search {
             padding: 10px;
             margin-bottom: 10px;
@@ -250,7 +255,7 @@
             map.on('click', () => {
                 if (lastFocusedMarker) {
                     lastFocusedMarker.marker.setIcon(L.icon({
-                        iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon.png',
+                        iconUrl: 'images/map-marker.684x1024.png',
                         shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
                         iconSize: [25, 41],
                         iconAnchor: [12, 41],
@@ -325,7 +330,7 @@
             let focusedMarker = markers.find(marker => marker.id === id);
             if (focusedMarker) {
                 focusedMarker.marker.setIcon(L.icon({
-                    iconUrl: 'images/map-marker.684x1024.png', // Red marker
+                    iconUrl: 'images/map-marker-red.png', // Red marker
                     shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
                     iconSize: [25, 41],
                     iconAnchor: [12, 41],
