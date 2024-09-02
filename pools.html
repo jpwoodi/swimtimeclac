@@ -97,24 +97,6 @@
             box-sizing: border-box;
         }
 
-        .toggle-results {
-            display: block;
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            text-align: center;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            text-decoration: none;
-            font-size: 1em;
-        }
-
-        .toggle-results:hover {
-            background-color: #0056b3;
-        }
-
         .map-container {
             flex: 1;
             position: relative;
@@ -155,8 +137,6 @@
                     <!-- Data will be dynamically inserted here -->
                 </tbody>
             </table>
-
-            <a id="toggle-results" class="toggle-results" href="javascript:void(0)" onclick="toggleResults()">Show More</a>
         </div>
         <div class="map-container">
             <div id="map"></div>
@@ -166,9 +146,6 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        const maxVisibleRows = 10;
-        let expanded = false;
-
         function initMap() {
             const map = L.map('map').setView([51.5074, -0.1278], 10); // London coordinates
 
@@ -180,9 +157,11 @@
             fetch('/.netlify/functions/getPools')
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Fetched data:', data); // Debugging log
+
                     const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map((record, index) => `
-                        <tr class="${index >= maxVisibleRows ? 'hidden' : ''}">
+                    tableBody.innerHTML = data.records.map(record => `
+                        <tr>
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
@@ -191,6 +170,7 @@
 
                     // Add markers to the map
                     data.records.forEach(record => {
+                        console.log('Processing record:', record); // Debugging log
                         if (record.fields.Latitude && record.fields.Longitude) {
                             const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
                             marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
@@ -199,10 +179,14 @@
                             geocodeAddress(record.fields.Address, map, record.fields.Name, record.fields.Borough);
                         }
                     });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error); // Debugging log
                 });
         }
 
         function geocodeAddress(address, map, name, borough) {
+            console.log('Geocoding address:', address); // Debugging log
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
             fetch(url)
                 .then(response => response.json())
@@ -210,17 +194,19 @@
                     if (data.length > 0) {
                         const lat = data[0].lat;
                         const lon = data[0].lon;
+                        console.log(`Geocoded ${name}: ${lat}, ${lon}`); // Debugging log
                         const marker = L.marker([lat, lon]).addTo(map);
                         marker.bindPopup(`<strong>${name}</strong><br>${borough}`);
+                    } else {
+                        console.warn(`No results found for ${address}`); // Debugging log
                     }
                 })
-                .catch(error => console.error('Error fetching geocode:', error));
+                .catch(error => console.error('Error fetching geocode:', error)); // Debugging log
         }
 
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
-            let visibleCount = 0;
 
             for (let i = 0; i < rows.length; i++) {
                 let cells = rows[i].getElementsByTagName('td');
@@ -231,36 +217,8 @@
                         break;
                     }
                 }
-                if (match) {
-                    rows[i].style.display = '';
-                    if (visibleCount >= maxVisibleRows && !expanded) {
-                        rows[i].classList.add('hidden');
-                    } else {
-                        rows[i].classList.remove('hidden');
-                    }
-                    visibleCount++;
-                } else {
-                    rows[i].style.display = 'none';
-                }
+                rows[i].style.display = match ? '' : 'none';
             }
-
-            updateToggleLink();
-        }
-
-        function toggleResults() {
-            expanded = !expanded;
-            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
-            for (let i = 0; i < rows.length; i++) {
-                if (i >= maxVisibleRows) {
-                    rows[i].classList.toggle('hidden', !expanded);
-                }
-            }
-            updateToggleLink();
-        }
-
-        function updateToggleLink() {
-            const toggleLink = document.getElementById('toggle-results');
-            toggleLink.innerText = expanded ? 'Show Less' : 'Show More';
         }
 
         function sortTable(columnIndex) {
