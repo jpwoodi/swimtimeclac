@@ -4,237 +4,237 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swimming Pools in London</title>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH2N2X1XVjH7l+htjJ8e5t4Xh+WwzQocIJcXxYKmqKJ4h7ZQ0lwnzC4BnSXZAh1I8T/r3Hg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        /* Global Styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
             font-family: 'Poppins', sans-serif;
             background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
             background-size: cover;
             background-position: center;
-            color: #212529;
-            min-height: 100vh;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
 
         .container {
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            max-width: 1200px;
+            display: flex;
             width: 100%;
-            padding: 40px;
-            margin-top: 20px;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             color: #007BFF;
-            font-size: 2.5em;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 30px;
-            text-decoration: none;
-            color: #007BFF;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .back-link:hover {
-            color: #0056b3;
-        }
-
-        #search {
-            width: 100%;
-            max-width: 400px;
-            padding: 12px 20px;
-            margin-bottom: 30px;
-            border: 1px solid #ced4da;
-            border-radius: 50px;
-            font-size: 1em;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        #search:focus {
-            border-color: #007BFF;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            overflow: hidden;
+            margin-bottom: 20px;
+            background-color: white;
             border-radius: 10px;
+            overflow: hidden;
         }
 
-        thead {
-            background-color: #343A40;
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
         }
 
         th {
-            color: #ffffff;
-            text-align: left;
-            padding: 15px;
-            font-weight: 600;
-            position: relative;
-            user-select: none;
+            background-color: #007BFF;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr.hidden {
+            display: none;
+        }
+
+        input#search {
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .toggle-results {
+            display: block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            border: none;
+            border-radius: 50px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            margin-bottom: 20px;
+            text-decoration: none;
+            font-size: 1em;
         }
 
-        th:hover {
-            background-color: #495057;
+        .toggle-results:hover {
+            background-color: #0056b3;
         }
 
-        th i {
-            margin-left: 10px;
-            opacity: 0.7;
-            transition: transform 0.3s ease;
+        .map-container {
+            flex: 1;
+            position: relative;
         }
 
-        tbody tr {
-            border-bottom: 1px solid #dee2e6;
-            transition: background-color 0.3s ease;
-        }
-
-        tbody tr:hover {
-            background-color: #f1f3f5;
-        }
-
-        td {
-            padding: 15px;
-            color: #495057;
+        #map {
+            width: 100%;
+            height: 100%;
         }
 
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
-            }
-
-            th, td {
-                padding: 12px;
-            }
-        }
-
-        @media (max-width: 576px) {
             .container {
-                padding: 20px;
+                flex-direction: column;
+                height: auto;
             }
 
-            h1 {
-                font-size: 1.5em;
-            }
-
-            #search {
-                width: 100%;
+            .map-container {
+                height: 300px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Swim Calculator</a>
-        <h1>Swimming Pools in London</h1>
-        <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
-        <table>
-            <thead>
-                <tr>
-                    <th onclick="sortTable(0)">Name <i class="fas fa-sort"></i></th>
-                    <th onclick="sortTable(1)">Length (m) <i class="fas fa-sort"></i></th>
-                    <th onclick="sortTable(2)">Borough <i class="fas fa-sort"></i></th>
-                </tr>
-            </thead>
-            <tbody id="pool-table-body">
-                <!-- Data will be dynamically inserted here -->
-            </tbody>
-        </table>
+        <div class="table-container">
+            <h1>Swimming Pools in London</h1>
+            <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Length (m)</th>
+                        <th>Borough</th>
+                    </tr>
+                </thead>
+                <tbody id="pool-table-body">
+                    <!-- Data will be dynamically inserted here -->
+                </tbody>
+            </table>
+
+            <a id="toggle-results" class="toggle-results" href="javascript:void(0)" onclick="toggleResults()">Show More</a>
+        </div>
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
     </div>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        const maxVisibleRows = 10;
+        let expanded = false;
+
+        function initMap() {
+            const map = L.map('map').setView([51.5074, -0.1278], 10); // London coordinates
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
             fetch('/.netlify/functions/getPools')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.records) {
-                        const tableBody = document.getElementById('pool-table-body');
-                        tableBody.innerHTML = data.records.map(record => `
-                            <tr>
-                                <td>${record.fields.Name || 'N/A'}</td>
-                                <td>${record.fields.Length || 'N/A'}</td>
-                                <td>${record.fields.Borough || 'N/A'}</td>
-                            </tr>
-                        `).join('');
-                    } else {
-                        document.getElementById('pool-table-body').innerHTML = '<tr><td colspan="3">No data found</td></tr>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    document.getElementById('pool-table-body').innerHTML = '<tr><td colspan="3">Failed to load data</td></tr>';
+                    const tableBody = document.getElementById('pool-table-body');
+                    tableBody.innerHTML = data.records.map((record, index) => `
+                        <tr class="${index >= maxVisibleRows ? 'hidden' : ''}">
+                            <td>${record.fields.Name}</td>
+                            <td>${record.fields.Length}</td>
+                            <td>${record.fields.Borough}</td>
+                        </tr>
+                    `).join('');
+
+                    // Add markers to the map
+                    data.records.forEach(record => {
+                        if (record.fields.Latitude && record.fields.Longitude) {
+                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
+                            marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
+                        }
+                    });
                 });
-        });
+        }
 
         function filterPools() {
-            const input = document.getElementById('search').value.toLowerCase();
-            const rows = document.querySelectorAll('#pool-table-body tr');
+            let input = document.getElementById('search').value.toLowerCase();
+            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            let visibleCount = 0;
 
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const match = Array.from(cells).some(td => td.innerText.toLowerCase().includes(input));
-                row.style.display = match ? '' : 'none';
-            });
-        }
-
-        function sortTable(columnIndex) {
-            const tableBody = document.getElementById('pool-table-body');
-            const rows = Array.from(tableBody.querySelectorAll('tr'));
-            const headers = document.querySelectorAll('th');
-            const currentIsAscending = headers[columnIndex].classList.contains('asc');
-
-            rows.sort((a, b) => {
-                const cellA = a.querySelectorAll('td')[columnIndex].innerText.toLowerCase();
-                const cellB = b.querySelectorAll('td')[columnIndex].innerText.toLowerCase();
-
-                if (!isNaN(cellA) && !isNaN(cellB)) {
-                    return currentIsAscending ? cellA - cellB : cellB - cellA;
-                } else {
-                    return currentIsAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+            for (let i = 0; i < rows.length; i++) {
+                let cells = rows[i].getElementsByTagName('td');
+                let match = false;
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
+                        match = true;
+                        break;
+                    }
                 }
-            });
+                if (match) {
+                    rows[i].style.display = '';
+                    if (visibleCount >= maxVisibleRows && !expanded) {
+                        rows[i].classList.add('hidden');
+                    } else {
+                        rows[i].classList.remove('hidden');
+                    }
+                    visibleCount++;
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
 
-            // Remove asc and desc classes from all headers
-            headers.forEach(header => {
-                header.classList.remove('asc', 'desc');
-                header.querySelector('i').classList.remove('fa-sort-up', 'fa-sort-down');
-                header.querySelector('i').classList.add('fa-sort');
-            });
-
-            // Add appropriate class to the sorted header
-            headers[columnIndex].classList.toggle('asc', !currentIsAscending);
-            headers[columnIndex].classList.toggle('desc', currentIsAscending);
-            headers[columnIndex].querySelector('i').classList.toggle('fa-sort-up', !currentIsAscending);
-            headers[columnIndex].querySelector('i').classList.toggle('fa-sort-down', currentIsAscending);
-            headers[columnIndex].querySelector('i').classList.remove('fa-sort');
-
-            // Append sorted rows to the table body
-            tableBody.innerHTML = '';
-            tableBody.append(...rows);
+            updateToggleLink();
         }
+
+        function toggleResults() {
+            expanded = !expanded;
+            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                if (i >= maxVisibleRows) {
+                    rows[i].classList.toggle('hidden', !expanded);
+                }
+            }
+            updateToggleLink();
+        }
+
+        function updateToggleLink() {
+            const toggleLink = document.getElementById('toggle-results');
+            toggleLink.innerText = expanded ? 'Show Less' : 'Show More';
+        }
+
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
