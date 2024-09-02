@@ -60,11 +60,10 @@
         }
 
         th, td {
-            padding: 8px;  /* Smaller padding */
+            padding: 8px;
             text-align: left;
-            color: #212529; /* Text color set to black */
-            font-size: 14px; /* Smaller font size */
-            height: 40px; /* Fixed height for all rows */
+            color: #212529;
+            font-size: 14px;
         }
 
         th {
@@ -75,11 +74,11 @@
         }
 
         th.sort-asc::after {
-            content: " \2191";  /* Up arrow */
+            content: " \2191";
         }
 
         th.sort-desc::after {
-            content: " \2193";  /* Down arrow */
+            content: " \2193";
         }
 
         tr:nth-child(even) {
@@ -98,49 +97,31 @@
         .map-container {
             flex: 1;
             position: relative;
-            transition: height 0.3s ease;
         }
 
         #map {
             width: 100%;
             height: 100%;
-            transition: height 0.3s ease;
         }
 
-        .info-panel {
+        .popup-card {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            box-shadow: 0px -5px 10px rgba(0, 0, 0, 0.2);
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
+            background-color: white;
+            padding: 15px;
+            box-shadow: 0px -2px 10px rgba(0, 0, 0, 0.3);
+            display: none;
             z-index: 1000;
-            max-height: 200px; /* Adjust as needed */
-            overflow-y: auto;
         }
 
-        .info-panel.active {
-            transform: translateY(0);
+        .popup-card p {
+            margin: 5px 0;
         }
 
-        .info-panel img {
-            max-width: 100px;
-            height: auto;
-            margin-right: 20px;
-            float: left;
-        }
-
-        .info-panel h2 {
-            margin-top: 0;
+        .popup-card strong {
             color: #007BFF;
-        }
-
-        .info-panel p {
-            margin: 10px 0;
-            color: #333;
         }
 
         @media (max-width: 768px) {
@@ -151,10 +132,6 @@
 
             .map-container {
                 height: 300px;
-            }
-
-            .info-panel {
-                max-height: 150px;
             }
         }
     </style>
@@ -180,7 +157,14 @@
         </div>
         <div class="map-container">
             <div id="map"></div>
-            <div id="info-panel" class="info-panel"></div>
+            <div class="popup-card" id="popup-card">
+                <p><strong id="popup-name"></strong></p>
+                <p><span id="popup-length"></span> m</p>
+                <p><span id="popup-borough"></span></p>
+                <p><span id="popup-address"></span></p>
+                <p>Opening Hours: <span id="popup-hours"></span></p>
+                <p>Price (Non-member): £<span id="popup-price"></span></p>
+            </div>
         </div>
     </div>
 
@@ -189,95 +173,51 @@
     <script>
         let map;
         let markers = [];
+        let originalView;
 
         function initMap() {
-            map = L.map('map').setView([51.5074, -0.1278], 12); // London coordinates, zoomed in one notch further
+            map = L.map('map').setView([51.5074, -0.1278], 12); // London coordinates
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
+            originalView = map.getCenter();
+
             fetch('/.netlify/functions/getPools')
                 .then(response => response.json())
                 .then(data => {
                     console.log('Fetched data:', data); // Debugging log
 
-                    // Sort data alphabetically by name
-                    data.records.sort((a, b) => a.fields.Name.localeCompare(b.fields.Name));
-
                     const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map((record, index) => `
-                        <tr data-index="${index}">
+                    tableBody.innerHTML = data.records.map(record => `
+                        <tr onclick="focusMarker(${record.fields.Latitude}, ${record.fields.Longitude}, '${record.fields.Name}', ${record.id})">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
                         </tr>
                     `).join('');
 
-                    // Add markers to the map
                     data.records.forEach((record, index) => {
-                        console.log(`Processing record ${index + 1}:`, record); // Debugging log
-
                         if (record.fields.Latitude && record.fields.Longitude) {
-                            let websiteUrl = record.fields.Website || '#';
-                            if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
-                                websiteUrl = 'http://' + websiteUrl;
-                            }
-                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
-                            marker.bindPopup(`<strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
-                            marker.on('click', () => showInfoPanel(record));
+                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude])
+                                .addTo(map)
+                                .bindPopup(`<strong><a href="${record.fields.Website}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
+
+                            marker.on('click', function() {
+                                focusMarker(record.fields.Latitude, record.fields.Longitude, record.fields.Name, record.fields);
+                            });
+
                             markers.push(marker);
-                            console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
-                        } else {
-                            console.warn(`Record ${index + 1} has no coordinates:`, record);
                         }
                     });
 
-                    // Add click event listeners to table rows
-                    const rows = document.querySelectorAll('#pool-table-body tr');
-                    rows.forEach(row => {
-                        row.addEventListener('click', function() {
-                            const index = this.getAttribute('data-index');
-                            highlightMarker(index);
-                            showInfoPanel(data.records[index]);
-                        });
-                    });
+                    map.on('click', resetMap);
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error); // Debugging log
                 });
-        }
-
-        function highlightMarker(index) {
-            markers.forEach((marker, i) => {
-                marker.setIcon(L.icon({
-                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
-                }));
-            });
-
-            if (markers[index]) {
-                map.setView(markers[index].getLatLng(), 14); // Zoom into the selected marker
-                markers[index].setIcon(L.icon({
-                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png', // Change to a red marker icon
-                    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
-                }));
-                markers[index].openPopup(); // Open the popup on the selected marker
-            }
-        }
-
-        function showInfoPanel(record) {
-            const infoPanel = document.getElementById('info-panel');
-            infoPanel.innerHTML = `
-                <img src="${record.fields.Photo[0].url}" alt="${record.fields.Name}">
-                <h2>${record.fields.Name}</h2>
-                <p><strong>Length:</strong> ${record.fields.Length} meters</p>
-                <p><strong>Borough:</strong> ${record.fields.Borough}</p>
-                <p>${record.fields.Description || 'No additional information available.'}</p>
-            `;
-            infoPanel.classList.add('active');
-            document.getElementById('map').style.height = 'calc(100% - 200px)'; // Adjust map height
         }
 
         function filterPools() {
@@ -324,6 +264,64 @@
 
             table.innerHTML = '';
             table.append(...rowsArray);
+        }
+
+        function focusMarker(lat, lng, name, fields) {
+            map.setView([lat, lng], 15);
+
+            markers.forEach(marker => {
+                if (marker.getLatLng().lat === lat && marker.getLatLng().lng === lng) {
+                    marker.setIcon(L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    }));
+                } else {
+                    marker.setIcon(L.icon({
+                        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    }));
+                }
+            });
+
+            const popupCard = document.getElementById('popup-card');
+            document.getElementById('popup-name').innerText = name;
+            document.getElementById('popup-length').innerText = fields.Length;
+            document.getElementById('popup-borough').innerText = fields.Borough;
+            document.getElementById('popup-address').innerText = fields.Address;
+            document.getElementById('popup-hours').innerText = fields.OpeningHours;
+            document.getElementById('popup-price').innerText = fields.PriceNonMember;
+
+            popupCard.style.display = 'block';
+            document.getElementById('map').style.height = '70%';
+            map.invalidateSize();
+        }
+
+        function resetMap() {
+            map.setView(originalView, 12);
+
+            markers.forEach(marker => {
+                marker.setIcon(L.icon({
+                    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                }));
+            });
+
+            const popupCard = document.getElementById('popup-card');
+            popupCard.style.display = 'none';
+            document.getElementById('map').style.height = '100%';
+            map.invalidateSize();
         }
 
         document.addEventListener('DOMContentLoaded', initMap);
