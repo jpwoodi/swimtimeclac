@@ -64,6 +64,7 @@
             text-align: left;
             color: #212529; /* Text color set to black */
             font-size: 14px; /* Smaller font size */
+            height: 40px; /* Fixed height for all rows */
         }
 
         th {
@@ -143,53 +144,65 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-function initMap() {
-    const map = L.map('map').setView([51.5074, -0.1278], 12); // Adjusted zoom level from 11 to 12
+        let map;
+        let markers = [];
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+        function initMap() {
+            map = L.map('map').setView([51.5074, -0.1278], 12); // London coordinates, zoomed in one notch further
 
-fetch('/.netlify/functions/getPools')
-    .then(response => response.json())
-    .then(data => {
-        console.log('Fetched data:', data); // Debugging log
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-        const tableBody = document.getElementById('pool-table-body');
-        tableBody.innerHTML = data.records.map(record => `
-            <tr>
-                <td>${record.fields.Name}</td>
-                <td>${record.fields.Length}</td>
-                <td>${record.fields.Borough}</td>
-            </tr>
-        `).join('');
+            fetch('/.netlify/functions/getPools')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Fetched data:', data); // Debugging log
 
-        // Add markers to the map
-        data.records.forEach((record, index) => {
-            console.log(`Processing record ${index + 1}:`, record); // Debugging log
+                    // Sort data alphabetically by name
+                    data.records.sort((a, b) => a.fields.Name.localeCompare(b.fields.Name));
 
-            if (record.fields.Latitude && record.fields.Longitude) {
-                const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
+                    const tableBody = document.getElementById('pool-table-body');
+                    tableBody.innerHTML = data.records.map(record => `
+                        <tr data-lat="${record.fields.Latitude}" data-lng="${record.fields.Longitude}" onclick="highlightMarker(${markers.length})">
+                            <td>${record.fields.Name}</td>
+                            <td>${record.fields.Length}</td>
+                            <td>${record.fields.Borough}</td>
+                        </tr>
+                    `).join('');
 
-                let websiteUrl = record.fields.Website || '#';
+                    // Add markers to the map
+                    data.records.forEach((record, index) => {
+                        console.log(`Processing record ${index + 1}:`, record); // Debugging log
 
-                // Ensure the URL starts with http:// or https://
-                if (websiteUrl && !websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
-                    websiteUrl = 'http://' + websiteUrl;
-                }
+                        if (record.fields.Latitude && record.fields.Longitude) {
+                            // Add marker with latitude and longitude
+                            let websiteUrl = record.fields.Website || '#';
+                            if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+                                websiteUrl = 'http://' + websiteUrl;
+                            }
+                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
+                            marker.bindPopup(`<strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
+                            markers.push(marker);
+                            console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
+                        } else {
+                            console.warn(`Record ${index + 1} has no coordinates:`, record);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error); // Debugging log
+                });
+        }
 
-                marker.bindPopup(`<strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
-                console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
-            } else {
-                console.warn(`Record ${index + 1} has no coordinates or address:`, record);
+        function highlightMarker(index) {
+            if (markers[index]) {
+                map.setView(markers[index].getLatLng(), 14); // Zoom into the marker
+                markers[index].openPopup();
             }
-        });
-    })
-    .catch(error => {
-        console.error('Error fetching data:', error); // Debugging log
-    });
-}
+        }
+
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
