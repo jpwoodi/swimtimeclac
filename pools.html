@@ -64,27 +64,26 @@
             border: 1px solid #ddd;
         }
 
-        th, td {
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            z-index: 10;
+            padding: 8px; /* Smaller padding */
+            text-align: left;
+            font-size: 14px; /* Smaller font size */
+        }
+
+        td {
             padding: 8px; /* Smaller padding */
             text-align: left;
             color: #212529; /* Text color set to black */
             font-size: 14px; /* Smaller font size */
             height: 40px; /* Fixed height for all rows */
-        }
-
-        th {
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        th.sort-asc::after {
-            content: " \2191"; /* Up arrow */
-        }
-
-        th.sort-desc::after {
-            content: " \2193"; /* Down arrow */
+            
         }
 
         tr {
@@ -94,6 +93,11 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+
+        tr:hover {
+            background-color: #e2e6ea; /* A light gray background color on hover */
+        }
+
 
         input#search {
             padding: 10px;
@@ -198,6 +202,7 @@
         let map;
         let markers = [];
         let lastFocusedMarker = null;
+        let allMarkers = [];
 
         function initMap() {
             map = L.map('map').setView([51.5074, -0.1278], 12); // Zoomed in one notch
@@ -221,8 +226,7 @@
                         </tr>
                     `).join('');
 
-                    // Add markers to the map
-                    markers = data.records.map((record) => {
+                    allMarkers = data.records.map(record => {
                         if (record.fields.Latitude && record.fields.Longitude) {
                             const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
                             marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
@@ -230,6 +234,8 @@
                             return { id: record.id, marker };
                         }
                     }).filter(marker => marker); // Filter out undefined markers
+
+                    markers = [...allMarkers]; // Initially show all markers
 
                     // Default sort table A-Z
                     sortTable(0);
@@ -257,6 +263,7 @@
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            let filteredMarkers = [];
 
             for (let i = 0; i < rows.length; i++) {
                 let cells = rows[i].getElementsByTagName('td');
@@ -268,7 +275,17 @@
                     }
                 }
                 rows[i].style.display = match ? '' : 'none';
+
+                let id = rows[i].getAttribute('data-id');
+                if (match) {
+                    let marker = allMarkers.find(m => m.id === id);
+                    if (marker) filteredMarkers.push(marker);
+                }
             }
+
+            markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
+            markers = filteredMarkers; // Update markers to show filtered ones
+            markers.forEach(m => m.marker.addTo(map)); // Add filtered markers to map
         }
 
         function sortTable(columnIndex) {
@@ -305,7 +322,7 @@
             let focusedMarker = markers.find(marker => marker.id === id);
             if (focusedMarker) {
                 focusedMarker.marker.setIcon(L.icon({
-                    iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon-2x.png', // Change to a red marker
+                    iconUrl: 'https://unpkg.com/leaflet/dist/images/marker-icon-2x.png', // Red marker
                     shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
                     iconSize: [25, 41],
                     iconAnchor: [12, 41],
@@ -317,10 +334,10 @@
                 lastFocusedMarker = focusedMarker;
 
                 document.getElementById('popup-card').innerHTML = `
-                    <h2>${focusedMarker.marker.getPopup().getContent().split('<br>')[0].replace('<strong>', '').replace('</strong>', '')}</h2>
-                    <p><strong>Length:</strong> ${data.records.find(record => record.id === id).fields.Length} meters</p>
-                    <p><strong>Borough:</strong> ${data.records.find(record => record.id === id).fields.Borough}</p>
-                    <p><strong>Address:</strong> ${data.records.find(record => record.id === id).fields.Address}</p>
+                    <h2>${document.querySelector(`tr[data-id="${id}"] td:first-child`).innerText}</h2>
+                    <p><strong>Length:</strong> ${document.querySelector(`tr[data-id="${id}"] td:nth-child(2)`).innerText} meters</p>
+                    <p><strong>Borough:</strong> ${document.querySelector(`tr[data-id="${id}"] td:nth-child(3)`).innerText}</p>
+                    <p><strong>Address:</strong> ${allMarkers.find(marker => marker.id === id).marker.getPopup().getContent().split('<br>')[1]}</p>
                     <p><strong>Opening Hours:</strong> ${data.records.find(record => record.id === id).fields.Opening_Hours}</p>
                     <p><strong>Price (Non-member):</strong> ${data.records.find(record => record.id === id).fields.Price}</p>
                 `;
