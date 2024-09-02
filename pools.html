@@ -98,11 +98,49 @@
         .map-container {
             flex: 1;
             position: relative;
+            transition: height 0.3s ease;
         }
 
         #map {
             width: 100%;
             height: 100%;
+            transition: height 0.3s ease;
+        }
+
+        .info-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            box-shadow: 0px -5px 10px rgba(0, 0, 0, 0.2);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-height: 200px; /* Adjust as needed */
+            overflow-y: auto;
+        }
+
+        .info-panel.active {
+            transform: translateY(0);
+        }
+
+        .info-panel img {
+            max-width: 100px;
+            height: auto;
+            margin-right: 20px;
+            float: left;
+        }
+
+        .info-panel h2 {
+            margin-top: 0;
+            color: #007BFF;
+        }
+
+        .info-panel p {
+            margin: 10px 0;
+            color: #333;
         }
 
         @media (max-width: 768px) {
@@ -113,6 +151,10 @@
 
             .map-container {
                 height: 300px;
+            }
+
+            .info-panel {
+                max-height: 150px;
             }
         }
     </style>
@@ -138,6 +180,7 @@
         </div>
         <div class="map-container">
             <div id="map"></div>
+            <div id="info-panel" class="info-panel"></div>
         </div>
     </div>
 
@@ -183,6 +226,7 @@
                             }
                             const marker = L.marker([record.fields.Latitude, record.fields.Longitude]).addTo(map);
                             marker.bindPopup(`<strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>${record.fields.Borough}`);
+                            marker.on('click', () => showInfoPanel(record));
                             markers.push(marker);
                             console.log(`Added marker for ${record.fields.Name} at ${record.fields.Latitude}, ${record.fields.Longitude}`);
                         } else {
@@ -196,6 +240,7 @@
                         row.addEventListener('click', function() {
                             const index = this.getAttribute('data-index');
                             highlightMarker(index);
+                            showInfoPanel(data.records[index]);
                         });
                     });
                 })
@@ -213,13 +258,26 @@
             });
 
             if (markers[index]) {
-                map.setView(markers[index].getLatLng(), 14); // Zoom into the marker
+                map.setView(markers[index].getLatLng(), 14); // Zoom into the selected marker
                 markers[index].setIcon(L.icon({
-                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png',
+                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png', // Change to a red marker icon
                     shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
                 }));
-                markers[index].openPopup();
+                markers[index].openPopup(); // Open the popup on the selected marker
             }
+        }
+
+        function showInfoPanel(record) {
+            const infoPanel = document.getElementById('info-panel');
+            infoPanel.innerHTML = `
+                <img src="${record.fields.Photo[0].url}" alt="${record.fields.Name}">
+                <h2>${record.fields.Name}</h2>
+                <p><strong>Length:</strong> ${record.fields.Length} meters</p>
+                <p><strong>Borough:</strong> ${record.fields.Borough}</p>
+                <p>${record.fields.Description || 'No additional information available.'}</p>
+            `;
+            infoPanel.classList.add('active');
+            document.getElementById('map').style.height = 'calc(100% - 200px)'; // Adjust map height
         }
 
         function filterPools() {
@@ -245,7 +303,6 @@
             const thElements = document.querySelectorAll('th');
             const isAscending = thElements[columnIndex].classList.toggle('sort-asc');
 
-            // Remove the sort-asc and sort-desc classes from all other columns
             thElements.forEach((th, index) => {
                 if (index !== columnIndex) {
                     th.classList.remove('sort-asc', 'sort-desc');
