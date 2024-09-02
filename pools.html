@@ -164,8 +164,8 @@
                     data.records.sort((a, b) => a.fields.Name.localeCompare(b.fields.Name));
 
                     const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map(record => `
-                        <tr data-lat="${record.fields.Latitude}" data-lng="${record.fields.Longitude}" onclick="highlightMarker(${markers.length})">
+                    tableBody.innerHTML = data.records.map((record, index) => `
+                        <tr data-index="${index}">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
@@ -177,7 +177,6 @@
                         console.log(`Processing record ${index + 1}:`, record); // Debugging log
 
                         if (record.fields.Latitude && record.fields.Longitude) {
-                            // Add marker with latitude and longitude
                             let websiteUrl = record.fields.Website || '#';
                             if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
                                 websiteUrl = 'http://' + websiteUrl;
@@ -190,6 +189,15 @@
                             console.warn(`Record ${index + 1} has no coordinates:`, record);
                         }
                     });
+
+                    // Add click event listeners to table rows
+                    const rows = document.querySelectorAll('#pool-table-body tr');
+                    rows.forEach(row => {
+                        row.addEventListener('click', function() {
+                            const index = this.getAttribute('data-index');
+                            highlightMarker(index);
+                        });
+                    });
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error); // Debugging log
@@ -197,8 +205,19 @@
         }
 
         function highlightMarker(index) {
+            markers.forEach((marker, i) => {
+                marker.setIcon(L.icon({
+                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
+                }));
+            });
+
             if (markers[index]) {
                 map.setView(markers[index].getLatLng(), 14); // Zoom into the marker
+                markers[index].setIcon(L.icon({
+                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
+                }));
                 markers[index].openPopup();
             }
         }
