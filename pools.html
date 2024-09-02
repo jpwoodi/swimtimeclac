@@ -35,9 +35,11 @@
 
         .table-container {
             flex: 1;
-            overflow-y: auto;
             padding: 20px;
             box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
@@ -107,6 +109,11 @@
             box-sizing: border-box;
         }
 
+        .table-body-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
         .map-container {
             flex: 1;
             position: relative;
@@ -158,19 +165,20 @@
         <div class="table-container">
             <h1>Swimming Pools in London</h1>
             <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
-
-            <table>
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Name</th>
-                        <th onclick="sortTable(1)">Length (m)</th>
-                        <th onclick="sortTable(2)">Borough</th>
-                    </tr>
-                </thead>
-                <tbody id="pool-table-body">
-                    <!-- Data will be dynamically inserted here -->
-                </tbody>
-            </table>
+            <div class="table-body-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)">Name</th>
+                            <th onclick="sortTable(1)">Length (m)</th>
+                            <th onclick="sortTable(2)">Borough</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pool-table-body">
+                        <!-- Data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div class="map-container">
             <div id="map"></div>
@@ -222,6 +230,8 @@
                     });
 
                     sortTable(0); // Sort by Name A-Z by default
+
+                    map.on('click', resetMap); // Reset map on click
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
@@ -254,41 +264,25 @@
             markers.forEach(m => m.setIcon(L.icon({
                 iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
                 iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
+                iconAnchor: [12, 41]
             })));
-
+            
             marker.setIcon(L.icon({
-                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png',
+                iconUrl: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|FF0000',
                 iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
+                iconAnchor: [12, 41]
             }));
         }
 
-        function sortTable(columnIndex) {
-            const table = document.querySelector('table tbody');
-            const rowsArray = Array.from(table.rows);
-            const thElements = document.querySelectorAll('th');
-            const isAscending = thElements[columnIndex].classList.toggle('sort-asc');
+        function resetMap() {
+            map.setView([51.5074, -0.1278], 12);
+            popup.style.display = 'none';
 
-            thElements.forEach((th, index) => {
-                if (index !== columnIndex) {
-                    th.classList.remove('sort-asc', 'sort-desc');
-                }
-            });
-
-            thElements[columnIndex].classList.toggle('sort-desc', !isAscending);
-
-            rowsArray.sort((a, b) => {
-                const cellA = a.cells[columnIndex].innerText.toLowerCase();
-                const cellB = b.cells[columnIndex].innerText.toLowerCase();
-
-                return isAscending ? (cellA > cellB ? 1 : -1) : (cellA < cellB ? 1 : -1);
-            });
-
-            table.innerHTML = '';
-            table.append(...rowsArray);
+            markers.forEach(marker => marker.setIcon(L.icon({
+                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            })));
         }
 
         function filterPools() {
@@ -315,6 +309,31 @@
             } else {
                 map.setView([51.5074, -0.1278], 12);
             }
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.querySelector('table tbody');
+            const rowsArray = Array.from(table.rows);
+            const thElements = document.querySelectorAll('th');
+            const isAscending = thElements[columnIndex].classList.toggle('sort-asc');
+
+            thElements.forEach((th, index) => {
+                if (index !== columnIndex) {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                }
+            });
+
+            thElements[columnIndex].classList.toggle('sort-desc', !isAscending);
+
+            rowsArray.sort((a, b) => {
+                const cellA = a.cells[columnIndex].innerText.toLowerCase();
+                const cellB = b.cells[columnIndex].innerText.toLowerCase();
+
+                return isAscending ? (cellA > cellB ? 1 : -1) : (cellA < cellB ? 1 : -1);
+            });
+
+            table.innerHTML = '';
+            table.append(...rowsArray);
         }
 
         document.addEventListener('DOMContentLoaded', initMap);
