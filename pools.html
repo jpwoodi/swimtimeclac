@@ -340,12 +340,12 @@
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
             let filteredMarkers = [];
             let latlngs = [];
-
+        
             for (let i = 0; i < rows.length; i++) {
                 let cells = rows[i].getElementsByTagName('td');
                 let type = rows[i].getAttribute('data-type');
                 let match = false;
-
+        
                 // Match search query
                 for (let j = 0; j < cells.length; j++) {
                     if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
@@ -353,14 +353,14 @@
                         break;
                     }
                 }
-
+        
                 // Match type filter
                 if (typeFilter !== 'all' && type !== typeFilter) {
                     match = false;
                 }
-
+        
                 rows[i].style.display = match ? '' : 'none';
-
+        
                 let id = rows[i].getAttribute('data-id');
                 if (match) {
                     let marker = allMarkers.find(m => m.id === id);
@@ -370,6 +370,20 @@
                     }
                 }
             }
+        
+            markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
+            markers = filteredMarkers; // Update markers to show filtered ones
+            markers.forEach(m => m.marker.addTo(map)); // Add filtered markers to map
+        
+            if (latlngs.length === 1) {
+                // If only one marker is found, zoom to focus level (same as focus mode)
+                map.setView(latlngs[0], 15); // Adjust zoom level as needed (15 matches focus mode)
+            } else if (latlngs.length > 0) {
+                map.fitBounds(latlngs, { padding: [50, 50] }); // Adjust the map view to fit all visible markers
+            } else {
+                map.setView([51.5074, -0.1278], defaultZoomLevel); // Reset to the default London view if no markers match
+            }
+}
 
             markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
             markers = filteredMarkers; // Update markers to show filtered ones
