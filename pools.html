@@ -334,42 +334,68 @@
             });
         }
         
-        function filterPools() {
-            let input = document.getElementById('search').value.toLowerCase();
-            let typeFilter = document.getElementById('type-filter').value;
-            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
-            let filteredMarkers = [];
-            let latlngs = [];
-            const minZoomLevel = 15; // Define the minimum zoom level
+function filterPools() {
+    let input = document.getElementById('search').value.toLowerCase();
+    let typeFilter = document.getElementById('type-filter').value;
+    let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+    let filteredMarkers = [];
+    let latlngs = [];
+    const minZoomLevel = 15; // Define the minimum zoom level
+
+    for (let i = 0; i < rows.length; i++) {
+        let cells = rows[i].getElementsByTagName('td');
+        let type = rows[i].getAttribute('data-type');
+        let match = false;
+
+        // Match search query
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
+                match = true;
+                break;
+            }
+        }
+
+        // Match type filter
+        if (typeFilter !== 'all' && type !== typeFilter) {
+            match = false;
+        }
+
+        rows[i].style.display = match ? '' : 'none';
+
+        let id = rows[i].getAttribute('data-id');
+        if (match) {
+            let marker = allMarkers.find(m => m.id === id);
+            if (marker) {
+                filteredMarkers.push(marker);
+                latlngs.push(marker.marker.getLatLng()); // Collect the marker's LatLng
+            }
+        }
+
+    // Remove all existing markers
+    markers.forEach(m => map.removeLayer(m.marker));
+
+    // Update markers to show filtered ones
+    markers = filteredMarkers;
+    markers.forEach(m => m.marker.addTo(map));
+
+    if (latlngs.length > 0) {
+        let bounds = L.latLngBounds(latlngs);
         
-            for (let i = 0; i < rows.length; i++) {
-                let cells = rows[i].getElementsByTagName('td');
-                let type = rows[i].getAttribute('data-type');
-                let match = false;
-        
-                // Match search query
-                for (let j = 0; j < cells.length; j++) {
-                    if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
-                        match = true;
-                        break;
-                    }
-                }
-        
-                // Match type filter
-                if (typeFilter !== 'all' && type !== typeFilter) {
-                    match = false;
-                }
-        
-                rows[i].style.display = match ? '' : 'none';
-        
-                let id = rows[i].getAttribute('data-id');
-                if (match) {
-                    let marker = allMarkers.find(m => m.id === id);
-                    if (marker) {
-                        filteredMarkers.push(marker);
-                        latlngs.push(marker.marker.getLatLng()); // Collect the marker's LatLng
-                    }
-                }
+        // Adjust the map view to fit all visible markers with padding
+        map.once('moveend', () => {
+            // Ensure the map doesn't zoom in too tightly
+            if (map.getZoom() > minZoomLevel) {
+                map.setZoom(minZoomLevel);
+            }
+        });
+
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        // Reset to the default London view if no markers match
+        map.setView([51.5074, -0.1278], defaultZoomLevel);
+    }
+}
+
             
         
             markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
