@@ -61,29 +61,76 @@
             overflow: hidden;
         }
 
-        table, th, td {
-            border: 1px solid #ddd;
-        }
+table, th, td {
+    border: 1px solid #ddd;
+    table-layout: fixed; /* Ensure table layout is fixed */
+    border-collapse: separate; /* Keep the border radius intact */
+    border-spacing: 0; /* Remove space between cells */
+}
 
-        th {
-            position: sticky;
-            top: 0;
-            background-color: #007BFF;
-            color: white;
-            cursor: pointer;
-            user-select: none;
-            z-index: 10;
-            padding: 8px; /* Smaller padding */
-            text-align: left;
-            font-size: 14px; /* Smaller font size */
-        }
+th, td {
+    width: 33.33%; /* Divide the width equally among 3 columns */
+    padding: 8px; /* Padding inside cells */
+    text-align: left;
+    color: #212529;
+    font-size: 14px;
+    height: 40px;
+    overflow: hidden; /* Prevent text overflow */
+    white-space: nowrap; /* Prevent text wrapping */
+}
 
-        td {
-            padding: 8px; /* Smaller padding */
-            text-align: left;
-            color: #212529; /* Text color set to black */
-            font-size: 14px; /* Smaller font size */
-            height: 40px; /* Fixed height for all rows */
+th {
+    height: 30px; /* Fixed height for the header row */
+    background-color: #007BFF;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-top-left-radius: 10px; /* Rounded corner */
+    border-top-right-radius: 10px; /* Rounded corner */
+}
+
+.scrollable-body {
+    flex: 1;
+    overflow-y: auto; /* Show scrollbar only when needed */
+    border-top: 1px solid #ddd;
+    padding-right: 10px;
+}
+
+.scrollable-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-body::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.scrollable-body::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.table-container {
+    height: calc(100% - 30px); /* Adjust height to include the header row */
+    display: flex;
+    flex-direction: column;
+}
+
+table {
+    width: calc(100% - 8px); /* Compensate for scrollbar width */
+}
+
+table, th, td {
+    background-clip: padding-box; /* Preserve border-radius during scrolling */
+}
+
+.scrollable-body::-webkit-scrollbar {
+    display: none; /* Hide scrollbar when not scrolling */
+}
+
+.scrollable-body:hover::-webkit-scrollbar {
+    display: block; /* Show scrollbar on hover */
+}
         }
 
         tr {
