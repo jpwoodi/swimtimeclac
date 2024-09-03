@@ -62,87 +62,91 @@
         }
 
         /* General table styling */
-table, th, td {
-    border: 1px solid #ddd;
-    table-layout: fixed; /* Fixed layout to control column width */
-    border-collapse: separate; /* Ensure separate borders for rounded corners */
-    border-spacing: 0; /* Remove space between cells */
-    width: 100%; /* Ensure table takes up full width */
-}
+        table, th, td {
+            border: 1px solid #ddd;
+            table-layout: fixed; /* Fixed layout to control column width */
+            border-collapse: separate; /* Ensure separate borders for rounded corners */
+            border-spacing: 0; /* Remove space between cells */
+            width: 100%; /* Ensure table takes up full width */
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            color: #212529;
+            font-size: 14px;
+            height: 40px;
+            overflow: hidden;
+            white-space: normal; /* Allow text wrapping */
+            word-wrap: break-word; /* Break words that are too long */
+        }
+        
+        th {
+            height: 30px; /* Fixed height for header row */
+            background-color: #007BFF;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        /* Rounded corners for the table header */
+        th:first-child {
+            border-top-left-radius: 10px; /* Only first column header has left rounded corner */
+        }
+        
+        th:last-child {
+            border-top-right-radius: 10px; /* Only last column header has right rounded corner */
+        }
+        
+        /* Styling the Length (m) column to be centered */
+        th:nth-child(2), td:nth-child(2) {
+            text-align: center; /* Center align for the "Length (m)" column */
+        }
+        
+        .scrollable-body {
+            flex: 1;
+            overflow-y: auto; /* Show scrollbar only when needed */
+            border-top: 1px solid #ddd;
+            padding-right: 10px;
+            margin-right: -10px; /* Prevent width change when scrollbar appears */
+        }
+        
+        .scrollable-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .scrollable-body::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        .scrollable-body::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+        
+        .scrollable-body::-webkit-scrollbar {
+            display: none; /* Hide scrollbar when not scrolling */
+        }
+        
+        .scrollable-body:hover::-webkit-scrollbar {
+            display: block; /* Show scrollbar on hover */
+        }
+        
+        /* Ensure table container adjusts height */
+        .table-container {
+            height: calc(100% - 30px); /* Account for header height */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Table with compensation for scrollbar */
+        .table-wrapper {
+            width: calc(100% - 10px); /* Compensate for scrollbar width */
+            overflow: hidden; /* Hide any potential overflow */
+            padding-bottom: 10px; /* Extra space for the scrollbar */
+        }
 
-th, td {
-    padding: 8px;
-    text-align: left;
-    color: #212529;
-    font-size: 14px;
-    height: 40px;
-    overflow: hidden;
-    white-space: normal; /* Allow text wrapping */
-    word-wrap: break-word; /* Break words that are too long */
-}
-
-th {
-    height: 30px; /* Fixed height for header row */
-    background-color: #007BFF;
-    color: white;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-/* Rounded corners for the table header */
-th:first-child {
-    border-top-left-radius: 10px; /* Only first column header has left rounded corner */
-}
-
-th:last-child {
-    border-top-right-radius: 10px; /* Only last column header has right rounded corner */
-}
-
-/* Styling the Length (m) column to be centered */
-th:nth-child(2), td:nth-child(2) {
-    text-align: center; /* Center align for the "Length (m)" column */
-}
-
-.scrollable-body {
-    flex: 1;
-    overflow-y: auto; /* Show scrollbar only when needed */
-    border-top: 1px solid #ddd;
-    padding-right: 10px;
-}
-
-.scrollable-body::-webkit-scrollbar {
-    width: 8px;
-}
-
-.scrollable-body::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-}
-
-.scrollable-body::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-.scrollable-body::-webkit-scrollbar {
-    display: none; /* Hide scrollbar when not scrolling */
-}
-
-.scrollable-body:hover::-webkit-scrollbar {
-    display: block; /* Show scrollbar on hover */
-}
-
-/* Ensure table container adjusts height */
-.table-container {
-    height: calc(100% - 30px); /* Account for header height */
-    display: flex;
-    flex-direction: column;
-}
-
-/* Table with compensation for scrollbar */
-table {
-    width: calc(100% - 8px); /* Compensate for scrollbar width */
-}
 
 
         tr:nth-child(even) {
