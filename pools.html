@@ -333,8 +333,8 @@
                 }
             });
         }
-
-            function filterPools() {
+        
+        function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
             let typeFilter = document.getElementById('type-filter').value;
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
@@ -370,6 +370,7 @@
                         latlngs.push(marker.marker.getLatLng()); // Collect the marker's LatLng
                     }
                 }
+            
         
             markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
             markers = filteredMarkers; // Update markers to show filtered ones
@@ -380,14 +381,16 @@
                 map.fitBounds(bounds, { padding: [50, 50] });
         
                 // Ensure the map doesn't zoom in too tightly
-                if (map.getZoom() > minZoomLevel) {
+                let currentZoom = map.getZoom();
+                if (currentZoom > minZoomLevel) {
                     map.setZoom(minZoomLevel);
                 }
             } else {
                 // Reset to the default London view if no markers match
-                map.setView([51.5074, -0.1278], 12);
+                map.setView([51.5074, -0.1278], defaultZoomLevel);
             }
         }
+
 
             markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
             markers = filteredMarkers; // Update markers to show filtered ones
