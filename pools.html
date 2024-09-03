@@ -385,7 +385,8 @@
         function sortTable(columnIndex) {
             let table = document.querySelector('table');
             let rows = Array.from(table.querySelectorAll('tbody tr'));
-            let isAscending = table.querySelectorAll('th')[columnIndex].classList.contains('sort-asc');
+            let th = table.querySelectorAll('th')[columnIndex];
+            let isAscending = th.classList.contains('sort-asc') ? false : true;
         
             rows.sort((a, b) => {
                 let cellA = a.children[columnIndex].innerText.toLowerCase();
@@ -397,9 +398,13 @@
         
             rows.forEach(row => table.querySelector('tbody').appendChild(row));
         
+            // Clear all sort classes
             table.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
-            table.querySelectorAll('th')[columnIndex].classList.add(isAscending ? 'sort-desc' : 'sort-asc');
+        
+            // Set the correct sort class on the clicked header
+            th.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
         }
+
 
         function focusOnMarker(id) {
             // Reset the last focused marker, if any
@@ -442,6 +447,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', initMap);
+        document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    sortTable(0); // Sort by the first column (Name) in ascending order
+});
+
     </script>
 </body>
 </html>
