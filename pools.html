@@ -9,222 +9,174 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
         <style>
-            body {
-                font-family: 'Poppins', sans-serif;
-                background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
-                background-size: cover;
-                background-position: center;
-                color: #212529;
-                margin: 0;
-                padding: 0;
-                height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #212529;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+    
+        .table-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+    
+        .table-header {
+            margin-bottom: 10px;
+        }
+    
+        .scrollable-body {
+            flex: 1;
+            overflow-y: auto;
+            border-top: 1px solid #ddd;
+            padding-right: 10px; /* Adjust padding to avoid scrollbar overlap */
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+    
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            z-index: 10;
+            padding: 8px; /* Smaller padding */
+            text-align: left;
+            font-size: 14px; /* Smaller font size */
+            height: 30px; /* Fixed height for header row */
+        }
+    
+        td {
+            padding: 8px; /* Smaller padding */
+            text-align: left;
+            color: #212529; /* Text color set to black */
+            font-size: 14px; /* Smaller font size */
+            height: 40px; /* Fixed height for all rows */
+            white-space: normal; /* Allow text wrapping */
+            word-wrap: break-word; /* Break words that are too long */
+        }
+    
+        /* Rounded corners for the table header */
+        th:first-child {
+            border-top-left-radius: 10px; /* Only first column header has left rounded corner */
+        }
         
+        th:last-child {
+            border-top-right-radius: 10px; /* Only last column header has right rounded corner */
+        }
+    
+        /* Styling the Length (m) column to be centered */
+        th:nth-child(2), td:nth-child(2) {
+            text-align: center; /* Center align for the "Length (m)" column */
+        }
+    
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    
+        tr:hover {
+            background-color: #d1e7fd; /* Light blue highlight color */
+        }
+    
+        input#search {
+            padding: 10px;
+            margin-bottom: 10px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+    
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+    
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    
+        .popup-card {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: white;
+            border-top: 2px solid #007BFF;
+            border-radius: 10px 10px 0 0;
+            padding: 10px;
+            box-sizing: border-box;
+            display: none;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: bottom 0.3s ease; /* Smooth transition */
+        }
+    
+        .popup-card.visible {
+            display: block;
+        }
+    
+        .popup-card h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #007BFF;
+        }
+    
+        .popup-card p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #212529;
+        }
+    
+        .popup-card a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+    
+        @media (max-width: 768px) {
             .container {
-                display: flex;
-                width: 100%;
-                max-width: 1200px;
-                height: 80vh;
-                background-color: rgba(255, 255, 255, 0.9);
-                border-radius: 10px;
-                overflow: hidden;
-                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            }
-        
-            .table-container {
-                flex: 1;
-                display: flex;
                 flex-direction: column;
-                padding: 20px;
-                box-sizing: border-box;
-                overflow: hidden;
-                padding-right: calc(10px - 1em); /* Adjust for scrollbar width */
+                height: auto;
             }
-        
-            .table-header {
-                margin-bottom: 10px;
-            }
-        
-            .scrollable-body {
-                flex: 1;
-                overflow-y: scroll; /* Always show scrollbar */
-                border-top: 1px solid #ddd;
-                padding-right: 10px;
-                margin-right: -10px; /* Prevent the content from shifting */
-            }
-        
-            table {
-                width: calc(100% + 10px); /* Ensure the table remains the same width regardless of scrollbar presence */
-                border-collapse: collapse;
-                background-color: white;
-                border-radius: 10px;
-                overflow: hidden;
-            }
-        
-            /* General table styling */
-            table, th, td {
-                border: 1px solid #ddd;
-                table-layout: fixed; /* Fixed layout to control column width */
-                border-collapse: separate; /* Ensure separate borders for rounded corners */
-                border-spacing: 0; /* Remove space between cells */
-                width: 100%; /* Ensure table takes up full width */
-            }
-            
-            th, td {
-                padding: 8px;
-                text-align: left;
-                color: #212529;
-                font-size: 14px;
-                height: 40px;
-                overflow: hidden;
-                white-space: normal; /* Allow text wrapping */
-                word-wrap: break-word; /* Break words that are too long */
-            }
-            
-            th {
-                height: 30px; /* Fixed height for header row */
-                background-color: #007BFF;
-                color: white;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
-            
-            /* Rounded corners for the table header */
-            th:first-child {
-                border-top-left-radius: 10px; /* Only first column header has left rounded corner */
-            }
-            
-            th:last-child {
-                border-top-right-radius: 10px; /* Only last column header has right rounded corner */
-            }
-            
-            /* Styling the Length (m) column to be centered */
-            th:nth-child(2), td:nth-child(2) {
-                text-align: center; /* Center align for the "Length (m)" column */
-            }
-            
-            .scrollable-body {
-                flex: 1;
-                overflow-y: auto; /* Show scrollbar only when needed */
-                border-top: 1px solid #ddd;
-                padding-right: 10px;
-                margin-right: -10px; /* Prevent width change when scrollbar appears */
-            }
-            
-            .scrollable-body::-webkit-scrollbar {
-                width: 8px;
-            }
-            
-            .scrollable-body::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.2);
-                border-radius: 4px;
-            }
-            
-            .scrollable-body::-webkit-scrollbar-track {
-                background-color: transparent;
-            }
-            
-            .scrollable-body::-webkit-scrollbar {
-                display: none; /* Hide scrollbar when not scrolling */
-            }
-            
-            .scrollable-body:hover::-webkit-scrollbar {
-                display: block; /* Show scrollbar on hover */
-            }
-            
-            /* Ensure table container adjusts height */
-            .table-container {
-                height: calc(100% - 30px); /* Account for header height */
-                display: flex;
-                flex-direction: column;
-            }
-            
-            /* Table with compensation for scrollbar */
-            .table-wrapper {
-                width: calc(100% - 10px); /* Compensate for scrollbar width */
-                overflow: hidden; /* Hide any potential overflow */
-                padding-bottom: 10px; /* Extra space for the scrollbar */
-            }
-        
-            tr:nth-child(even) {
-                background-color: #f2f2f2;
-            }
-        
-            tr:hover {
-                background-color: #d1e7fd; /* Light blue highlight color */
-            }
-        
-            input#search {
-                padding: 10px;
-                margin-bottom: 10px;
-                width: 100%;
-                border-radius: 5px;
-                border: 1px solid #ccc;
-                box-sizing: border-box;
-            }
-        
+    
             .map-container {
-                flex: 1;
-                position: relative;
+                height: 300px;
             }
-        
-            #map {
-                width: 100%;
-                height: 100%;
-            }
-        
-            .popup-card {
-                position: absolute;
-                bottom: 0;
-                width: 100%;
-                background-color: white;
-                border-top: 2px solid #007BFF;
-                border-radius: 10px 10px 0 0;
-                padding: 10px;
-                box-sizing: border-box;
-                display: none;
-                overflow-y: auto;
-                z-index: 1000;
-                transition: bottom 0.3s ease; /* Smooth transition */
-            }
-        
-            .popup-card.visible {
-                display: block;
-            }
-        
-            .popup-card h2 {
-                margin: 0;
-                font-size: 18px;
-                color: #007BFF;
-            }
-        
-            .popup-card p {
-                margin: 5px 0;
-                font-size: 14px;
-                color: #212529;
-            }
-        
-            .popup-card a {
-                color: #007BFF;
-                text-decoration: none;
-            }
-        
-            @media (max-width: 768px) {
-                .container {
-                    flex-direction: column;
-                    height: auto;
-                }
-        
-                .map-container {
-                    height: 300px;
-                }
-            }
+        }
     </style>
-
 </head>
 <body>
     <div class="container">
