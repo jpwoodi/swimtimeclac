@@ -144,7 +144,6 @@
             width: calc(100% - 8px); /* Compensate for scrollbar width */
         }
 
-
         tr {
             height: 40px; /* Fixed row height */
         }
@@ -230,6 +229,11 @@
             <div class="table-header">
                 <h1>Swimming Pools in London</h1>
                 <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
+                <select id="type-filter" onchange="filterPools()">
+                    <option value="all">All</option>
+                    <option value="pool">Pool</option>
+                    <option value="open_water">Open Water</option>
+                </select>
             </div>
             <div class="scrollable-body">
                 <table>
@@ -281,7 +285,7 @@
 
                     const tableBody = document.getElementById('pool-table-body');
                     tableBody.innerHTML = data.records.map(record => `
-                        <tr data-id="${record.id}">
+                        <tr data-id="${record.id}" data-type="${record.fields.Type.toLowerCase()}">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
@@ -332,18 +336,27 @@
 
         function filterPools() {
             let input = document.getElementById('search').value.toLowerCase();
+            let typeFilter = document.getElementById('type-filter').value;
             let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
             let filteredMarkers = [];
             let latlngs = [];
 
             for (let i = 0; i < rows.length; i++) {
                 let cells = rows[i].getElementsByTagName('td');
+                let type = rows[i].getAttribute('data-type');
                 let match = false;
+
+                // Match search query
                 for (let j = 0; j < cells.length; j++) {
                     if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
                         match = true;
                         break;
                     }
+                }
+
+                // Match type filter
+                if (typeFilter !== 'all' && type !== typeFilter) {
+                    match = false;
                 }
 
                 rows[i].style.display = match ? '' : 'none';
