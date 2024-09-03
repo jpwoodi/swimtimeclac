@@ -98,13 +98,32 @@
             background-color: #d1e7fd; /* Light blue highlight color */
         }
 
-        input#search {
-            padding: 10px;
-            margin-bottom: 10px;
-            width: 100%;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
+ /* New Styles for the Search Bar with Icon */
+.search-container {
+    position: relative;
+    width: 100%; /* Ensure the search bar is the same width as the table */
+    margin-bottom: 10px;
+}
+
+input#search {
+    padding: 10px 40px 10px 20px; /* Adjust padding to accommodate the icon */
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.search-icon {
+    position: absolute;
+    top: 50%;
+    right: 15px; /* Position the icon inside the input field */
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #ccc; /* Light gray color for the icon */
+    pointer-events: none; /* Ensure the icon doesn't interfere with input focus */
+}
         }
 
         .map-container {
