@@ -370,7 +370,6 @@
                         latlngs.push(marker.marker.getLatLng()); // Collect the marker's LatLng
                     }
                 }
-            }
         
             markers.forEach(m => map.removeLayer(m.marker)); // Remove all existing markers
             markers = filteredMarkers; // Update markers to show filtered ones
