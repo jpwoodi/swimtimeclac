@@ -381,7 +381,7 @@ map.on('click', () => {
         }));
         lastFocusedMarker = null;
         document.getElementById('popup-card').classList.remove('visible');
-        map.setView([51.5074, -0.1278], 12); // Reset to the default London view
+        map.setView([51.5074, -0.1278], defaultZoomLevel); // Reset to the default zoom level
     }
 });
 
