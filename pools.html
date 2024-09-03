@@ -304,7 +304,7 @@
     markers.forEach(m => m.marker.addTo(map)); // Add filtered markers to map
 
     if (latlngs.length > 0) {
-        map.fitBounds(latlngs); // Adjust the map view to fit all visible markers
+        map.fitBounds(latlngs, {padding: [50, 50] }); // Adjust the map view to fit all visible markers and include padding to make the zoom level less tight.
     } else {
         map.setView([51.5074, -0.1278], 12); // Reset to the default London view if no markers match
     }
