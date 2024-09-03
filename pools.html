@@ -370,6 +370,33 @@ function filterPools() {
                 latlngs.push(marker.marker.getLatLng()); // Collect the marker's LatLng
             }
         }
+    }
+
+    // Remove all existing markers
+    markers.forEach(m => map.removeLayer(m.marker));
+
+    // Update markers to show filtered ones
+    markers = filteredMarkers;
+    markers.forEach(m => m.marker.addTo(map));
+
+    if (latlngs.length > 0) {
+        let bounds = L.latLngBounds(latlngs);
+        
+        // Adjust the map view to fit all visible markers with padding
+        map.once('moveend', () => {
+            // Ensure the map doesn't zoom in too tightly
+            if (map.getZoom() > minZoomLevel) {
+                map.setZoom(minZoomLevel);
+            }
+        });
+
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        // Reset to the default London view if no markers match
+        map.setView([51.5074, -0.1278], defaultZoomLevel);
+    }
+}
+
 
     // Remove all existing markers
     markers.forEach(m => map.removeLayer(m.marker));
