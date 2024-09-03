@@ -48,9 +48,9 @@
 
         .scrollable-body {
             flex: 1;
-            overflow-y: auto;
+            overflow-y: scroll; /* Ensure the scrollbar remains visible */
             border-top: 1px solid #ddd;
-            padding-right: 10px; /* Adjust padding to avoid scrollbar overlap */
+            padding-right: 10px;
         }
 
         table {
@@ -63,27 +63,27 @@
 
         table, th, td {
             border: 1px solid #ddd;
+            table-layout: fixed; /* Ensure table layout is fixed */
+        }
+
+        th, td {
+            width: 33.33%; /* Divide the width equally among 3 columns */
+            padding: 8px; /* Padding inside cells */
+            text-align: left;
+            color: #212529;
+            font-size: 14px;
+            height: 40px;
+            overflow: hidden; /* Prevent text overflow */
+            white-space: nowrap; /* Prevent text wrapping */
         }
 
         th {
-            position: sticky;
-            top: 0;
+            height: 30px; /* Fixed height for the header row */
             background-color: #007BFF;
             color: white;
-            cursor: pointer;
-            user-select: none;
+            position: sticky;
+            top: 0;
             z-index: 10;
-            padding: 8px; /* Smaller padding */
-            text-align: left;
-            font-size: 14px; /* Smaller font size */
-        }
-
-        td {
-            padding: 8px; /* Smaller padding */
-            text-align: left;
-            color: #212529; /* Text color set to black */
-            font-size: 14px; /* Smaller font size */
-            height: 40px; /* Fixed height for all rows */
         }
 
         tr {
