@@ -402,6 +402,23 @@ function focusOnMarker(id) {
         lastFocusedMarker = focusedMarker;
 
         const record = dataRecords.find(record => record.id === id);
+
+        // Ensure the `Website` field exists and is valid, else fallback to '#'
+        let websiteUrl = record.fields.Website ? record.fields.Website : '#';
+
+        // Prepend 'https://' if the URL doesn't already contain 'http://' or 'https://'
+        if (websiteUrl && !websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+            websiteUrl = 'https://' + websiteUrl;
+        }
+
+        // HTML for the chain link image with hyperlink to the website
+        const chainLinkHtml = `
+            <a href="${websiteUrl}" target="_blank" title="Go to website">
+                <img src="path/to/chain-link-image.png" alt="Website" style="width: 16px; height: 16px; vertical-align: middle;">
+            </a>
+        `;
+
+        // Construct the popup content with the name, borough, and chain link
         document.getElementById('popup-card').innerHTML = `
             <h2>${record.fields.Name}</h2>
             <p><strong>Length:</strong> ${record.fields.Length} meters</p>
@@ -409,10 +426,13 @@ function focusOnMarker(id) {
             <p><strong>Address:</strong> ${record.fields.Address}</p>
             <p><strong>Opening Hours:</strong> ${record.fields.Opening_Hours}</p>
             <p><strong>Price (Non-member):</strong> ${record.fields.Price}</p>
+            <p>${chainLinkHtml}</p> <!-- Chain link added here -->
         `;
+
         document.getElementById('popup-card').classList.add('visible');
     }
 }
+
 
 
         
