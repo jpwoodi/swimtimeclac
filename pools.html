@@ -9,7 +9,191 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        /* CSS remains the same */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #212529;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .table-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .table-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input#search {
+            padding: 12px;
+            margin-bottom: 20px;
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .scrollable-body {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 16px;
+            color: #333;
+        }
+
+        th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #ddd;
+        }
+
+        td {
+            border-bottom: 1px solid #eee;
+            color: #555;
+            font-weight: 400;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+            transition: background-color 0.3s ease;
+        }
+
+        tr {
+            transition: background-color 0.3s ease;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .scrollable-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-body::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .scrollable-body::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            border-left: 1px solid #ddd;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .popup-card {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: white;
+            border-top: 2px solid #007BFF;
+            border-radius: 10px 10px 0 0;
+            padding: 20px;
+            box-sizing: border-box;
+            display: none;
+            z-index: 1000;
+            transition: bottom 0.3s ease;
+        }
+
+        .popup-card.visible {
+            display: block;
+        }
+
+        .popup-card h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #007BFF;
+            font-weight: 600;
+        }
+
+        .popup-card p {
+            margin: 10px 0;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .popup-card a {
+            color: #007BFF;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .map-container {
+                height: 300px;
+                border-left: none;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 12px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -176,6 +360,92 @@
                 `;
                 document.getElementById('popup-card').classList.add('visible');
             }
+        }
+
+        function filterPools() {
+            let input = document.getElementById('search').value.toLowerCase();
+            let typeFilter = document.getElementById('type-filter').value;
+            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+            let filteredMarkers = [];
+            let latlngs = [];
+            const minZoomLevel = 15;
+
+            for (let i = 0; i < rows.length; i++) {
+                let cells = rows[i].getElementsByTagName('td');
+                let type = rows[i].getAttribute('data-type');
+                let match = false;
+
+                // Match search query
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
+                        match = true;
+                        break;
+                    }
+                }
+
+                // Match type filter
+                if (typeFilter !== 'all' && type !== typeFilter) {
+                    match = false;
+                }
+
+                rows[i].style.display = match ? '' : 'none';
+
+                let id = rows[i].getAttribute('data-id');
+                if (match) {
+                    let marker = allMarkers.find(m => m.id === id);
+                    if (marker) {
+                        filteredMarkers.push(marker);
+                        latlngs.push(marker.marker.getLatLng()); // Collect the marker's LatLng
+                    }
+                }
+            }
+
+            // Remove all existing markers
+            markers.forEach(m => map.removeLayer(m.marker));
+
+            // Update markers to show filtered ones
+            markers = filteredMarkers;
+            markers.forEach(m => m.marker.addTo(map));
+
+            if (latlngs.length > 0) {
+                let bounds = L.latLngBounds(latlngs);
+
+                // Adjust the map view to fit all visible markers with padding
+                map.once('moveend', () => {
+                    // Ensure the map doesn't zoom in too tightly
+                    if (map.getZoom() > minZoomLevel) {
+                        map.setZoom(minZoomLevel);
+                    }
+                });
+
+                map.fitBounds(bounds, { padding: [50, 50] });
+            } else {
+                // Reset to the default London view if no markers match
+                map.setView([51.5074, -0.1278], defaultZoomLevel);
+            }
+        }
+
+        function sortTable(columnIndex) {
+            let table = document.querySelector('table');
+            let rows = Array.from(table.querySelectorAll('tbody tr'));
+            let th = table.querySelectorAll('th')[columnIndex];
+            let isAscending = th.classList.contains('sort-asc') ? false : true;
+
+            rows.sort((a, b) => {
+                let cellA = a.children[columnIndex].innerText.toLowerCase();
+                let cellB = b.children[columnIndex].innerText.toLowerCase();
+                if (cellA < cellB) return isAscending ? -1 : 1;
+                if (cellA > cellB) return isAscending ? 1 : -1;
+                return 0;
+            });
+
+            rows.forEach(row => table.querySelector('tbody').appendChild(row));
+
+            // Clear all sort classes
+            table.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+
+            // Set the correct sort class on the clicked header
+            th.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
         }
 
         document.addEventListener('DOMContentLoaded', initMap);
