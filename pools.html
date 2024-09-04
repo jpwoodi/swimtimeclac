@@ -211,19 +211,70 @@
             text-decoration: none;
         }
 
+        /* Style for the top navigation bar */
+        .top-nav {
+            width: 100%;
+            background-color: #007BFF;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+        }
+
+        .top-nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .top-nav ul li {
+            padding: 14px 20px;
+        }
+
+        .top-nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .top-nav ul li a:hover {
+            background-color: #0056b3;
+            color: white;
+            border-radius: 5px;
+        }
+
+        /* Add padding to your main content to avoid being hidden by the fixed nav */
+        .container {
+            margin-top: 60px;
+        }
+
         @media (max-width: 768px) {
-            .container {
+            .top-nav ul {
                 flex-direction: column;
-                height: auto;
+                align-items: center;
             }
 
-            .map-container {
-                height: 300px;
+            .top-nav ul li {
+                padding: 10px;
             }
         }
     </style>
 </head>
 <body>
+
+    <!-- Navigation Menu -->
+    <nav class="top-nav">
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="calculator.html">Calculator</a></li>
+            <li><a href="london-pools.html">London Pools</a></li>
+        </ul>
+    </nav>
+    
     <div class="container">
         <div class="table-container">
             <div class="table-header">
