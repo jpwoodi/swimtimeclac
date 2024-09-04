@@ -331,11 +331,17 @@ fetch('/.netlify/functions/getPools')
                 const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool'; // Ensure type is defined
                 const icon = type === 'open_water' ? openWaterIcon : poolIcon;
 
+                // Ensure the `Website` field exists and is valid, else fallback to '#'
+                let websiteUrl = record.fields.Website ? record.fields.Website : '#';
+
+                // Prepend 'https://' if the URL doesn't already contain 'http://' or 'https://'
+                if (websiteUrl && !websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+                    websiteUrl = 'https://' + websiteUrl;
+                }
+
                 // Create marker with custom popup content, including hyperlink
                 const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
 
-                // Ensure the `Website` field exists and is valid, else fallback to '#'
-                const websiteUrl = record.fields.Website ? record.fields.Website : '#';
 
                 // Construct the popup content with a hyperlink on the name
                 const popupContent = `
