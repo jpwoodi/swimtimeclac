@@ -120,6 +120,10 @@
             border-radius: 4px;
         }
         
+        .scrollable-body::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+        
         .scrollable-body::-webkit-scrollbar {
             display: none; /* Hide scrollbar when not scrolling */
         }
@@ -128,18 +132,20 @@
             display: block; /* Show scrollbar on hover */
         }
         
+        /* Ensure table container adjusts height */
         .table-container {
-            height: calc(100% - 30px);
+            height: calc(100% - 30px); /* Account for header height */
             display: flex;
             flex-direction: column;
         }
         
+        /* Table with compensation for scrollbar */
         table {
-            width: calc(100% - 8px);
+            width: calc(100% - 8px); /* Compensate for scrollbar width */
         }
 
         tr {
-            height: 40px;
+            height: 40px; /* Fixed row height */
         }
 
         tr:nth-child(even) {
@@ -147,7 +153,7 @@
         }
 
         tr:hover {
-            background-color: #d1e7fd;
+            background-color: #d1e7fd; /* Light blue highlight color */
         }
 
         input#search {
@@ -200,16 +206,9 @@
             color: #212529;
         }
 
-        .popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .chain-link-icon {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
+        .popup-card a {
+            color: #007BFF;
+            text-decoration: none;
         }
 
         @media (max-width: 768px) {
@@ -268,197 +267,217 @@
         let allMarkers = [];
         let dataRecords = [];
 
-        const defaultZoomLevel = 12;
+        const defaultZoomLevel = 12; // Default zoom level
 
         function initMap() {
-            if (map) return;
+    // Check if the map is already initialized, if so, do not re-initialize
+        if (map) {
+        return; // Exit function if map is already initialized
+    }
 
-            map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel);
+    // Initialize the map if not already done
+    map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-            const poolIcon = L.icon({
-                iconUrl: 'images/map-marker-blue.png',
-                shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
+    // Custom icons for pool (default blue) and open water (green)
+    const poolIcon = L.icon({
+        iconUrl: 'images/map-marker-blue.png', // Path to the blue pool marker
+        shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
 
-            const openWaterIcon = L.icon({
-                iconUrl: 'images/map-marker-green.png',
-                shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
+    const openWaterIcon = L.icon({
+        iconUrl: 'images/map-marker-green.png', // Path to the green open water marker
+        shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
 
-            const focusIcon = L.icon({
-                iconUrl: 'images/map-marker-red.png',
-                shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
+    const focusIcon = L.icon({
+        iconUrl: 'images/map-marker-red.png', // Red marker for focus mode
+        shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+fetch('/.netlify/functions/getPools')
+    .then(response => response.json())
+    .then(data => {
+        dataRecords = data.records; // Store the fetched data for later use
+        console.log('Fetched data:', data); // Debugging log
 
-            fetch('/.netlify/functions/getPools')
-                .then(response => response.json())
-                .then(data => {
-                    dataRecords = data.records;
+        const tableBody = document.getElementById('pool-table-body');
+        tableBody.innerHTML = data.records.map(record => `
+            <tr data-id="${record.id}" data-type="${record.fields.Type.toLowerCase()}">
+                <td>${record.fields.Name}</td>
+                <td>${record.fields.Length}</td>
+                <td>${record.fields.Borough}</td>
+            </tr>
+        `).join('');
 
-                    const tableBody = document.getElementById('pool-table-body');
-                    tableBody.innerHTML = data.records.map(record => `
-                        <tr data-id="${record.id}" data-type="${record.fields.Type.toLowerCase()}">
-                            <td>${record.fields.Name}</td>
-                            <td>${record.fields.Length}</td>
-                            <td>${record.fields.Borough}</td>
-                        </tr>
-                    `).join('');
+        allMarkers = data.records.map(record => {
+            if (record.fields.Latitude && record.fields.Longitude) {
+                // Check type of location and assign the correct icon
+                const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool'; // Ensure type is defined
+                const icon = type === 'open_water' ? openWaterIcon : poolIcon;
 
-                    allMarkers = data.records.map(record => {
-                        if (record.fields.Latitude && record.fields.Longitude) {
-                            const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
-                            const icon = type === 'open_water' ? openWaterIcon : poolIcon;
-
-                            let websiteUrl = record.fields.Website ? record.fields.Website : '#';
-                            if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
-                                websiteUrl = 'https://' + websiteUrl;
-                            }
-
-                            const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
-                            const popupContent = `
-                                <strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>
-                                ${record.fields.Borough}
-                            `;
-
-                            marker.bindPopup(popupContent);
-                            marker.type = type;
-                            marker.on('click', () => focusOnMarker(record.id));
-                            return { id: record.id, marker };
-                        }
-                    }).filter(marker => marker);
-
-                    markers = [...allMarkers];
-                    sortTable(0);
-
-                    document.querySelectorAll('#pool-table-body tr').forEach(row => {
-                        row.addEventListener('click', () => focusOnMarker(row.getAttribute('data-id')));
-                    });
-                })
-                .catch(error => console.error('Error fetching data:', error));
-
-            map.on('click', () => {
-                if (lastFocusedMarker) {
-                    const originalIcon = lastFocusedMarker.marker.type === 'open_water' ? openWaterIcon : poolIcon;
-                    lastFocusedMarker.marker.setIcon(originalIcon);
-                    lastFocusedMarker = null;
-                    document.getElementById('popup-card').classList.remove('visible');
-                    map.setView([51.5074, -0.1278], defaultZoomLevel);
-                }
-            });
-        }
-
-        function focusOnMarker(id) {
-            if (lastFocusedMarker) {
-                const originalIcon = lastFocusedMarker.marker.type === 'open_water' ? openWaterIcon : poolIcon;
-                lastFocusedMarker.marker.setIcon(originalIcon);
-            }
-
-            let focusedMarker = markers.find(marker => marker.id === id);
-            if (focusedMarker) {
-                focusedMarker.marker.setIcon(focusIcon);
-                map.setView(focusedMarker.marker.getLatLng(), 15);
-                lastFocusedMarker = focusedMarker;
-
-                const record = dataRecords.find(record => record.id === id);
+                // Ensure the `Website` field exists and is valid, else fallback to '#'
                 let websiteUrl = record.fields.Website ? record.fields.Website : '#';
-                if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+
+                // Prepend 'https://' if the URL doesn't already contain 'http://' or 'https://'
+                if (websiteUrl && !websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
                     websiteUrl = 'https://' + websiteUrl;
                 }
 
-                const chainLinkHtml = `
-                    <a href="${websiteUrl}" target="_blank" title="Visit Website">
-                        <img src="images/chain-link.png" alt="Link to website" class="chain-link-icon">
-                    </a>
+                // Create marker with custom popup content, including hyperlink
+                const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
+
+
+                // Construct the popup content with a hyperlink on the name
+                const popupContent = `
+                    <strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>
+                    ${record.fields.Borough}
                 `;
 
-                document.getElementById('popup-card').innerHTML = `
-                    <div class="popup-header">
-                        <h2>${record.fields.Name}</h2>
-                        ${chainLinkHtml}
-                    </div>
-                    <p><strong>Length:</strong> ${record.fields.Length} meters</p>
-                    <p><strong>Borough:</strong> ${record.fields.Borough}</p>
-                    <p><strong>Address:</strong> ${record.fields.Address}</p>
-                    <p><strong>Opening Hours:</strong> ${record.fields.Opening_Hours}</p>
-                    <p><strong>Price (Non-member):</strong> ${record.fields.Price}</p>
-                `;
+                marker.bindPopup(popupContent);
+                marker.type = type; // Store type in the marker object for later use
+                marker.on('click', () => focusOnMarker(record.id));
+                return { id: record.id, marker };
+            }
+        }).filter(marker => marker !== undefined); // Filter out undefined markers
 
-                document.getElementById('popup-card').classList.add('visible');
+        markers = [...allMarkers]; // Initially show all markers
+
+        // Default sort table A-Z
+        sortTable(0);
+
+        // Add click event to table rows
+        document.querySelectorAll('#pool-table-body tr').forEach(row => {
+            row.addEventListener('click', () => {
+                focusOnMarker(row.getAttribute('data-id'));
+            });
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error); // Debugging log
+    });
+
+
+    map.on('click', () => {
+        if (lastFocusedMarker) {
+            // Restore the original marker icon based on its type (pool or open_water)
+            const originalIcon = lastFocusedMarker.marker.type === 'open_water' ? openWaterIcon : poolIcon;
+            lastFocusedMarker.marker.setIcon(originalIcon);
+            lastFocusedMarker = null;
+            document.getElementById('popup-card').classList.remove('visible');
+            map.setView([51.5074, -0.1278], defaultZoomLevel); // Reset to default zoom level
+        }
+    });
+}
+
+function focusOnMarker(id) {
+    // Reset the last focused marker, if any
+    if (lastFocusedMarker) {
+        // Restore the original marker icon based on its type (pool or open_water)
+        const originalIcon = lastFocusedMarker.marker.type === 'open_water' ? openWaterIcon : poolIcon;
+        lastFocusedMarker.marker.setIcon(originalIcon);
+    }
+
+    let focusedMarker = markers.find(marker => marker.id === id);
+    if (focusedMarker) {
+        // Set the marker to the red "focus" icon
+        focusedMarker.marker.setIcon(focusIcon);
+
+        map.setView(focusedMarker.marker.getLatLng(), 15); // Adjust zoom level as needed
+        lastFocusedMarker = focusedMarker;
+
+        const record = dataRecords.find(record => record.id === id);
+        document.getElementById('popup-card').innerHTML = `
+            <h2>${record.fields.Name}</h2>
+            <p><strong>Length:</strong> ${record.fields.Length} meters</p>
+            <p><strong>Borough:</strong> ${record.fields.Borough}</p>
+            <p><strong>Address:</strong> ${record.fields.Address}</p>
+            <p><strong>Opening Hours:</strong> ${record.fields.Opening_Hours}</p>
+            <p><strong>Price (Non-member):</strong> ${record.fields.Price}</p>
+        `;
+        document.getElementById('popup-card').classList.add('visible');
+    }
+}
+
+
+        
+function filterPools() {
+    let input = document.getElementById('search').value.toLowerCase();
+    let typeFilter = document.getElementById('type-filter').value;
+    let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
+    let filteredMarkers = [];
+    let latlngs = [];
+    const minZoomLevel = 15; // Define the minimum zoom level
+
+    for (let i = 0; i < rows.length; i++) {
+        let cells = rows[i].getElementsByTagName('td');
+        let type = rows[i].getAttribute('data-type');
+        let match = false;
+
+        // Match search query
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
+                match = true;
+                break;
             }
         }
 
-        function filterPools() {
-            let input = document.getElementById('search').value.toLowerCase();
-            let typeFilter = document.getElementById('type-filter').value;
-            let rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
-            let filteredMarkers = [];
-            let latlngs = [];
-            const minZoomLevel = 15;
+        // Match type filter
+        if (typeFilter !== 'all' && type !== typeFilter) {
+            match = false;
+        }
 
-            for (let i = 0; i < rows.length; i++) {
-                let cells = rows[i].getElementsByTagName('td');
-                let type = rows[i].getAttribute('data-type');
-                let match = false;
+        rows[i].style.display = match ? '' : 'none';
 
-                for (let j = 0; j < cells.length; j++) {
-                    if (cells[j].innerText.toLowerCase().indexOf(input) > -1) {
-                        match = true;
-                        break;
-                    }
-                }
-
-                if (typeFilter !== 'all' && type !== typeFilter) {
-                    match = false;
-                }
-
-                rows[i].style.display = match ? '' : 'none';
-
-                let id = rows[i].getAttribute('data-id');
-                if (match) {
-                    let marker = allMarkers.find(m => m.id === id);
-                    if (marker) {
-                        filteredMarkers.push(marker);
-                        latlngs.push(marker.marker.getLatLng());
-                    }
-                }
-            }
-
-            markers.forEach(m => map.removeLayer(m.marker));
-
-            markers = filteredMarkers;
-            markers.forEach(m => m.marker.addTo(map));
-
-            if (latlngs.length > 0) {
-                let bounds = L.latLngBounds(latlngs);
-                
-                map.once('moveend', () => {
-                    if (map.getZoom() > minZoomLevel) {
-                        map.setZoom(minZoomLevel);
-                    }
-                });
-
-                map.fitBounds(bounds, { padding: [50, 50] });
-            } else {
-                map.setView([51.5074, -0.1278], defaultZoomLevel);
+        let id = rows[i].getAttribute('data-id');
+        if (match) {
+            let marker = allMarkers.find(m => m.id === id);
+            if (marker) {
+                filteredMarkers.push(marker);
+                latlngs.push(marker.marker.getLatLng()); // Collect the marker's LatLng
             }
         }
+    }
+
+    // Remove all existing markers
+    markers.forEach(m => map.removeLayer(m.marker));
+
+    // Update markers to show filtered ones
+    markers = filteredMarkers;
+    markers.forEach(m => m.marker.addTo(map));
+
+    if (latlngs.length > 0) {
+        let bounds = L.latLngBounds(latlngs);
+        
+        // Adjust the map view to fit all visible markers with padding
+        map.once('moveend', () => {
+            // Ensure the map doesn't zoom in too tightly
+            if (map.getZoom() > minZoomLevel) {
+                map.setZoom(minZoomLevel);
+            }
+        });
+
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        // Reset to the default London view if no markers match
+        map.setView([51.5074, -0.1278], defaultZoomLevel);
+    }
+}
 
         function sortTable(columnIndex) {
             let table = document.querySelector('table');
@@ -476,11 +495,60 @@
         
             rows.forEach(row => table.querySelector('tbody').appendChild(row));
         
+            // Clear all sort classes
             table.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+        
+            // Set the correct sort class on the clicked header
             th.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
         }
 
+
+        function focusOnMarker(id) {
+            // Reset the last focused marker, if any
+            if (lastFocusedMarker) {
+                lastFocusedMarker.marker.setIcon(L.icon({
+                    iconUrl: 'images/map-marker-blue.png', // Default blue marker
+                    shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                }));
+            }
+
+            let focusedMarker = markers.find(marker => marker.id === id);
+            if (focusedMarker) {
+                focusedMarker.marker.setIcon(L.icon({
+                    iconUrl: 'images/map-marker-red.png', // Red marker for focus
+                    shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                }));
+
+                map.setView(focusedMarker.marker.getLatLng(), 15); // Adjust zoom level as needed
+                lastFocusedMarker = focusedMarker;
+
+                const record = dataRecords.find(record => record.id === id);
+                document.getElementById('popup-card').innerHTML = `
+                    <h2>${record.fields.Name}</h2>
+                    <p><strong>Length:</strong> ${record.fields.Length} meters</p>
+                    <p><strong>Borough:</strong> ${record.fields.Borough}</p>
+                    <p><strong>Address:</strong> ${record.fields.Address}</p>
+                    <p><strong>Opening Hours:</strong> ${record.fields.Opening_Hours}</p>
+                    <p><strong>Price (Non-member):</strong> ${record.fields.Price}</p>
+                `;
+                document.getElementById('popup-card').classList.add('visible');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', initMap);
+        document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    sortTable(0); // Sort by the first column (Name) in ascending order
+});
+
     </script>
 </body>
 </html>
