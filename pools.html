@@ -269,8 +269,14 @@
 
         const defaultZoomLevel = 12; // Default zoom level
 
-function initMap() {
-    map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel); // Zoomed in one notch
+        function initMap() {
+    // Check if the map is already initialized, if so, do not re-initialize
+        if (map) {
+        return; // Exit function if map is already initialized
+    }
+
+    // Initialize the map if not already done
+    map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
