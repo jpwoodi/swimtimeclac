@@ -85,6 +85,8 @@
             flex-direction: column;
             justify-content: space-between;
             margin-top: 70px; /* Adjusted for the nav bar */
+            height: 600px; /* Fixed height to avoid resizing */
+            overflow: hidden; /* Prevents form expanding the container */
         }
 
         h1 {
@@ -192,6 +194,7 @@
             .calculator-container {
                 padding: 20px;
                 min-height: auto; /* Adjust height for smaller screens */
+                height: auto; /* Allow height to adjust on small screens */
             }
 
             h1 {
@@ -221,7 +224,6 @@
             }
         }
     </style>
-   
 </head>
 <body>
     <!-- Navigation Menu -->
