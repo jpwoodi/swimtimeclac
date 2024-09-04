@@ -310,7 +310,6 @@
         popupAnchor: [1, -34],
         shadowSize: [41, 41]
     });
-
 fetch('/.netlify/functions/getPools')
     .then(response => response.json())
     .then(data => {
@@ -329,27 +328,27 @@ fetch('/.netlify/functions/getPools')
         allMarkers = data.records.map(record => {
             if (record.fields.Latitude && record.fields.Longitude) {
                 // Check type of location and assign the correct icon
-                const type = record.fields.Type.toLowerCase();
+                const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool'; // Ensure type is defined
                 const icon = type === 'open_water' ? openWaterIcon : poolIcon;
 
                 // Create marker with custom popup content, including hyperlink
                 const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
-                
-                // Ensure the `Website` field exists and is valid, else fallback
+
+                // Ensure the `Website` field exists and is valid, else fallback to '#'
                 const websiteUrl = record.fields.Website ? record.fields.Website : '#';
-                
+
                 // Construct the popup content with a hyperlink on the name
                 const popupContent = `
                     <strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>
                     ${record.fields.Borough}
                 `;
-                
+
                 marker.bindPopup(popupContent);
                 marker.type = type; // Store type in the marker object for later use
                 marker.on('click', () => focusOnMarker(record.id));
                 return { id: record.id, marker };
             }
-        }).filter(marker => marker); // Filter out undefined markers
+        }).filter(marker => marker !== undefined); // Filter out undefined markers
 
         markers = [...allMarkers]; // Initially show all markers
 
@@ -367,9 +366,6 @@ fetch('/.netlify/functions/getPools')
         console.error('Error fetching data:', error); // Debugging log
     });
 
-        .catch(error => {
-            console.error('Error fetching data:', error); // Debugging log
-        });
 
     map.on('click', () => {
         if (lastFocusedMarker) {
