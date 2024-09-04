@@ -311,47 +311,62 @@
         shadowSize: [41, 41]
     });
 
-    fetch('/.netlify/functions/getPools')
-        .then(response => response.json())
-        .then(data => {
-            dataRecords = data.records; // Store the fetched data for later use
-            console.log('Fetched data:', data); // Debugging log
+fetch('/.netlify/functions/getPools')
+    .then(response => response.json())
+    .then(data => {
+        dataRecords = data.records; // Store the fetched data for later use
+        console.log('Fetched data:', data); // Debugging log
 
-            const tableBody = document.getElementById('pool-table-body');
-            tableBody.innerHTML = data.records.map(record => `
-                <tr data-id="${record.id}" data-type="${record.fields.Type.toLowerCase()}">
-                    <td>${record.fields.Name}</td>
-                    <td>${record.fields.Length}</td>
-                    <td>${record.fields.Borough}</td>
-                </tr>
-            `).join('');
+        const tableBody = document.getElementById('pool-table-body');
+        tableBody.innerHTML = data.records.map(record => `
+            <tr data-id="${record.id}" data-type="${record.fields.Type.toLowerCase()}">
+                <td>${record.fields.Name}</td>
+                <td>${record.fields.Length}</td>
+                <td>${record.fields.Borough}</td>
+            </tr>
+        `).join('');
 
-            allMarkers = data.records.map(record => {
-                if (record.fields.Latitude && record.fields.Longitude) {
-                    // Check type of location and assign the correct icon
-                    const type = record.fields.Type.toLowerCase();
-                    const icon = type === 'open_water' ? openWaterIcon : poolIcon;
+        allMarkers = data.records.map(record => {
+            if (record.fields.Latitude && record.fields.Longitude) {
+                // Check type of location and assign the correct icon
+                const type = record.fields.Type.toLowerCase();
+                const icon = type === 'open_water' ? openWaterIcon : poolIcon;
 
-                    const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
-                    marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
-                    marker.type = type; // Store type in the marker object for later use
-                    marker.on('click', () => focusOnMarker(record.id));
-                    return { id: record.id, marker };
-                }
-            }).filter(marker => marker); // Filter out undefined markers
+                // Create marker with custom popup content, including hyperlink
+                const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
+                
+                // Ensure the `Website` field exists and is valid, else fallback
+                const websiteUrl = record.fields.Website ? record.fields.Website : '#';
+                
+                // Construct the popup content with a hyperlink on the name
+                const popupContent = `
+                    <strong><a href="${websiteUrl}" target="_blank">${record.fields.Name}</a></strong><br>
+                    ${record.fields.Borough}
+                `;
+                
+                marker.bindPopup(popupContent);
+                marker.type = type; // Store type in the marker object for later use
+                marker.on('click', () => focusOnMarker(record.id));
+                return { id: record.id, marker };
+            }
+        }).filter(marker => marker); // Filter out undefined markers
 
-            markers = [...allMarkers]; // Initially show all markers
+        markers = [...allMarkers]; // Initially show all markers
 
-            // Default sort table A-Z
-            sortTable(0);
+        // Default sort table A-Z
+        sortTable(0);
 
-            // Add click event to table rows
-            document.querySelectorAll('#pool-table-body tr').forEach(row => {
-                row.addEventListener('click', () => {
-                    focusOnMarker(row.getAttribute('data-id'));
-                });
+        // Add click event to table rows
+        document.querySelectorAll('#pool-table-body tr').forEach(row => {
+            row.addEventListener('click', () => {
+                focusOnMarker(row.getAttribute('data-id'));
             });
-        })
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching data:', error); // Debugging log
+    });
+
         .catch(error => {
             console.error('Error fetching data:', error); // Debugging log
         });
