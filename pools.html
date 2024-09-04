@@ -22,7 +22,7 @@
             align-items: center;
             justify-content: center;
         }
-
+        
         .container {
             display: flex;
             width: 100%;
@@ -33,7 +33,7 @@
             overflow: hidden;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
-
+        
         .table-container {
             flex: 1;
             display: flex;
@@ -41,33 +41,27 @@
             padding: 20px;
             box-sizing: border-box;
         }
-
+        
         .table-header {
             margin-bottom: 10px;
         }
-
+        
         .scrollable-body {
             flex: 1;
             overflow-y: auto;
             border-top: 1px solid #ddd;
             padding-right: 10px; /* Adjust padding to avoid scrollbar overlap */
         }
-
+        
+        /* General table styling */
         table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
-            border-radius: 10px;
+            border-radius: 10px 10px 0 0; /* Only round top corners of the table */
             overflow: hidden;
-        }
-
-        /* General table styling */
-        table, th, td {
-            border: 1px solid #ddd;
             table-layout: fixed; /* Fixed layout to control column width */
-            border-collapse: separate; /* Ensure separate borders for rounded corners */
             border-spacing: 0; /* Remove space between cells */
-            width: 100%; /* Ensure table takes up full width */
         }
         
         th, td {
@@ -88,26 +82,20 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            cursor: pointer;
+            user-select: none;
+            border-top-left-radius: 10px; /* Rounded corners for the first th */
+            border-top-right-radius: 10px; /* Rounded corners for the last th */
         }
         
-        /* Rounded corners for the table header */
-        th:first-child {
-            border-top-left-radius: 10px; /* Only first column header has left rounded corner */
-        }
-        
-        th:last-child {
-            border-top-right-radius: 10px; /* Only last column header has right rounded corner */
-        }
-        
-        /* Styling the Length (m) column to be centered */
+        /* Center-align Length (m) column */
         th:nth-child(2), td:nth-child(2) {
-            text-align: center; /* Center align for the "Length (m)" column */
+            text-align: center;
         }
         
         .scrollable-body {
             flex: 1;
             overflow-y: auto; /* Show scrollbar only when needed */
-            border-top: 1px solid #ddd;
             padding-right: 10px;
         }
         
@@ -132,30 +120,18 @@
             display: block; /* Show scrollbar on hover */
         }
         
-        /* Ensure table container adjusts height */
-        .table-container {
-            height: calc(100% - 30px); /* Account for header height */
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Table with compensation for scrollbar */
-        table {
-            width: calc(100% - 8px); /* Compensate for scrollbar width */
-        }
-
         tr {
             height: 40px; /* Fixed row height */
         }
-
+        
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-
+        
         tr:hover {
             background-color: #d1e7fd; /* Light blue highlight color */
         }
-
+        
         input#search {
             padding: 10px;
             margin-bottom: 10px;
@@ -164,17 +140,17 @@
             border: 1px solid #ccc;
             box-sizing: border-box;
         }
-
+        
         .map-container {
             flex: 1;
             position: relative;
         }
-
+        
         #map {
             width: 100%;
             height: 100%;
         }
-
+        
         .popup-card {
             position: absolute;
             bottom: 0;
@@ -189,38 +165,41 @@
             z-index: 1000;
             transition: bottom 0.3s ease; /* Smooth transition */
         }
-
+        
         .popup-card.visible {
             display: block;
         }
-
+        
         .popup-card h2 {
             margin: 0;
             font-size: 18px;
             color: #007BFF;
         }
-
+        
         .popup-card p {
             margin: 5px 0;
             font-size: 14px;
             color: #212529;
         }
-
+        
         .popup-card a {
             color: #007BFF;
             text-decoration: none;
         }
-
+        
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
                 height: auto;
             }
-
+        
             .map-container {
                 height: 300px;
             }
         }
+
+
+        
     </style>
 </head>
 <body>
