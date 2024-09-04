@@ -1,11 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swimming Pools in London</title>
+    <link rel="icon" href="images/swimming_favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #212529;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-  <body>
+              /* Style for the top navigation bar */
+        .top-nav {
+            width: 100%;
+            background-color: #007BFF;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+        }
 
-  <h1>My First Heading</h1>
-  <p>My first paragraph.</p>
+        .top-nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
 
-  </body>
+        .top-nav ul li {
+            padding: 14px 20px;
+        }
 
+        .top-nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .top-nav ul li a:hover {
+            background-color: #0056b3;
+            color: white;
+            border-radius: 5px;
+        }
+
+        /* Add padding to your main content to avoid being hidden by the fixed nav */
+        .container {
+            margin-top: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .top-nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .top-nav ul li {
+                padding: 10px;
+            }
+        }
+    </style>
+  </head>
 </html>
