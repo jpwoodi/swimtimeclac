@@ -420,13 +420,15 @@ function focusOnMarker(id) {
 
         // Construct the popup content with the name, borough, and chain link
         document.getElementById('popup-card').innerHTML = `
-            <h2>${record.fields.Name}</h2>
+            <div class="popup-header">
+                <h2>${record.fields.Name}</h2>
+                ${chainLinkHtml} <!-- Chain link icon -->
+            </div>
             <p><strong>Length:</strong> ${record.fields.Length} meters</p>
             <p><strong>Borough:</strong> ${record.fields.Borough}</p>
             <p><strong>Address:</strong> ${record.fields.Address}</p>
             <p><strong>Opening Hours:</strong> ${record.fields.Opening_Hours}</p>
             <p><strong>Price (Non-member):</strong> ${record.fields.Price}</p>
-            <p>${chainLinkHtml}</p> <!-- Chain link added here -->
         `;
 
         document.getElementById('popup-card').classList.add('visible');
