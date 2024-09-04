@@ -406,7 +406,6 @@ fetch('/.netlify/functions/getPools')
 function focusOnMarker(id) {
     // Reset the last focused marker, if any
     if (lastFocusedMarker) {
-        // Restore the original marker icon based on its type (pool or open_water)
         const originalIcon = lastFocusedMarker.marker.type === 'open_water' ? openWaterIcon : poolIcon;
         lastFocusedMarker.marker.setIcon(originalIcon);
     }
@@ -415,32 +414,29 @@ function focusOnMarker(id) {
     if (focusedMarker) {
         // Set the marker to the red "focus" icon
         focusedMarker.marker.setIcon(focusIcon);
-
         map.setView(focusedMarker.marker.getLatLng(), 15); // Adjust zoom level as needed
         lastFocusedMarker = focusedMarker;
 
         const record = dataRecords.find(record => record.id === id);
-
-        // Ensure the `Website` field exists and is valid, else fallback to '#'
         let websiteUrl = record.fields.Website ? record.fields.Website : '#';
 
-        // Prepend 'https://' if the URL doesn't already contain 'http://' or 'https://'
+        // Prepend 'https://' if necessary
         if (websiteUrl && !websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
             websiteUrl = 'https://' + websiteUrl;
         }
 
-        // HTML for the chain link image with hyperlink to the website
+        // HTML for the chain link image with a test placeholder image
         const chainLinkHtml = `
-            <a href="${record.fields.Website}" target="_blank" title="Visit Website">
-                <img src="images/chain-link.png" alt="Link to website" class="chain-link-icon">
+            <a href="${websiteUrl}" target="_blank" title="Visit Website">
+                <img src="https://via.placeholder.com/20" alt="Link to website" class="chain-link-icon">
             </a>
         `;
 
-        // Construct the popup content with the name, borough, and chain link
+        // Construct the popup content
         document.getElementById('popup-card').innerHTML = `
             <div class="popup-header">
                 <h2>${record.fields.Name}</h2>
-                ${chainLinkHtml} <!-- Chain link icon -->
+                ${chainLinkHtml}
             </div>
             <p><strong>Length:</strong> ${record.fields.Length} meters</p>
             <p><strong>Borough:</strong> ${record.fields.Borough}</p>
@@ -452,6 +448,7 @@ function focusOnMarker(id) {
         document.getElementById('popup-card').classList.add('visible');
     }
 }
+
         
 function filterPools() {
     let input = document.getElementById('search').value.toLowerCase();
