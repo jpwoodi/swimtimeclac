@@ -119,7 +119,7 @@
         }
 
         .toggle-container input[type="radio"] {
-            margin-right: 8px; /* Space between radio button and text */
+            margin-right: 8px;
         }
 
         .error {
@@ -144,10 +144,51 @@
             margin-right: 8px;
         }
 
+        /* Navigation bar styles */
+        .top-nav {
+            width: 100%;
+            background-color: #007BFF;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+        }
+
+        .top-nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .top-nav ul li {
+            padding: 14px 20px;
+        }
+
+        .top-nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .top-nav ul li a:hover {
+            background-color: #0056b3;
+            color: white;
+            border-radius: 5px;
+        }
+
+        /* Add padding to your main content to avoid being hidden by the fixed nav */
+        .container {
+            margin-top: 60px;
+        }
+
         @media (max-width: 576px) {
             .calculator-container {
                 padding: 20px;
-                min-height: auto; /* Adjust height for smaller screens */
+                min-height: auto;
             }
 
             h1 {
@@ -165,51 +206,21 @@
             p {
                 font-size: 1em;
             }
-                    /* Style for the top navigation bar */
-            .top-nav {
-                width: 100%;
-                background-color: #007BFF;
-                position: fixed;
-                top: 0;
-                left: 0;
-                z-index: 100;
-                display: flex;
-                justify-content: center;
-            }
-    
+
+            /* Mobile navigation adjustments */
             .top-nav ul {
-                list-style-type: none;
-                margin: 0;
-                padding: 0;
-                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
-    
+
             .top-nav ul li {
-                padding: 14px 20px;
+                padding: 10px;
             }
-    
-            .top-nav ul li a {
-                color: white;
-                text-decoration: none;
-                font-size: 18px;
-                font-family: 'Poppins', sans-serif;
-            }
-    
-            .top-nav ul li a:hover {
-                background-color: #0056b3;
-                color: white;
-                border-radius: 5px;
-            }
-    
-            /* Add padding to your main content to avoid being hidden by the fixed nav */
-            .container {
-                margin-top: 60px;
-            
         }
     </style>
 </head>
 <body>
-        <!-- Navigation Menu -->
+    <!-- Navigation Menu -->
     <nav class="top-nav">
         <ul>
             <li><a href="index.html">Home</a></li>
