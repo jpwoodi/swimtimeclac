@@ -296,6 +296,15 @@ function initMap() {
         shadowSize: [41, 41]
     });
 
+    const focusIcon = L.icon({
+        iconUrl: 'images/map-marker-red.png', // Red marker for focus mode
+        shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
     fetch('/.netlify/functions/getPools')
         .then(response => response.json())
         .then(data => {
@@ -314,10 +323,12 @@ function initMap() {
             allMarkers = data.records.map(record => {
                 if (record.fields.Latitude && record.fields.Longitude) {
                     // Check type of location and assign the correct icon
-                    const icon = record.fields.Type.toLowerCase() === 'open_water' ? openWaterIcon : poolIcon;
+                    const type = record.fields.Type.toLowerCase();
+                    const icon = type === 'open_water' ? openWaterIcon : poolIcon;
 
                     const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
                     marker.bindPopup(`<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`);
+                    marker.type = type; // Store type in the marker object for later use
                     marker.on('click', () => focusOnMarker(record.id));
                     return { id: record.id, marker };
                 }
@@ -341,13 +352,45 @@ function initMap() {
 
     map.on('click', () => {
         if (lastFocusedMarker) {
-            lastFocusedMarker.marker.setIcon(poolIcon);
+            // Restore the original marker icon based on its type (pool or open_water)
+            const originalIcon = lastFocusedMarker.marker.type === 'open_water' ? openWaterIcon : poolIcon;
+            lastFocusedMarker.marker.setIcon(originalIcon);
             lastFocusedMarker = null;
             document.getElementById('popup-card').classList.remove('visible');
             map.setView([51.5074, -0.1278], defaultZoomLevel); // Reset to default zoom level
         }
     });
 }
+
+function focusOnMarker(id) {
+    // Reset the last focused marker, if any
+    if (lastFocusedMarker) {
+        // Restore the original marker icon based on its type (pool or open_water)
+        const originalIcon = lastFocusedMarker.marker.type === 'open_water' ? openWaterIcon : poolIcon;
+        lastFocusedMarker.marker.setIcon(originalIcon);
+    }
+
+    let focusedMarker = markers.find(marker => marker.id === id);
+    if (focusedMarker) {
+        // Set the marker to the red "focus" icon
+        focusedMarker.marker.setIcon(focusIcon);
+
+        map.setView(focusedMarker.marker.getLatLng(), 15); // Adjust zoom level as needed
+        lastFocusedMarker = focusedMarker;
+
+        const record = dataRecords.find(record => record.id === id);
+        document.getElementById('popup-card').innerHTML = `
+            <h2>${record.fields.Name}</h2>
+            <p><strong>Length:</strong> ${record.fields.Length} meters</p>
+            <p><strong>Borough:</strong> ${record.fields.Borough}</p>
+            <p><strong>Address:</strong> ${record.fields.Address}</p>
+            <p><strong>Opening Hours:</strong> ${record.fields.Opening_Hours}</p>
+            <p><strong>Price (Non-member):</strong> ${record.fields.Price}</p>
+        `;
+        document.getElementById('popup-card').classList.add('visible');
+    }
+}
+
 
         
 function filterPools() {
