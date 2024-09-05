@@ -62,59 +62,60 @@
     </div>
 
     <script>
-        // Function to fetch the Strava client ID from the server
-        async function fetchClientId() {
+        // Function to fetch the Strava client ID and redirect URI from the server
+        async function fetchClientInfo() {
             const response = await fetch('/.netlify/functions/get-strava-client-id');
             const data = await response.json();
-            return data.clientId;
+            return { clientId: data.clientId, redirectUri: data.redirectUri };
         }
 
         // Redirect to Strava for authorization
         async function authenticateStrava() {
-            const clientId = await fetchClientId();
-            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${REDIRECT_URI}&approval_prompt=force&scope=read_all`; 
+            const { clientId, redirectUri } = await fetchClientInfo(); // Fetch both clientId and redirectUri
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=activity:read_all`;
             window.location.href = authUrl;
-}
+        }
 
+        // Handle the OAuth callback and fetch activities
+        async function handleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
 
-    // Handle the OAuth callback and fetch activities
-    async function handleCallback() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+            if (code) {
+                try {
+                    // Fetch activities using the Netlify function
+                    const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
+                    const activities = await response.json();
 
-        if (code) {
-            try {
-                // Fetch activities using the Netlify function by passing the code
-                const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
-                const activities = await response.json();
+                    // Log the full response to inspect the structure
+                    console.log('Activities response:', activities);
 
-                // Log the full response to inspect the structure
-                console.log('Activities response:', activities);
+                    const activitiesContainer = document.getElementById('activities');
+                    activitiesContainer.innerHTML = '';
 
-                const activitiesContainer = document.getElementById('activities');
-                activitiesContainer.innerHTML = '';
-
-                // Check if the response is an array and has any swim activities
-                if (Array.isArray(activities) && activities.length > 0) {
-                    activities.forEach(activity => {
-                        const activityElement = document.createElement('div');
-                        activityElement.classList.add('activity');
-                        activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
-                        activitiesContainer.appendChild(activityElement);
-                    });
-                } else {
-                    activitiesContainer.innerHTML = '<p>No recent swims found</p>';
+                    // Check if the response is an array and has any swim activities
+                    if (Array.isArray(activities) && activities.length > 0) {
+                        activities.forEach(activity => {
+                            const activityElement = document.createElement('div');
+                            activityElement.classList.add('activity');
+                            activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
+                            activitiesContainer.appendChild(activityElement);
+                        });
+                    } else {
+                        activitiesContainer.innerHTML = '<p>No recent swims found</p>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching activities:', error);
                 }
-            } catch (error) {
-                console.error('Error fetching activities:', error);
             }
         }
-    }
 
-    // Call handleCallback when the page loads and user returns with the authorization code
-    window.onload = handleCallback;
-</script>
+        // Event listener for the "Connect with Strava" button
+        document.getElementById('auth-button').addEventListener('click', authenticateStrava);
 
+        // Handle callback when page loads
+        window.onload = handleCallback;
+    </script>
 
 </body>
 </html>
