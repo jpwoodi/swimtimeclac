@@ -64,7 +64,8 @@
     <script>
         // Redirect to Strava for authorization
         function authenticateStrava() {
-            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID_STRAVA}&response_type=code&redirect_uri=https://woodnott.com/callback&scope=activity:read_all`;
+            // Update this to correctly reflect the environment variables
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${process.env.CLIENT_ID_STRAVA}&response_type=code&redirect_uri=${process.env.REDIRECT_URI_STRAVA}&scope=activity:read_all`;
             window.location.href = authUrl;
         }
 
