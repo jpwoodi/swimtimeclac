@@ -77,47 +77,44 @@
 }
 
 
+    // Handle the OAuth callback and fetch activities
+    async function handleCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
 
-        // Handle the OAuth callback and fetch activities
-        async function handleCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
+        if (code) {
+            try {
+                // Fetch activities using the Netlify function by passing the code
+                const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
+                const activities = await response.json();
 
-            if (code) {
-                try {
-                    // Fetch activities using the Netlify function
-                    const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
-                    const activities = await response.json();
+                // Log the full response to inspect the structure
+                console.log('Activities response:', activities);
 
-                    // Log the full response to inspect the structure
-                    console.log('Activities response:', activities);
+                const activitiesContainer = document.getElementById('activities');
+                activitiesContainer.innerHTML = '';
 
-                    const activitiesContainer = document.getElementById('activities');
-                    activitiesContainer.innerHTML = '';
-
-                    // Check if the response is an array and has any swim activities
-                    if (Array.isArray(activities) && activities.length > 0) {
-                        activities.forEach(activity => {
-                            const activityElement = document.createElement('div');
-                            activityElement.classList.add('activity');
-                            activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
-                            activitiesContainer.appendChild(activityElement);
-                        });
-                    } else {
-                        activitiesContainer.innerHTML = '<p>No recent swims found</p>';
-                    }
-                } catch (error) {
-                    console.error('Error fetching activities:', error);
+                // Check if the response is an array and has any swim activities
+                if (Array.isArray(activities) && activities.length > 0) {
+                    activities.forEach(activity => {
+                        const activityElement = document.createElement('div');
+                        activityElement.classList.add('activity');
+                        activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
+                        activitiesContainer.appendChild(activityElement);
+                    });
+                } else {
+                    activitiesContainer.innerHTML = '<p>No recent swims found</p>';
                 }
+            } catch (error) {
+                console.error('Error fetching activities:', error);
             }
         }
+    }
 
-        // Event listener for the "Connect with Strava" button
-        document.getElementById('auth-button').addEventListener('click', authenticateStrava);
+    // Call handleCallback when the page loads and user returns with the authorization code
+    window.onload = handleCallback;
+</script>
 
-        // Handle callback when page loads
-        window.onload = handleCallback;
-    </script>
 
 </body>
 </html>
