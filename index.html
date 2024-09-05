@@ -65,12 +65,27 @@
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 10px;
             margin-top: 20px;
+            text-align: center;
         }
 
         .activity {
             margin-bottom: 10px;
             padding: 10px;
             border-bottom: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -88,6 +103,9 @@
     <div id="strava-feed" class="strava-feed">
         <h2>My Strava Swims</h2>
         <div id="activities"></div>
+
+        <!-- Button to trigger Strava OAuth -->
+        <button onclick="authenticateStrava()">Connect to Strava</button>
     </div>
 
     <script>
