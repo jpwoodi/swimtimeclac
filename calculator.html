@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time and Pace Calculator</title>
+    <title>Swim Calculator: Time and Pace</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
@@ -29,7 +29,6 @@
             padding: 20px;
         }
 
-        /* Calculator Styles */
         .calculator-container {
             background-color: #ffffff;
             border-radius: 10px;
@@ -42,8 +41,6 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 600px; /* Fixed height to avoid resizing */
-            overflow: hidden; /* Prevents form expanding the container */
         }
 
         h1 {
@@ -102,13 +99,7 @@
         }
 
         .hidden {
-            visibility: hidden;
-            height: 0;
-        }
-
-        .visible {
-            visibility: visible;
-            height: auto;
+            display: none;
         }
 
         .toggle-container {
@@ -157,7 +148,6 @@
             .calculator-container {
                 padding: 20px;
                 min-height: auto; /* Adjust height for smaller screens */
-                height: auto; /* Allow height to adjust on small screens */
             }
 
             h1 {
@@ -180,7 +170,7 @@
 </head>
 <body>
     <div class="calculator-container">
-        <h1>Time and Pace Calculator</h1>
+        <h1>Swim Calculator</h1>
         <div class="toggle-container">
             <label>
                 <input type="radio" name="calculation-mode" value="time" checked onclick="toggleMode()"> Calculate Time
@@ -196,14 +186,14 @@
                 <input type="text" id="distance" name="distance" placeholder="Enter distance" oninput="formatInputWithCommas(this); updateTimeLabel();">
             </div>
 
-            <div class="form-group visible" id="time-group">
+            <div class="form-group hidden" id="time-group">
                 <label for="time-hours">Hours:</label>
                 <input type="text" id="time-hours" name="time-hours" placeholder="Hours" oninput="formatInputWithCommas(this);">
                 <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
                 <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
             </div>
 
-            <div class="form-group visible" id="pace-group">
+            <div class="form-group" id="pace-group">
                 <label for="pace-mins">Pace (/100m):</label>
                 <input type="text" id="pace-mins" name="pace-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
                 <input type="text" id="pace-secs" name="pace-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
@@ -214,6 +204,10 @@
         
         <p id="result"></p>
         <p id="error-message" class="error hidden"></p>
+
+        <a href="pools.html" class="back-link">
+            <i class="fas fa-swimming-pool"></i> View Swimming Pools in London
+        </a>
     </div>
 
     <script>
@@ -224,14 +218,10 @@
 
             if (mode === 'time') {
                 timeGroup.classList.add('hidden');
-                timeGroup.classList.remove('visible');
-                paceGroup.classList.add('visible');
                 paceGroup.classList.remove('hidden');
             } else {
-                timeGroup.classList.add('visible');
                 timeGroup.classList.remove('hidden');
                 paceGroup.classList.add('hidden');
-                paceGroup.classList.remove('visible');
             }
 
             document.getElementById('result').innerText = ''; // Clear the result when switching modes
