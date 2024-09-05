@@ -72,7 +72,7 @@
         // Redirect to Strava for authorization
         async function authenticateStrava() {
             const clientId = await fetchClientId();
-            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=https://woodnott.com&scope=activity:read_all`;
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID_STRAVA}&response_type=code&redirect_uri=https://woodnott.com/callback&scope=read,activity:read_all&approval_prompt=force`;
             window.location.href = authUrl;
         }
 
