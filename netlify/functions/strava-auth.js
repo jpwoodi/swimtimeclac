@@ -1,77 +1,103 @@
-// /.netlify/functions/strava-auth.js
 const fetch = require('node-fetch');
 
-const CLIENT_ID = process.env.CLIENT_ID_STRAVA;
-const CLIENT_SECRET = process.env.CLIENT_SECRET_STRAVA;
+exports.handler = async (event, context) => {
+    const CLIENT_ID = process.env.CLIENT_ID_STRAVA;
+    const CLIENT_SECRET = process.env.CLIENT_SECRET_STRAVA;
+    const REDIRECT_URI = process.env.REDIRECT_URI_STRAVA;
 
-async function getAccessToken(refreshToken) {
-    // Exchange refresh token for a new access token
-    const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            client_id: CLIENT_ID,
-            client_secret: CLIENT_SECRET,
-            grant_type: 'refresh_token',
-            refresh_token: refreshToken
-        }),
-    });
-
-    const tokenData = await tokenResponse.json();
-    return tokenData;
-}
-
-exports.handler = async function(event, context) {
     const code = event.queryStringParameters.code;
 
-    if (code) {
-        // If code is present, exchange it for an access token and refresh token
-        const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
-            method: 'POST',
+    if (!code) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'Missing authorization code' }),
+        };
+    }
+
+    try {
+        // Check if we have a stored refresh token and access token
+        let refreshToken = process.env.REFRESH_TOKEN_STRAVA;
+
+        // Function to refresh access token using refresh token
+        const refreshAccessToken = async (refreshToken) => {
+            const refreshResponse = await fetch('https://www.strava.com/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                    grant_type: 'refresh_token',
+                    refresh_token: refreshToken,
+                }),
+            });
+
+            const refreshData = await refreshResponse.json();
+
+            if (!refreshData.access_token) {
+                throw new Error('Failed to refresh access token');
+            }
+
+            // Return new access and refresh tokens
+            return {
+                accessToken: refreshData.access_token,
+                refreshToken: refreshData.refresh_token,
+            };
+        };
+
+        // If no refresh token exists, exchange the authorization code for access/refresh tokens
+        if (!refreshToken) {
+            const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                    code: code,
+                    grant_type: 'authorization_code',
+                    redirect_uri: REDIRECT_URI,
+                }),
+            });
+
+            const tokenData = await tokenResponse.json();
+
+            if (!tokenData.access_token || !tokenData.refresh_token) {
+                throw new Error('Failed to get access or refresh token');
+            }
+
+            // Store the refresh token securely in Netlify environment variables (or some other method)
+            refreshToken = tokenData.refresh_token;
+
+            // Return new access and refresh tokens
+            return {
+                statusCode: 200,
+                body: JSON.stringify(tokenData),
+            };
+        }
+
+        // If a refresh token exists, use it to get a new access token
+        const { accessToken } = await refreshAccessToken(refreshToken);
+
+        // Fetch activities using the new access token
+        const activitiesResponse = await fetch('https://www.strava.com/api/v3/athlete/activities', {
             headers: {
-                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
             },
-            body: JSON.stringify({
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
-                code: code,
-                grant_type: 'authorization_code'
-            }),
         });
 
-        const tokenData = await tokenResponse.json();
+        const activities = await activitiesResponse.json();
 
-        // Return access token, refresh token, and expiration data to the client
         return {
             statusCode: 200,
-            body: JSON.stringify({
-                access_token: tokenData.access_token,
-                refresh_token: tokenData.refresh_token,
-                expires_at: tokenData.expires_at, // UNIX timestamp for when the token expires
-            }),
+            body: JSON.stringify(activities),
         };
-    }
-
-    const refreshToken = event.queryStringParameters.refresh_token;
-    if (refreshToken) {
-        // Use the refresh token to get a new access token
-        const tokenData = await getAccessToken(refreshToken);
-
-        // Return the new tokens to the client
+    } catch (error) {
         return {
-            statusCode: 200,
-            body: JSON.stringify({
-                access_token: tokenData.access_token,
-                refresh_token: tokenData.refresh_token,
-                expires_at: tokenData.expires_at,
-            }),
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Server error', details: error.message }),
         };
     }
-
-    return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Missing authorization code or refresh token' }),
-    };
 };
