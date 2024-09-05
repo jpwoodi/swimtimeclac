@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+
 exports.handler = async (event, context) => {
     const CLIENT_ID = process.env.CLIENT_ID_STRAVA;
     const CLIENT_SECRET = process.env.CLIENT_SECRET_STRAVA;
@@ -14,10 +15,12 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        // Check for existing refresh token
         let refreshToken = process.env.REFRESH_TOKEN_STRAVA;
 
         // Function to refresh access token using refresh token
         const refreshAccessToken = async (refreshToken) => {
+            console.log('Refreshing access token...');
             const refreshResponse = await fetch('https://www.strava.com/oauth/token', {
                 method: 'POST',
                 headers: {
@@ -32,20 +35,22 @@ exports.handler = async (event, context) => {
             });
 
             const refreshData = await refreshResponse.json();
-            console.log('Refresh token response:', refreshData); // Log the full refresh response
+            console.log('Refresh token response:', refreshData); // Log the full response
 
             if (!refreshData.access_token) {
                 throw new Error('Failed to refresh access token');
             }
 
+            // Return new access and refresh tokens
             return {
                 accessToken: refreshData.access_token,
                 refreshToken: refreshData.refresh_token,
             };
         };
 
-        // If no refresh token exists, exchange the authorization code for access/refresh tokens
+        // Exchange authorization code for access/refresh tokens
         if (!refreshToken) {
+            console.log('No refresh token found. Exchanging authorization code...');
             const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
                 method: 'POST',
                 headers: {
@@ -61,11 +66,13 @@ exports.handler = async (event, context) => {
             });
 
             const tokenData = await tokenResponse.json();
+            console.log('Token exchange response:', tokenData); // Log the full response
 
             if (!tokenData.access_token || !tokenData.refresh_token) {
                 throw new Error('Failed to get access or refresh token');
             }
 
+            // Store refresh token for future use
             refreshToken = tokenData.refresh_token;
 
             return {
@@ -85,16 +92,13 @@ exports.handler = async (event, context) => {
 
         const activities = await activitiesResponse.json();
 
-        // Log the fetched activities for debugging purposes
-        console.log('Fetched activities:', activities); // Log the full activities response
+        console.log('Fetched activities:', activities); // Log the activities response
 
-        // Check for authorization error
         if (activities.errors) {
-            console.error('Authorization error:', activities);
             throw new Error('Authorization error: Missing read permissions.');
         }
 
-        // Filter out only swim activities
+        // Filter for swim activities
         const swimActivities = activities.filter(activity => activity.type === 'Swim');
 
         return {
@@ -102,13 +106,10 @@ exports.handler = async (event, context) => {
             body: JSON.stringify(swimActivities),
         };
     } catch (error) {
-        // Log the error for debugging
         console.error('Error fetching activities:', error.message);
-
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Server error', details: error.message }),
         };
     }
 };
-
