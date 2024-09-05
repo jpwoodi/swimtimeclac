@@ -105,43 +105,85 @@
     </div>
 
     <script>
-        // Redirect to Strava for authorization
-        function authenticateStrava() {
-            // Call the Netlify function to get the authorization URL
-            fetch('/.netlify/functions/strava-auth-url')
-                .then(response => response.json())
-                .then(data => {
-                    // Redirect the user to Strava's OAuth page
-                    window.location.href = data.authUrl;
-                })
-                .catch(error => {
-                    console.error("Error fetching auth URL:", error);
-                });
-        }
+    // Function to authenticate with Strava and fetch tokens
+    function authenticateStrava() {
+        fetch('/.netlify/functions/strava-auth-url')
+            .then(response => response.json())
+            .then(data => {
+                window.location.href = data.authUrl;
+            })
+            .catch(error => console.error("Error fetching auth URL:", error));
+    }
 
-        // Handle OAuth callback and fetch activities
-        async function handleCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
+    // Handle OAuth callback and store tokens
+    async function handleCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
 
-            if (code) {
-                // Call the Netlify function with the authorization code
-                const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
-                const activities = await response.json();
+        if (code) {
+            const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
+            const data = await response.json();
 
-                const activitiesContainer = document.getElementById('activities');
-                activities.forEach(activity => {
-                    const activityElement = document.createElement('div');
-                    activityElement.classList.add('activity');
-                    activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
-                    activitiesContainer.appendChild(activityElement);
-                });
+            // Store tokens and expiration time
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+            localStorage.setItem('expires_at', data.expires_at);
+
+            // Fetch activities
+            fetchActivities(data.access_token);
+        } else {
+            // Check if access token is already stored and valid
+            const accessToken = localStorage.getItem('access_token');
+            const expiresAt = localStorage.getItem('expires_at');
+
+            if (accessToken && Date.now() < expiresAt * 1000) {
+                // Token is still valid, fetch activities
+                fetchActivities(accessToken);
+            } else {
+                // Token expired or not present, use refresh token to get a new access token
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (refreshToken) {
+                    refreshAccessToken(refreshToken);
+                }
             }
         }
+    }
 
-        // Call handleCallback when the page loads
-        window.onload = handleCallback;
-    </script>
+    // Fetch activities using access token
+    async function fetchActivities(accessToken) {
+        const response = await fetch('https://www.strava.com/api/v3/athlete/activities', {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+        });
+        const activities = await response.json();
+        const activitiesContainer = document.getElementById('activities');
+
+        activities.forEach(activity => {
+            const activityElement = document.createElement('div');
+            activityElement.classList.add('activity');
+            activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
+            activitiesContainer.appendChild(activityElement);
+        });
+    }
+
+    // Refresh access token using the refresh token
+    async function refreshAccessToken(refreshToken) {
+        const response = await fetch(`/.netlify/functions/strava-auth?refresh_token=${refreshToken}`);
+        const data = await response.json();
+
+        // Update tokens and expiration time in localStorage
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem('expires_at', data.expires_at);
+
+        // Fetch activities with the new access token
+        fetchActivities(data.access_token);
+    }
+
+    // Call handleCallback when the page loads
+    window.onload = handleCallback;
+</script>
 
 </body>
 </html>
