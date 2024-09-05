@@ -65,12 +65,14 @@ exports.handler = async (event, context) => {
                 }),
             });
 
+
             const tokenData = await tokenResponse.json();
-            console.log('Token exchange response:', tokenData); // Log the full response
+            console.log('Token exchange response:', tokenData); // Log full response, including the scope
 
             if (!tokenData.access_token || !tokenData.refresh_token) {
                 throw new Error('Failed to get access or refresh token');
-            }
+}
+
 
             // Store refresh token for future use
             refreshToken = tokenData.refresh_token;
