@@ -15,7 +15,7 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        // Check if we have a stored refresh token and access token
+        // Check if we have a stored refresh token in environment variables
         let refreshToken = process.env.REFRESH_TOKEN_STRAVA;
 
         // Function to refresh access token using refresh token
