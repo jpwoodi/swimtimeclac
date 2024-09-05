@@ -54,7 +54,7 @@
 <body>
 
     <!-- Button to Trigger Strava Authentication -->
-    <button onclick="authenticateStrava()">Connect with Strava</button>
+    <button id="auth-button">Connect with Strava</button>
 
     <div id="strava-feed" class="strava-feed">
         <h2>My Strava Swims</h2>
@@ -62,10 +62,17 @@
     </div>
 
     <script>
+        // Function to fetch the Strava client ID from the server
+        async function fetchClientId() {
+            const response = await fetch('/.netlify/functions/get-strava-client-id');
+            const data = await response.json();
+            return data.clientId;
+        }
+
         // Redirect to Strava for authorization
-        function authenticateStrava() {
-            // Update this to correctly reflect the environment variables
-            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${process.env.CLIENT_ID_STRAVA}&response_type=code&redirect_uri=${process.env.REDIRECT_URI_STRAVA}&scope=activity:read_all`;
+        async function authenticateStrava() {
+            const clientId = await fetchClientId();
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=https://woodnott.com/callback&scope=activity:read_all`;
             window.location.href = authUrl;
         }
 
@@ -90,6 +97,8 @@
                 });
             }
         }
+
+        document.getElementById('auth-button').addEventListener('click', authenticateStrava);
 
         // Call handleCallback when the page loads
         window.onload = handleCallback;
