@@ -15,7 +15,6 @@ exports.handler = async (event, context) => {
     }
 
     try {
-        // Check if we have a stored refresh token in environment variables
         let refreshToken = process.env.REFRESH_TOKEN_STRAVA;
 
         // Function to refresh access token using refresh token
@@ -39,7 +38,6 @@ exports.handler = async (event, context) => {
                 throw new Error('Failed to refresh access token');
             }
 
-            // Return new access and refresh tokens
             return {
                 accessToken: refreshData.access_token,
                 refreshToken: refreshData.refresh_token,
@@ -87,18 +85,20 @@ exports.handler = async (event, context) => {
 
         const activities = await activitiesResponse.json();
 
+        // Log the fetched activities for debugging purposes
+        console.log('Fetched activities:', activities);
+
         // Filter out only swim activities
         const swimActivities = activities.filter(activity => activity.type === 'Swim');
-
-        // Log to debug and check the activities
-        console.log('Fetched activities:', activities);
-        console.log('Swim activities:', swimActivities);
 
         return {
             statusCode: 200,
             body: JSON.stringify(swimActivities),
         };
     } catch (error) {
+        // Log the error for debugging
+        console.error('Error fetching activities:', error.message);
+
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Server error', details: error.message }),
