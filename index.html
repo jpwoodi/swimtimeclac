@@ -89,19 +89,26 @@
                 const activitiesContainer = document.getElementById('activities');
                 activitiesContainer.innerHTML = '';
 
-                activities.forEach(activity => {
-                    const activityElement = document.createElement('div');
-                    activityElement.classList.add('activity');
-                    activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
-                    activitiesContainer.appendChild(activityElement);
-                });
+                if (activities.length > 0) {
+                    activities.forEach(activity => {
+                        const activityElement = document.createElement('div');
+                        activityElement.classList.add('activity');
+                        activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
+                        activitiesContainer.appendChild(activityElement);
+                    });
+                } else {
+                    activitiesContainer.innerHTML = 'No recent swims found.';
+                }
             }
         }
 
+        // Event listener for the "Connect with Strava" button
         document.getElementById('auth-button').addEventListener('click', authenticateStrava);
 
-        // Call handleCallback when the page loads
-        window.onload = handleCallback;
+        // Check if the user has been redirected to the callback URL
+        if (window.location.pathname === '/callback') {
+            handleCallback();
+        }
     </script>
 
 </body>
