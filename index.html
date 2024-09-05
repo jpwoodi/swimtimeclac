@@ -56,10 +56,6 @@
             border-radius: 5px;
         }
 
-        .container {
-            margin-top: 60px;
-        }
-
         .strava-feed {
             padding: 20px;
             background-color: rgba(255, 255, 255, 0.8);
@@ -111,8 +107,16 @@
     <script>
         // Redirect to Strava for authorization
         function authenticateStrava() {
-            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&scope=activity:read_all`;
-            window.location.href = authUrl;
+            // Call the Netlify function to get the authorization URL
+            fetch('/.netlify/functions/strava-auth-url')
+                .then(response => response.json())
+                .then(data => {
+                    // Redirect the user to Strava's OAuth page
+                    window.location.href = data.authUrl;
+                })
+                .catch(error => {
+                    console.error("Error fetching auth URL:", error);
+                });
         }
 
         // Handle OAuth callback and fetch activities
