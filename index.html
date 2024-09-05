@@ -82,7 +82,7 @@
             const code = urlParams.get('code');
 
             if (code) {
-                // Fetch activities using the Netlify function
+                // Fetch activities using the Netlify function with the authorization code
                 const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
                 const activities = await response.json();
 
