@@ -153,4 +153,30 @@
                 // Check if the response is an array and has any swim activities
                 if (Array.isArray(activities) && activities.length > 0) {
                     activities.forEach((activity, index) => {
-                        c
+                        const side = index % 2 === 0 ? 'left' : 'right'; // Alternate sides for timeline
+
+                        const timelineItem = document.createElement('div');
+                        timelineItem.classList.add('timeline-item', side);
+
+                        const swimName = `<h3>${activity.name}</h3>`;
+                        const swimDistance = `<p><strong>Distance:</strong> ${activity.distance} meters</p>`;
+                        const swimDate = `<p class="date">${new Date(activity.start_date).toLocaleDateString()}</p>`;
+                        const swimPhoto = activity.photo ? `<img src="${activity.photo}" alt="Swim Photo" class="swim-photo">` : ''; // Placeholder for photos
+
+                        timelineItem.innerHTML = `${swimName}${swimDistance}${swimDate}${swimPhoto}`;
+                        timeline.appendChild(timelineItem);
+                    });
+                } else {
+                    timeline.innerHTML = '<p>No recent swims found</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching activities:', error);
+            }
+        }
+
+        // Fetch swims when page loads
+        window.onload = fetchSwims;
+    </script>
+
+</body>
+</html>
