@@ -6,8 +6,6 @@
     <title>Swimming</title>
     <link rel="icon" href="images/swimming_favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -23,7 +21,6 @@
             justify-content: center;
         }
 
-              /* Style for the top navigation bar */
         .top-nav {
             width: 100%;
             background-color: #007BFF;
@@ -59,40 +56,25 @@
             border-radius: 5px;
         }
 
-        /* Add padding to your main content to avoid being hidden by the fixed nav */
         .container {
             margin-top: 60px;
         }
 
-        @media (max-width: 768px) {
-            .top-nav ul {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .top-nav ul li {
-                padding: 10px;
-            }
+        .strava-feed {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            margin-top: 20px;
         }
-    .strava-feed {
-        padding: 20px;
-        background-color: rgba(255, 255, 255, 0.8);
-        border-radius: 10px;
-        margin-top: 20px;
-    }
 
-    .activity {
-        margin-bottom: 10px;
-        padding: 10px;
-        border-bottom: 1px solid #ccc;
-    }
-    
-    
-    
-    
+        .activity {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
     </style>
-  </head>
-    <body>
+</head>
+<body>
 
     <!-- Navigation Menu -->
     <nav class="top-nav">
@@ -102,44 +84,42 @@
             <li><a href="pools.html">London Swim Locations</a></li>
         </ul>
     </nav>
-    
+
     <div id="strava-feed" class="strava-feed">
-    <h2>My Strava Swims</h2>
-    <div id="activities"></div>
-        
-</div>
+        <h2>My Strava Swims</h2>
+        <div id="activities"></div>
+    </div>
 
-<script>
-    // Redirect to Strava for authorization
-    function authenticateStrava() {
-        const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=https://your-site-url/.netlify/functions/strava-auth&scope=activity:read_all`;
-        window.location.href = authUrl;
-    }
-
-    // Handle the OAuth callback
-    async function handleCallback() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-
-        if (code) {
-            // Call the Netlify function with the authorization code
-            const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
-            const activities = await response.json();
-
-            const activitiesContainer = document.getElementById('activities');
-            activities.forEach(activity => {
-                const activityElement = document.createElement('div');
-                activityElement.classList.add('activity');
-                activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
-                activitiesContainer.appendChild(activityElement);
-            });
+    <script>
+        // Redirect to Strava for authorization
+        function authenticateStrava() {
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}&scope=activity:read_all`;
+            window.location.href = authUrl;
         }
-    }
 
-    // Call handleCallback when the page loads
-    window.onload = handleCallback;
-</script>
+        // Handle OAuth callback and fetch activities
+        async function handleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
 
+            if (code) {
+                // Call the Netlify function with the authorization code
+                const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
+                const activities = await response.json();
 
-    </body>
+                const activitiesContainer = document.getElementById('activities');
+                activities.forEach(activity => {
+                    const activityElement = document.createElement('div');
+                    activityElement.classList.add('activity');
+                    activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
+                    activitiesContainer.appendChild(activityElement);
+                });
+            }
+        }
+
+        // Call handleCallback when the page loads
+        window.onload = handleCallback;
+    </script>
+
+</body>
 </html>
