@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Swim Timeline</title>
+    <title>Swimming</title>
+    <link rel="icon" href="images/swimming_favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
@@ -132,64 +133,94 @@
                 left: 20px;
             }
         }
+
+        button {
+            padding: 10px 20px;
+            background-color: #fc4c02;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            background-color: #e34400;
+        }
     </style>
 </head>
 <body>
 
-<h1>My Swim Timeline</h1>
+    <h1>My Strava Swim Timeline</h1>
 
-<div class="timeline" id="timeline"></div>
+    <!-- Button to Trigger Strava Authentication -->
+    <div style="text-align: center;">
+        <button id="auth-button">Connect with Strava</button>
+    </div>
 
-<script>
-    // Sample data from Strava (replace with actual API call)
-    const swimData = [
-        {
-            name: "Morning Swim at the Lake",
-            distance: 1500,
-            date: "2024-09-01",
-            duration: "45 mins",
-            photo: "https://via.placeholder.com/300x200?text=Swim+Photo+1"
-        },
-        {
-            name: "Open Water Swim",
-            distance: 2000,
-            date: "2024-09-02",
-            duration: "60 mins",
-            photo: "https://via.placeholder.com/300x200?text=Swim+Photo+2"
-        },
-        {
-            name: "Pool Training Session",
-            distance: 1000,
-            date: "2024-09-03",
-            duration: "30 mins",
-            photo: null // No photo for this swim
+    <div class="timeline" id="timeline"></div>
+
+    <script>
+        // Function to fetch the Strava client ID and redirect URI from the server
+        async function fetchClientInfo() {
+            const response = await fetch('/.netlify/functions/get-strava-client-id');
+            const data = await response.json();
+            return { clientId: data.clientId, redirectUri: data.redirectUri };
         }
-    ];
 
-    // Function to generate timeline items dynamically
-    function renderTimeline(swimData) {
-        const timeline = document.getElementById('timeline');
+        // Redirect to Strava for authorization
+        async function authenticateStrava() {
+            const { clientId, redirectUri } = await fetchClientInfo(); // Fetch both clientId and redirectUri
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&approval_prompt=force&scope=read,activity:read_all`;
+            window.location.href = authUrl;
+        }
 
-        swimData.forEach((swim, index) => {
-            const side = index % 2 === 0 ? 'left' : 'right'; // Alternating sides
+        // Handle the OAuth callback and fetch activities
+        async function handleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
 
-            const timelineItem = document.createElement('div');
-            timelineItem.classList.add('timeline-item', side);
+            if (code) {
+                try {
+                    // Fetch activities using the Netlify function
+                    const response = await fetch(`/.netlify/functions/strava-auth?code=${code}`);
+                    const activities = await response.json();
 
-            const swimName = `<h3>${swim.name}</h3>`;
-            const swimDistance = `<p><strong>Distance:</strong> ${swim.distance} meters</p>`;
-            const swimDuration = `<p><strong>Duration:</strong> ${swim.duration}</p>`;
-            const swimDate = `<p class="date">${swim.date}</p>`;
-            const swimPhoto = swim.photo ? `<img src="${swim.photo}" alt="Swim Photo" class="swim-photo">` : '';
+                    const timeline = document.getElementById('timeline');
+                    timeline.innerHTML = '';
 
-            timelineItem.innerHTML = `${swimName}${swimDistance}${swimDuration}${swimDate}${swimPhoto}`;
-            timeline.appendChild(timelineItem);
-        });
-    }
+                    // Check if the response is an array and has any swim activities
+                    if (Array.isArray(activities) && activities.length > 0) {
+                        activities.forEach((activity, index) => {
+                            const side = index % 2 === 0 ? 'left' : 'right'; // Alternate sides for timeline
 
-    // Render the timeline with swim data
-    renderTimeline(swimData);
-</script>
+                            const timelineItem = document.createElement('div');
+                            timelineItem.classList.add('timeline-item', side);
+
+                            const swimName = `<h3>${activity.name}</h3>`;
+                            const swimDistance = `<p><strong>Distance:</strong> ${activity.distance} meters</p>`;
+                            const swimDate = `<p class="date">${new Date(activity.start_date).toLocaleDateString()}</p>`;
+                            const swimPhoto = activity.photo ? `<img src="${activity.photo}" alt="Swim Photo" class="swim-photo">` : ''; // Placeholder for photos
+
+                            timelineItem.innerHTML = `${swimName}${swimDistance}${swimDate}${swimPhoto}`;
+                            timeline.appendChild(timelineItem);
+                        });
+                    } else {
+                        timeline.innerHTML = '<p>No recent swims found</p>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching activities:', error);
+                }
+            }
+        }
+
+        // Event listener for the "Connect with Strava" button
+        document.getElementById('auth-button').addEventListener('click', authenticateStrava);
+
+        // Handle callback when page loads
+        window.onload = handleCallback;
+    </script>
 
 </body>
 </html>
