@@ -3,5 +3,6 @@
 
 [[redirects]]
   from = "/callback"
-  to = "/"
+  to = "/stravafeed.html"
   status = 200
+  query = "*"
