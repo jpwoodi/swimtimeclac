@@ -72,7 +72,7 @@
         // Redirect to Strava for authorization
         async function authenticateStrava() {
             const clientId = await fetchClientId();
-            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=https://woodnott.com/callback&scope=activity:read_all`;
+            const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=https://woodnott.com&scope=activity:read_all`;
             window.location.href = authUrl;
         }
 
@@ -99,14 +99,18 @@
                 } else {
                     activitiesContainer.innerHTML = 'No recent swims found.';
                 }
+
+                // Remove the authorization code from the URL after processing
+                const newUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
             }
         }
 
         // Event listener for the "Connect with Strava" button
         document.getElementById('auth-button').addEventListener('click', authenticateStrava);
 
-        // Check if the user has been redirected to the callback URL
-        if (window.location.pathname === '/callback') {
+        // Handle the callback when the user returns to the homepage with the authorization code
+        if (window.location.search.includes('code=')) {
             handleCallback();
         }
     </script>
