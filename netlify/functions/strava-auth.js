@@ -19,6 +19,7 @@ exports.handler = async (event, context) => {
 
         // Function to refresh access token using refresh token
         const refreshAccessToken = async (refreshToken) => {
+            console.log('Refreshing access token...');
             const refreshResponse = await fetch('https://www.strava.com/oauth/token', {
                 method: 'POST',
                 headers: {
@@ -33,6 +34,7 @@ exports.handler = async (event, context) => {
             });
 
             const refreshData = await refreshResponse.json();
+            console.log('Refresh token response:', refreshData);
 
             if (!refreshData.access_token) {
                 throw new Error('Failed to refresh access token');
@@ -46,6 +48,7 @@ exports.handler = async (event, context) => {
 
         // If no refresh token exists, exchange the authorization code for access/refresh tokens
         if (!refreshToken) {
+            console.log('No refresh token found, fetching new tokens...');
             const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
                 method: 'POST',
                 headers: {
@@ -61,6 +64,7 @@ exports.handler = async (event, context) => {
             });
 
             const tokenData = await tokenResponse.json();
+            console.log('Token response:', tokenData);
 
             if (!tokenData.access_token || !tokenData.refresh_token) {
                 throw new Error('Failed to get access or refresh token');
@@ -96,7 +100,6 @@ exports.handler = async (event, context) => {
             body: JSON.stringify(swimActivities),
         };
     } catch (error) {
-        // Log the error for debugging
         console.error('Error fetching activities:', error.message);
 
         return {
