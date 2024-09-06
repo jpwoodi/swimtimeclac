@@ -19,72 +19,29 @@
             padding: 0;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
-              /* Style for the top navigation bar */
-        .top-nav {
-            width: 100%;
-            background-color: #007BFF;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-        }
-
-        .top-nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-
-        .top-nav ul li {
-            padding: 14px 20px;
-        }
-
-        .top-nav ul li a {
+        h1 {
             color: white;
-            text-decoration: none;
-            font-size: 18px;
-            font-family: 'Poppins', sans-serif;
+            font-size: 48px;
+            margin-bottom: 20px;
         }
 
-        .top-nav ul li a:hover {
-            background-color: #0056b3;
-            color: white;
-            border-radius: 5px;
+        img {
+            width: 150px;
+            height: auto;
         }
 
-        /* Add padding to your main content to avoid being hidden by the fixed nav */
-        .container {
-            margin-top: 60px;
-        }
-
-        @media (max-width: 768px) {
-            .top-nav ul {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .top-nav ul li {
-                padding: 10px;
-            }
-        }
     </style>
-  </head>
-    <body>
+</head>
+<body>
 
-    <!-- Navigation Menu -->
-    <nav class="top-nav">
-        <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="calculator.html">Time and Pace Calculator</a></li>
-            <li><a href="pools.html">London Swim Locations</a></li>
-        </ul>
-    </nav>
-    </body>
+    <!-- Coming Soon Section -->
+    <h1>Coming soon</h1>
+    <img src="images/swimming_favicon_larger_head_latest" alt="Swimming Logo">
+
+</body>
 </html>
