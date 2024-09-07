@@ -201,35 +201,38 @@
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            padding: 8px 15px;
+            padding: 4px 10px; /* Reduce padding */
+            height: 40px; /* Reduce height */
             box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
         }
-
+        
         .top-nav .logo {
-            width: 70px;
+            width: 35px; /* Reduce logo size */
             height: auto;
-            margin-right: 15px;
+            margin-right: 10px; /* Reduce spacing between logo and nav items */
         }
-
+        
         .top-nav ul {
             list-style-type: none;
             margin: 0;
             padding: 0;
             display: flex;
-            gap: 20px;
+            gap: 10px; /* Reduce gap between links */
         }
-
+        
         .top-nav ul li a {
             color: black;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 14px; /* Reduce font size */
             font-family: 'Poppins', sans-serif;
+            padding: 4px 8px; /* Reduce padding around links */
         }
-
+        
         .top-nav ul li a:hover {
             background-color: #f2f2f2;
             border-radius: 5px;
         }
+
 
         /* Hamburger menu */
         .hamburger {
@@ -245,25 +248,24 @@
 
         /* Responsive styling */
         @media (max-width: 768px) {
-            .top-nav ul {
-                display: none;
-                flex-direction: column;
-                background-color: white;
-                position: absolute;
-                top: 60px;
-                left: 0;
-                width: 100%;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
+    .top-nav ul {
+        display: none;
+        flex-direction: column;
+        background-color: white;
+        position: absolute;
+        top: 40px; /* Adjust based on new height */
+        left: 0;
+        width: 100%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-            .hamburger {
-                display: block;
-            }
+    .hamburger {
+        font-size: 18px; /* Slightly smaller for consistency */
+    }
 
-            .top-nav img.logo {
-                width: 50px;
-            }
-
+    .top-nav img.logo {
+        width: 25px; /* Smaller logo on mobile */
+    }
             .container {
                 margin-top: 100px;
             }
