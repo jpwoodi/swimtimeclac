@@ -368,10 +368,9 @@ function generatePopupContent(record) {
 function updateMapMarkers(records) {
     allMarkers = records
         .map(record => {
-            const { Latitude, Longitude, Name } = record.fields;
-            
-            // Ensure Latitude and Longitude exist and are valid
-            if (Latitude && Longitude) {
+            if (record.fields && record.fields.Latitude && record.fields.Longitude) {
+                const { Latitude, Longitude, Name } = record.fields;
+
                 const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
                 const icon = type === 'open_water' ? openWaterIcon : poolIcon;
 
@@ -390,7 +389,7 @@ function updateMapMarkers(records) {
 
                 return { id: record.id, marker };
             } else {
-                console.warn(`Record ${record.id} is missing Latitude or Longitude.`);
+                console.warn(`Record ${record.id} is missing fields, Latitude, or Longitude.`);
                 return null; // Exclude invalid records
             }
         })
@@ -398,7 +397,6 @@ function updateMapMarkers(records) {
 
     markers = [...allMarkers];
 }
-
 
 function updateTable(records) {
     const tableBody = document.getElementById('pool-table-body');
