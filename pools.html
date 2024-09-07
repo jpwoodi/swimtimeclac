@@ -64,10 +64,9 @@
         /* General table styling */
         table, th, td {
             border: 1px solid #ddd;
-            table-layout: fixed; /* Fixed layout to control column width */
-            border-collapse: separate; /* Ensure separate borders for rounded corners */
-            border-spacing: 0; /* Remove space between cells */
-            width: 100%; /* Ensure table takes up full width */
+            table-layout: fixed;
+            border-spacing: 0;
+            width: 100%;
         }
         
         th, td {
@@ -77,12 +76,12 @@
             font-size: 14px;
             height: 40px;
             overflow: hidden;
-            white-space: normal; /* Allow text wrapping */
-            word-wrap: break-word; /* Break words that are too long */
+            white-space: normal;
+            word-wrap: break-word;
         }
         
         th {
-            height: 30px; /* Fixed height for header row */
+            height: 30px;
             background-color: #007BFF;
             color: white;
             position: sticky;
@@ -90,62 +89,41 @@
             z-index: 10;
         }
         
-        /* Rounded corners for the table header */
         th:first-child {
-            border-top-left-radius: 10px; /* Only first column header has left rounded corner */
+            border-top-left-radius: 10px;
         }
         
         th:last-child {
-            border-top-right-radius: 10px; /* Only last column header has right rounded corner */
+            border-top-right-radius: 10px;
         }
         
-        /* Styling the Length (m) column to be centered */
         th:nth-child(2), td:nth-child(2) {
-            text-align: center; /* Center align for the "Length (m)" column */
-        }
-        
-        .scrollable-body {
-            flex: 1;
-            overflow-y: auto; /* Show scrollbar only when needed */
-            border-top: 1px solid #ddd;
-            padding-right: 10px;
+            text-align: center;
         }
         
         .scrollable-body::-webkit-scrollbar {
             width: 8px;
         }
-        
+
         .scrollable-body::-webkit-scrollbar-thumb {
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 4px;
         }
-        
+
         .scrollable-body::-webkit-scrollbar-track {
             background-color: transparent;
         }
-        
+
         .scrollable-body::-webkit-scrollbar {
-            display: none; /* Hide scrollbar when not scrolling */
+            display: none;
         }
-        
+
         .scrollable-body:hover::-webkit-scrollbar {
-            display: block; /* Show scrollbar on hover */
-        }
-        
-        /* Ensure table container adjusts height */
-        .table-container {
-            height: calc(100% - 30px); /* Account for header height */
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Table with compensation for scrollbar */
-        table {
-            width: calc(100% - 8px); /* Compensate for scrollbar width */
+            display: block;
         }
 
         tr {
-            height: 40px; /* Fixed row height */
+            height: 40px;
         }
 
         tr:nth-child(even) {
@@ -153,7 +131,7 @@
         }
 
         tr:hover {
-            background-color: #d1e7fd; /* Light blue highlight color */
+            background-color: #d1e7fd;
         }
 
         input#search {
@@ -187,7 +165,7 @@
             display: none;
             overflow-y: auto;
             z-index: 1000;
-            transition: bottom 0.3s ease; /* Smooth transition */
+            transition: bottom 0.3s ease;
         }
 
         .popup-card.visible {
@@ -211,19 +189,25 @@
             text-decoration: none;
         }
 
-        /* Updated smaller Navbar Styling */
+        /* Navbar styling */
         .top-nav {
             width: 100%;
-            background-color: white; /* White background */
+            background-color: white;
             position: fixed;
             top: 0;
             left: 0;
             z-index: 100;
             display: flex;
-            justify-content: flex-start; /* Align content to the left */
+            justify-content: flex-start;
             align-items: center;
-            padding: 8px 15px; /* Reduce padding to make the navbar smaller */
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for the nav */
+            padding: 8px 15px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .top-nav .logo {
+            width: 70px;
+            height: auto;
+            margin-right: 15px;
         }
 
         .top-nav ul {
@@ -231,16 +215,13 @@
             margin: 0;
             padding: 0;
             display: flex;
-        }
-
-        .top-nav ul li {
-            padding: 10px 15px; /* Reduce padding for smaller spacing */
+            gap: 20px;
         }
 
         .top-nav ul li a {
-            color: black; /* Black text */
+            color: black;
             text-decoration: none;
-            font-size: 16px; /* Smaller font size */
+            font-size: 16px;
             font-family: 'Poppins', sans-serif;
         }
 
@@ -249,25 +230,46 @@
             border-radius: 5px;
         }
 
-        .top-nav img.logo {
-            width: 90px; /* Reduce logo size */
-            height: auto;
-            margin-right: 15px; /* Spacing between logo and the menu */
+        /* Hamburger menu */
+        .hamburger {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: black;
         }
 
-        .container {
-            margin-top: 80px; /* Adjust margin to avoid overlap with navbar */
+        .top-nav ul {
+            display: flex;
         }
 
+        /* Responsive styling */
         @media (max-width: 768px) {
             .top-nav ul {
+                display: none;
                 flex-direction: column;
-                align-items: center;
+                background-color: white;
+                position: absolute;
+                top: 60px;
+                left: 0;
+                width: 100%;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             }
 
-            .top-nav ul li {
-                padding: 10px;
+            .hamburger {
+                display: block;
             }
+
+            .top-nav img.logo {
+                width: 50px;
+            }
+
+            .container {
+                margin-top: 80px;
+            }
+        }
+
+        .hamburger.active + ul {
+            display: flex;
         }
     </style>
 </head>
@@ -275,7 +277,8 @@
 
     <!-- Navigation Menu -->
     <nav class="top-nav">
-        <img src="images/swimmer_head_full_transparent_background.png" alt="Logo" class="logo"> <!-- Your Logo on the left -->
+        <img src="images/swimmer_head_full_transparent_background.png" alt="Logo" class="logo">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
         <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="calculator.html">Time and Pace Calculator</a></li>
@@ -320,6 +323,12 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+        // Toggle mobile menu
+        function toggleMenu() {
+            const navLinks = document.querySelector('.top-nav ul');
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+        }
+
         let map;
         let markers = [];
         let lastFocusedMarker = null;
