@@ -472,7 +472,6 @@
                     const marker = allMarkers.find(m => m.id === id);
                     if (marker) {
                         filteredMarkers.push(marker);
-                        latlngs
                         latlngs.push(marker.marker.getLatLng()); // Collect marker LatLngs for map fitting
                     }
                 }
