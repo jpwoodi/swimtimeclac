@@ -212,15 +212,19 @@
         }
 
         /* Style for the top navigation bar */
+  /* Updated Navbar Styling */
         .top-nav {
             width: 100%;
-            background-color: #007BFF;
+            background-color: white; /* White background */
             position: fixed;
             top: 0;
             left: 0;
             z-index: 100;
             display: flex;
-            justify-content: center;
+            justify-content: flex-start; /* Align content to the left */
+            align-items: center;
+            padding: 10px 20px; /* Adjust padding for better spacing */
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for the nav */
         }
 
         .top-nav ul {
@@ -235,21 +239,25 @@
         }
 
         .top-nav ul li a {
-            color: white;
+            color: black; /* Black text */
             text-decoration: none;
             font-size: 18px;
             font-family: 'Poppins', sans-serif;
         }
 
         .top-nav ul li a:hover {
-            background-color: #0056b3;
-            color: white;
+            background-color: #f2f2f2;
             border-radius: 5px;
         }
 
-        /* Add padding to your main content to avoid being hidden by the fixed nav */
+        .top-nav img.logo {
+            width: 120px; /* Adjust logo width as needed */
+            height: auto;
+            margin-right: 20px; /* Spacing between logo and the menu */
+        }
+
         .container {
-            margin-top: 60px;
+            margin-top: 100px; /* Added more space to avoid overlap with nav */
         }
 
         @media (max-width: 768px) {
@@ -268,6 +276,7 @@
 
     <!-- Navigation Menu -->
     <nav class="top-nav">
+        <img src="images/swimmer_head_full_transparent_background.png" alt="Logo" class="logo"> <!-- Your Logo on the left -->
         <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="calculator.html">Time and Pace Calculator</a></li>
