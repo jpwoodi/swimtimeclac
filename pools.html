@@ -519,7 +519,8 @@
             const table = document.querySelector('table');
             const rows = Array.from(table.querySelectorAll('tbody tr'));
             const th = table.querySelectorAll('th')[columnIndex];
-            const isAscending = th.classList.contains('sort-asc') ? false : true;
+            const isAscending = th.classList.contains('sort-asc') || !th.classList.contains('sort-desc');
+
 
             rows.sort((a, b) => {
                 const cellA = a.children[columnIndex].innerText.toLowerCase();
