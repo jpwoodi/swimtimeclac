@@ -188,6 +188,13 @@
 
         const defaultZoomLevel = 12;
 
+        // Function to toggle mobile menu
+        function toggleMenu() {
+            const navLinks = document.querySelector('.top-nav ul');
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        // Initialize map and fetch pools
         function initMap() {
             if (!map) {
                 map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel);
@@ -218,17 +225,19 @@
             fetch('/.netlify/functions/getPools')
                 .then(response => response.json())
                 .then(data => {
-                    dataRecords = data.records;
+                    dataRecords = data.records; // Store the fetched data
 
+                    // Populate table
                     const tableBody = document.getElementById('pool-table-body');
                     tableBody.innerHTML = data.records.map(record => `
-                        <tr>
+                        <tr data-id="${record.id}">
                             <td>${record.fields.Name}</td>
                             <td>${record.fields.Length}</td>
                             <td>${record.fields.Borough}</td>
                         </tr>
                     `).join('');
 
+                    // Populate map with markers
                     allMarkers = data.records.map(record => {
                         if (record.fields.Latitude && record.fields.Longitude) {
                             const icon = record.fields.Type === 'open_water' ? openWaterIcon : poolIcon;
@@ -238,7 +247,7 @@
                         }
                     }).filter(marker => marker !== undefined);
 
-                    markers = [...allMarkers];
+                    markers = [...allMarkers]; // Store the markers
                 })
                 .catch(error => console.error('Error fetching data:', error));
         }
