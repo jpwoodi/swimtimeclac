@@ -44,7 +44,7 @@
     </div>
 
     <script>
-        // Fetch and display activities
+        // Fetch and display activities from Netlify function
         async function fetchActivities() {
             try {
                 const response = await fetch('/.netlify/functions/strava-auth');
@@ -69,7 +69,7 @@
             }
         }
 
-        // Fetch activities when page loads
+        // Fetch activities when the page loads
         window.onload = fetchActivities;
     </script>
 
