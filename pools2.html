@@ -366,22 +366,39 @@ function generatePopupContent(record) {
 }
 
 function updateMapMarkers(records) {
-    allMarkers = records.map(record => {
-        if (record.fields.Latitude && record.fields.Longitude) {
-            const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
-            const icon = type === 'open_water' ? openWaterIcon : poolIcon;
+    allMarkers = records
+        .map(record => {
+            const { Latitude, Longitude, Name } = record.fields;
+            
+            // Ensure Latitude and Longitude exist and are valid
+            if (Latitude && Longitude) {
+                const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
+                const icon = type === 'open_water' ? openWaterIcon : poolIcon;
 
-            const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
-            marker.bindPopup(generatePopupContent(record));
-            marker.type = type;
-            marker.on('click', () => focusOnMarker(record.id));
+                // Create the marker
+                const marker = L.marker([Latitude, Longitude], { icon }).addTo(map);
 
-            return { id: record.id, marker };
-        }
-    }).filter(marker => marker !== undefined);
+                // Check if Name exists to avoid undefined values in popups
+                if (Name) {
+                    marker.bindPopup(generatePopupContent(record));
+                } else {
+                    console.warn(`Record ${record.id} is missing a Name.`);
+                }
+
+                marker.type = type;
+                marker.on('click', () => focusOnMarker(record.id));
+
+                return { id: record.id, marker };
+            } else {
+                console.warn(`Record ${record.id} is missing Latitude or Longitude.`);
+                return null; // Exclude invalid records
+            }
+        })
+        .filter(marker => marker !== null); // Filter out invalid markers
 
     markers = [...allMarkers];
 }
+
 
 function updateTable(records) {
     const tableBody = document.getElementById('pool-table-body');
