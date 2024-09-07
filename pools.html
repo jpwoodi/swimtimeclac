@@ -17,11 +17,10 @@
             color: #212529;
             margin: 0;
             padding: 0;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            min-height: 100vh;
         }
 
         .container {
@@ -33,7 +32,7 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin-top: 100px; /* This creates space for the navbar */
+            margin-top: 80px; /* Creates space for the navbar */
         }
 
         .table-container {
@@ -63,6 +62,7 @@
             overflow: hidden;
         }
 
+        /* General table styling */
         table, th, td {
             border: 1px solid #ddd;
             table-layout: fixed;
@@ -265,7 +265,7 @@
             }
 
             .container {
-                margin-top: 100px; /* Adjust margin to avoid overlap with navbar */
+                margin-top: 100px;
             }
         }
 
@@ -320,22 +320,12 @@
             </div>
         </div>
     </div>
-
-    <!-- Leaflet JS -->
+    
+        <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        let map;
-        let markers = [];
-        let lastFocusedMarker = null;
-        let allMarkers = [];
-        let dataRecords = [];
-
-        const defaultZoomLevel = 12;
-
         function toggleMenu() {
-            const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.top-nav ul');
-            hamburger.classList.toggle('active');
             navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
         }
 
@@ -345,12 +335,20 @@
         let allMarkers = [];
         let dataRecords = [];
 
-        const defaultZoomLevel = 12; // Default zoom level
+        const defaultZoomLevel = 12;
 
         function initMap() {
+            if (map) return;
+            map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+    
    
             
-            // Check if the map is already initialized, if so, do not re-initialize
+        // Check if the map is already initialized, if so, do not re-initialize
         if (map) {
         return; // Exit function if map is already initialized
     }
