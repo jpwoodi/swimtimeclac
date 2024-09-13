@@ -40,14 +40,15 @@ exports.handler = async (event, context) => {
     const tokenData = await tokenResponse.json();
     const access_token = tokenData.access_token;
 
-    // Fetch activities for the past year
+    // Fetch activities from the last 12 months
+    const twelveMonthsAgo = Math.floor((Date.now() - 365 * 24 * 60 * 60 * 1000) / 1000); // Unix timestamp in seconds
     let page = 1;
     const per_page = 200; // Max per_page allowed by Strava API
     let allActivities = [];
     let activities = [];
 
     do {
-      const activitiesResponse = await fetch(`https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${per_page}`, {
+      const activitiesResponse = await fetch(`https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${per_page}&after=${twelveMonthsAgo}`, {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
