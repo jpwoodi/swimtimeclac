@@ -242,7 +242,9 @@
             const pacePer100mInSeconds = 100 / averageSpeed;
             const minutes = Math.floor(pacePer100mInSeconds / 60);
             const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
-            return `${minutes}:${seconds}`;
+                
+            // Format the pace with a comma separator if needed
+            return `${minutes}:${seconds}`.toLocaleString();
         }
 
         // Function to format duration in hh:mm:ss
