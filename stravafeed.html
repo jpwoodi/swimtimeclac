@@ -5,44 +5,109 @@
 <head>
   <meta charset="UTF-8">
   <title>My Swim Feed</title>
+  <!-- Add Bootstrap CSS for better styling -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    body { margin: 20px; }
     .swim { border-bottom: 1px solid #ccc; padding: 10px 0; }
-    .swim h2 { margin: 0; }
+    .swim h2 { margin-top: 0; }
   </style>
 </head>
 <body>
-  <h1>My Swim Feed</h1>
-  <div id="swim-feed">Loading swims...</div>
+  <div class="container">
+    <h1 class="mb-4">My Swim Feed</h1>
+
+    <!-- Checkboxes for optional data fields -->
+    <div class="mb-4">
+      <h5>Select Additional Information:</h5>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="average_speed" id="average_speed">
+        <label class="form-check-label" for="average_speed">Average Speed</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="calories" id="calories">
+        <label class="form-check-label" for="calories">Calories Burned</label>
+      </div>
+      <!-- Add more checkboxes as needed -->
+    </div>
+
+    <!-- Swim feed container -->
+    <div id="swim-feed">Loading swims...</div>
+
+    <!-- Load More button -->
+    <button id="load-more" class="btn btn-primary mt-4">Load More</button>
+  </div>
+
+  <!-- Add Bootstrap JS and dependencies (optional for Bootstrap JS components) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 
   <script>
-    fetch('/.netlify/functions/get-swims')
-      .then(response => response.json())
-      .then(data => {
-        const swimFeed = document.getElementById('swim-feed');
-        swimFeed.innerHTML = ''; // Clear loading text
+    let page = 1;
+    const swimsPerPage = 10;
+    let selectedFields = [];
 
-        if (data.error) {
-          swimFeed.textContent = 'Error loading swims.';
-          return;
-        }
+    // Function to fetch and display swims
+    function fetchSwims() {
+      // Get selected fields
+      selectedFields = Array.from(document.querySelectorAll('.form-check-input:checked'))
+                            .map(checkbox => checkbox.value);
 
-        data.forEach(swim => {
-          const swimDiv = document.createElement('div');
-          swimDiv.className = 'swim';
-          swimDiv.innerHTML = `
-            <h2>${swim.name}</h2>
-            <p><strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}</p>
-            <p><strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km</p>
-            <p><strong>Duration:</strong> ${Math.floor(swim.moving_time / 60)} min ${swim.moving_time % 60} sec</p>
-          `;
-          swimFeed.appendChild(swimDiv);
+      fetch(`/.netlify/functions/get-swims?page=${page}&per_page=${swimsPerPage}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById('swim-feed').textContent = 'Error loading swims.';
+            return;
+          }
+
+          if (page === 1) {
+            document.getElementById('swim-feed').innerHTML = '';
+          }
+
+          data.forEach(swim => {
+            const swimDiv = document.createElement('div');
+            swimDiv.className = 'swim';
+            swimDiv.innerHTML = `
+              <h2>${swim.name}</h2>
+              <p><strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}</p>
+              <p><strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km</p>
+              <p><strong>Duration:</strong> ${Math.floor(swim.moving_time / 60)} min ${swim.moving_time % 60} sec</p>
+            `;
+
+            // Add optional fields based on selections
+            if (selectedFields.includes('average_speed')) {
+              swimDiv.innerHTML += `<p><strong>Average Speed:</strong> ${(swim.average_speed * 3.6).toFixed(2)} km/h</p>`;
+            }
+            if (selectedFields.includes('calories') && swim.hasOwnProperty('calories')) {
+              swimDiv.innerHTML += `<p><strong>Calories Burned:</strong> ${swim.calories.toFixed(0)} kcal</p>`;
+            }
+            // Add more optional fields as needed
+
+            document.getElementById('swim-feed').appendChild(swimDiv);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching swims:', error);
+          document.getElementById('swim-feed').textContent = 'Error loading swims.';
         });
-      })
-      .catch(error => {
-        console.error('Error fetching swims:', error);
-        document.getElementById('swim-feed').textContent = 'Error loading swims.';
+    }
+
+    // Event listener for checkboxes
+    document.querySelectorAll('.form-check-input').forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        page = 1;
+        fetchSwims();
       });
+    });
+
+    // Event listener for Load More button
+    document.getElementById('load-more').addEventListener('click', () => {
+      page++;
+      fetchSwims();
+    });
+
+    // Initial fetch
+    fetchSwims();
   </script>
 </body>
 </html>
