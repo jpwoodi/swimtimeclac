@@ -1,8 +1,4 @@
+# netlify.toml
+
 [build]
   functions = "netlify/functions"
-
-[[redirects]]
-  from = "/callback"
-  to = "/stravafeed.html"
-  status = 200
-  query = "*"
