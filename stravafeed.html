@@ -16,6 +16,10 @@
   <div class="container">
     <h1 class="mb-4">My Swim Feed</h1>
 
+    <!-- Chart Section -->
+    <h2 class="mb-4">Weekly Distance Trend</h2>
+    <canvas id="weeklyChart" width="400" height="200"></canvas>
+
     <!-- Checkboxes for optional data fields -->
     <div class="mb-4">
       <h5>Select Additional Information:</h5>
@@ -27,14 +31,6 @@
         <input class="form-check-input" type="checkbox" value="calories" id="calories">
         <label class="form-check-label" for="calories">Calories Burned</label>
       </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="max_speed" id="max_speed">
-        <label class="form-check-label" for="max_speed">Maximum Speed</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="average_heartrate" id="average_heartrate">
-        <label class="form-check-label" for="average_heartrate">Average Heart Rate</label>
-      </div>
       <!-- Add more checkboxes as needed -->
     </div>
 
@@ -42,15 +38,16 @@
     <div id="swim-feed">Loading swims...</div>
 
     <!-- Load More button -->
-    <button id="load-more" class="btn btn-primary mt-4">Load More</button>
+    <!-- Removed Load More button since we fetch all swims at once -->
+
   </div>
 
   <!-- Bootstrap JS and dependencies -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <!-- Chart.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    let page = 1;
-    const swimsPerPage = 10;
     let selectedFields = [];
 
     // Function to fetch and display swims
@@ -59,7 +56,7 @@
       selectedFields = Array.from(document.querySelectorAll('.form-check-input:checked'))
                             .map(checkbox => checkbox.value);
 
-      fetch(`/.netlify/functions/get-swims?page=${page}&per_page=${swimsPerPage}`)
+      fetch('/.netlify/functions/get-swims')
         .then(response => response.json())
         .then(data => {
           if (data.error) {
@@ -67,17 +64,15 @@
             return;
           }
 
-          // Hide Load More button if fewer swims are returned than requested
-          if (data.length < swimsPerPage) {
-            document.getElementById('load-more').style.display = 'none';
-          } else {
-            document.getElementById('load-more').style.display = 'block';
-          }
+          document.getElementById('swim-feed').innerHTML = '';
 
-          if (page === 1) {
-            document.getElementById('swim-feed').innerHTML = '';
-          }
+          // Process data for the chart
+          const weeklyData = processWeeklyData(data);
 
+          // Render the chart
+          renderChart(weeklyData);
+
+          // Display swims
           data.forEach(swim => {
             const swimDiv = document.createElement('div');
             swimDiv.className = 'swim-card';
@@ -94,8 +89,6 @@
                   </p>
                   ${selectedFields.includes('average_speed') && swim.hasOwnProperty('average_speed') ? `<p class="card-text"><strong>Average Speed:</strong> ${(swim.average_speed * 3.6).toFixed(2)} km/h</p>` : ''}
                   ${selectedFields.includes('calories') && swim.hasOwnProperty('calories') ? `<p class="card-text"><strong>Calories Burned:</strong> ${swim.calories.toFixed(0)} kcal</p>` : ''}
-                  ${selectedFields.includes('max_speed') && swim.hasOwnProperty('max_speed') ? `<p class="card-text"><strong>Maximum Speed:</strong> ${(swim.max_speed * 3.6).toFixed(2)} km/h</p>` : ''}
-                  ${selectedFields.includes('average_heartrate') && swim.hasOwnProperty('average_heartrate') ? `<p class="card-text"><strong>Average Heart Rate:</strong> ${swim.average_heartrate.toFixed(0)} bpm</p>` : ''}
                 </div>
               </div>
             `;
@@ -114,18 +107,81 @@
         });
     }
 
+    // Function to process data into weekly totals
+    function processWeeklyData(swims) {
+      const weeklyTotals = {};
+
+      swims.forEach(swim => {
+        const date = new Date(swim.start_date_local);
+        const weekNumber = getWeekNumber(date);
+        const year = date.getFullYear();
+        const key = `${year}-W${weekNumber}`;
+
+        if (!weeklyTotals[key]) {
+          weeklyTotals[key] = 0;
+        }
+        weeklyTotals[key] += swim.distance / 1000; // Convert to kilometers
+      });
+
+      // Sort the weeks
+      const sortedWeeks = Object.keys(weeklyTotals).sort();
+
+      const labels = sortedWeeks;
+      const data = sortedWeeks.map(week => parseFloat(weeklyTotals[week].toFixed(2)));
+
+      return { labels, data };
+    }
+
+    // Function to get week number
+    function getWeekNumber(date) {
+      const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+      const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+      return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    }
+
+    // Function to render the chart
+    function renderChart(weeklyData) {
+      const ctx = document.getElementById('weeklyChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: weeklyData.labels,
+          datasets: [{
+            label: 'Weekly Distance (km)',
+            data: weeklyData.data,
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 2,
+            fill: true,
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Week'
+              }
+            },
+            y: {
+              display: true,
+              title: {
+                display: true,
+                text: 'Distance (km)'
+              },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
     // Event listener for checkboxes
     document.querySelectorAll('.form-check-input').forEach(checkbox => {
       checkbox.addEventListener('change', () => {
-        page = 1;
         fetchSwims();
       });
-    });
-
-    // Event listener for Load More button
-    document.getElementById('load-more').addEventListener('click', () => {
-      page++;
-      fetchSwims();
     });
 
     // Initial fetch
