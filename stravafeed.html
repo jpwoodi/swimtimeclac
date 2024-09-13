@@ -28,35 +28,33 @@
             flex-direction: column;
             width: 100%;
             max-width: 1200px;
-            height: 80vh;
+            height: 80vh; /* Set the container height to take up most of the viewport */
             background-color: rgba(255, 255, 255, 0.9);
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
         }
-
-        h1, h2 {
-            color: #007BFF;
-            font-weight: 600;
+        
+        .chart-container, .feed-container {
+            flex: 1; /* Allow both containers to share the available space equally */
             margin-bottom: 20px;
-        }
-
-        .feed-container {
-            flex: 1;
-            overflow-y: auto;
-            margin-top: 20px; /* Add space between chart and swim feed */
         }
         
         .chart-container {
-            width: 100%;
-            height: auto; /* Let the chart container adjust automatically based on content */
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* Make the chart container fill its parent's height */
         }
         
         canvas#monthlyChart {
             width: 100% !important;
-            height: auto !important;
+            height: 100% !important; /* Make the chart take the full height of the container */
+        }
+        
+        .feed-container {
+            overflow-y: auto;
         }
         
         .swim-card {
@@ -65,7 +63,6 @@
             margin-bottom: 20px;
             border-radius: 8px;
             box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
-            clear: both; /* Ensure cards are cleared from any floating or flex content */
         }
         
         .swim-card h5 {
@@ -73,6 +70,7 @@
             margin-bottom: 10px;
             font-size: 18px;
         }
+
 
         /* Navbar styling */
         .top-nav {
