@@ -4,30 +4,21 @@ const fetch = require('node-fetch');
 
 let cachedSwims = [];
 let cacheTimestamp = null;
-const CACHE_DURATION = 60 * 1000; // Cache duration in milliseconds (e.g., 60 seconds)
+const CACHE_DURATION = 60 * 60 * 1000; // Cache duration in milliseconds (e.g., 1 hour)
 
 exports.handler = async (event, context) => {
   const client_id = process.env.STRAVA_CLIENT_ID;
   const client_secret = process.env.STRAVA_CLIENT_SECRET;
   const refresh_token = process.env.STRAVA_REFRESH_TOKEN;
 
-  // Get query parameters for pagination
-  const page = parseInt(event.queryStringParameters.page) || 1;
-  const per_page = parseInt(event.queryStringParameters.per_page) || 10;
-
   const currentTime = new Date().getTime();
 
   try {
     // Check if cached data is available and valid
     if (cachedSwims.length > 0 && (currentTime - cacheTimestamp < CACHE_DURATION)) {
-      // Return the requested page from cached data
-      const startIndex = (page - 1) * per_page;
-      const endIndex = startIndex + per_page;
-      const pageSwims = cachedSwims.slice(startIndex, endIndex);
-
       return {
         statusCode: 200,
-        body: JSON.stringify(pageSwims),
+        body: JSON.stringify(cachedSwims),
       };
     }
 
@@ -49,33 +40,38 @@ exports.handler = async (event, context) => {
     const tokenData = await tokenResponse.json();
     const access_token = tokenData.access_token;
 
-    // Fetch activities (we'll fetch more to cache them)
-    const activitiesResponse = await fetch(`https://www.strava.com/api/v3/athlete/activities?per_page=50`, {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
+    // Fetch activities for the past year
+    let page = 1;
+    const per_page = 200; // Max per_page allowed by Strava API
+    let allActivities = [];
+    let activities = [];
 
-    if (!activitiesResponse.ok) {
-      throw new Error('Failed to fetch activities');
-    }
+    do {
+      const activitiesResponse = await fetch(`https://www.strava.com/api/v3/athlete/activities?page=${page}&per_page=${per_page}`, {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
 
-    const activities = await activitiesResponse.json();
+      if (!activitiesResponse.ok) {
+        throw new Error('Failed to fetch activities');
+      }
 
-    // Filter for swim activities and cache them
-    const swims = activities.filter(activity => activity.type === 'Swim');
+      activities = await activitiesResponse.json();
+      allActivities = allActivities.concat(activities);
+      page++;
+    } while (activities.length === per_page);
 
+    // Filter for swim activities
+    const swims = allActivities.filter(activity => activity.type === 'Swim');
+
+    // Cache the swims
     cachedSwims = swims;
     cacheTimestamp = currentTime;
 
-    // Return the requested page
-    const startIndex = (page - 1) * per_page;
-    const endIndex = startIndex + per_page;
-    const pageSwims = swims.slice(startIndex, endIndex);
-
     return {
       statusCode: 200,
-      body: JSON.stringify(pageSwims),
+      body: JSON.stringify(swims),
     };
   } catch (error) {
     console.error('Error fetching swims:', error);
