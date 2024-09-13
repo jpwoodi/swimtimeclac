@@ -17,28 +17,11 @@
     <h1 class="mb-4">My Swim Feed</h1>
 
     <!-- Chart Section -->
-    <h2 class="mb-4">Weekly Distance Trend</h2>
-    <canvas id="weeklyChart" width="400" height="200"></canvas>
-
-    <!-- Checkboxes for optional data fields -->
-    <div class="mb-4">
-      <h5>Select Additional Information:</h5>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="average_speed" id="average_speed">
-        <label class="form-check-label" for="average_speed">Average Speed</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="calories" id="calories">
-        <label class="form-check-label" for="calories">Calories Burned</label>
-      </div>
-      <!-- Add more checkboxes as needed -->
-    </div>
+    <h2 class="mb-4">Monthly Distance Over the Last 12 Months</h2>
+    <canvas id="monthlyChart" width="400" height="200"></canvas>
 
     <!-- Swim feed container -->
     <div id="swim-feed">Loading swims...</div>
-
-    <!-- Load More button -->
-    <!-- Removed Load More button since we fetch all swims at once -->
 
   </div>
 
@@ -48,14 +31,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    let selectedFields = [];
-
     // Function to fetch and display swims
     function fetchSwims() {
-      // Get selected fields
-      selectedFields = Array.from(document.querySelectorAll('.form-check-input:checked'))
-                            .map(checkbox => checkbox.value);
-
       fetch('/.netlify/functions/get-swims')
         .then(response => response.json())
         .then(data => {
@@ -67,15 +44,18 @@
           document.getElementById('swim-feed').innerHTML = '';
 
           // Process data for the chart
-          const weeklyData = processWeeklyData(data);
+          const monthlyData = processMonthlyData(data);
 
           // Render the chart
-          renderChart(weeklyData);
+          renderChart(monthlyData);
 
           // Display swims
           data.forEach(swim => {
             const swimDiv = document.createElement('div');
             swimDiv.className = 'swim-card';
+
+            // Calculate average pace per 100 meters
+            const pacePer100m = calculatePacePer100m(swim.moving_time, swim.distance);
 
             // Build the swim card using Bootstrap components
             swimDiv.innerHTML = `
@@ -85,10 +65,9 @@
                   <p class="card-text">
                     <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
                     <strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km<br>
-                    <strong>Duration:</strong> ${Math.floor(swim.moving_time / 60)} min ${swim.moving_time % 60} sec
+                    <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
+                    <strong>Average Pace:</strong> ${pacePer100m} per 100m
                   </p>
-                  ${selectedFields.includes('average_speed') && swim.hasOwnProperty('average_speed') ? `<p class="card-text"><strong>Average Speed:</strong> ${(swim.average_speed * 3.6).toFixed(2)} km/h</p>` : ''}
-                  ${selectedFields.includes('calories') && swim.hasOwnProperty('calories') ? `<p class="card-text"><strong>Calories Burned:</strong> ${swim.calories.toFixed(0)} kcal</p>` : ''}
                 </div>
               </div>
             `;
@@ -107,51 +86,72 @@
         });
     }
 
-    // Function to process data into weekly totals
-    function processWeeklyData(swims) {
-      const weeklyTotals = {};
+    // Function to calculate average pace per 100 meters
+    function calculatePacePer100m(timeInSeconds, distanceInMeters) {
+      if (distanceInMeters === 0) return 'N/A';
+      const pacePerMeter = timeInSeconds / distanceInMeters;
+      const pacePer100mInSeconds = pacePerMeter * 100;
+      const minutes = Math.floor(pacePer100mInSeconds / 60);
+      const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    // Function to format duration in hh:mm:ss
+    function formatDuration(timeInSeconds) {
+      const hours = Math.floor(timeInSeconds / 3600);
+      const minutes = Math.floor((timeInSeconds % 3600) / 60);
+      const seconds = timeInSeconds % 60;
+
+      const hoursStr = hours > 0 ? `${hours}h ` : '';
+      const minutesStr = minutes > 0 ? `${minutes}m ` : '';
+      const secondsStr = `${seconds}s`;
+
+      return `${hoursStr}${minutesStr}${secondsStr}`;
+    }
+
+    // Function to process data into monthly totals
+    function processMonthlyData(swims) {
+      const monthlyTotals = {};
 
       swims.forEach(swim => {
         const date = new Date(swim.start_date_local);
-        const weekNumber = getWeekNumber(date);
+        const month = date.getMonth(); // 0-11
         const year = date.getFullYear();
-        const key = `${year}-W${weekNumber}`;
+        const key = `${year}-${month + 1}`; // Month +1 for 1-12
 
-        if (!weeklyTotals[key]) {
-          weeklyTotals[key] = 0;
+        if (!monthlyTotals[key]) {
+          monthlyTotals[key] = 0;
         }
-        weeklyTotals[key] += swim.distance / 1000; // Convert to kilometers
+        monthlyTotals[key] += swim.distance / 1000; // Convert to kilometers
       });
 
-      // Sort the weeks
-      const sortedWeeks = Object.keys(weeklyTotals).sort();
+      // Get last 12 months labels
+      const labels = [];
+      const dataPoints = [];
+      const currentDate = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+        labels.push(date.toLocaleString('default', { month: 'short', year: 'numeric' }));
+        dataPoints.push(parseFloat((monthlyTotals[key] || 0).toFixed(2)));
+      }
 
-      const labels = sortedWeeks;
-      const data = sortedWeeks.map(week => parseFloat(weeklyTotals[week].toFixed(2)));
-
-      return { labels, data };
-    }
-
-    // Function to get week number
-    function getWeekNumber(date) {
-      const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-      const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-      return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+      return { labels, data: dataPoints };
     }
 
     // Function to render the chart
-    function renderChart(weeklyData) {
-      const ctx = document.getElementById('weeklyChart').getContext('2d');
+    function renderChart(monthlyData) {
+      const ctx = document.getElementById('monthlyChart').getContext('2d');
       new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
-          labels: weeklyData.labels,
+          labels: monthlyData.labels,
           datasets: [{
-            label: 'Weekly Distance (km)',
-            data: weeklyData.data,
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            label: 'Monthly Distance (km)',
+            data: monthlyData.data,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
             borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 2,
+            borderWidth: 1,
             fill: true,
           }]
         },
@@ -161,7 +161,7 @@
               display: true,
               title: {
                 display: true,
-                text: 'Week'
+                text: 'Month'
               }
             },
             y: {
@@ -176,13 +176,6 @@
         }
       });
     }
-
-    // Event listener for checkboxes
-    document.querySelectorAll('.form-check-input').forEach(checkbox => {
-      checkbox.addEventListener('change', () => {
-        fetchSwims();
-      });
-    });
 
     // Initial fetch
     fetchSwims();
