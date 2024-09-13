@@ -215,7 +215,7 @@
                             <h5>${swim.name}</h5>
                             <p>
                                     <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
-                                    <strong>Distance:</strong> ${(swim.distance / 1).toFixed(2).toLocaleString()}m<br>
+                                    <strong>Distance:</strong> ${swim.distance.toLocaleString()}m<br>
                                     <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
                                     <strong>Average Pace:</strong> ${pacePer100m} per 100m
                             </p>
