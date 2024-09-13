@@ -55,7 +55,7 @@
             swimDiv.className = 'swim-card';
 
             // Calculate average pace per 100 meters
-            const pacePer100m = calculatePacePer100m(swim.moving_time, swim.distance);
+            const pacePer100m = calculatePacePer100m(swim.average_speed);
 
             // Build the swim card using Bootstrap components
             swimDiv.innerHTML = `
@@ -86,11 +86,11 @@
         });
     }
 
-    // Function to calculate average pace per 100 meters
-    function calculatePacePer100m(timeInSeconds, distanceInMeters) {
-      if (distanceInMeters === 0) return 'N/A';
-      const pacePerMeter = timeInSeconds / distanceInMeters;
-      const pacePer100mInSeconds = pacePerMeter * 100;
+    // Function to calculate average pace per 100 meters using average speed
+    function calculatePacePer100m(averageSpeed) {
+      if (!averageSpeed || averageSpeed === 0) return 'N/A';
+      // Pace per 100 meters in seconds
+      const pacePer100mInSeconds = 100 / averageSpeed;
       const minutes = Math.floor(pacePer100mInSeconds / 60);
       const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
       return `${minutes}:${seconds}`;
