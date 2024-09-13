@@ -163,7 +163,6 @@
         <h1>My Swim Feed</h1>
 
         <!-- Chart Section -->
-        <h2>Monthly Distance Over the Last 12 Months</h2>
         <div class="chart-container">
             <canvas id="monthlyChart"></canvas>
         </div>
@@ -216,9 +215,9 @@
                             <h5>${swim.name}</h5>
                             <p>
                                 <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
-                                <strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km<br>
+                                <strong>Distance:</strong> ${(swim.distance / 1).toFixed(2)}m<br>
                                 <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
-                                <strong>Average Pace:</strong> ${pacePer100m} per 100m
+                                <strong>Average Pace:</strong> ${pacePer100m}/100m
                             </p>
                         `;
 
