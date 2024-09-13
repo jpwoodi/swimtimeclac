@@ -41,6 +41,9 @@
             return;
           }
 
+          // Sort swims by start_date_local from newest to oldest
+          data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+
           document.getElementById('swim-feed').innerHTML = '';
 
           // Process data for the chart
