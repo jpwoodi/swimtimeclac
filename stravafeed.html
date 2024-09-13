@@ -214,10 +214,10 @@
                         swimDiv.innerHTML = `
                             <h5>${swim.name}</h5>
                             <p>
-                                <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
-                                <strong>Distance:</strong> ${(swim.distance / 1).toFixed(2)}m<br>
-                                <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
-                                <strong>Average Pace:</strong> ${pacePer100m}/100m
+                                    <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
+                                    <strong>Distance:</strong> ${(swim.distance / 1).toFixed(2).toLocaleString()}m<br>
+                                    <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
+                                    <strong>Average Pace:</strong> ${pacePer100m} per 100m
                             </p>
                         `;
 
@@ -235,17 +235,18 @@
                 });
         }
 
-        // Function to calculate average pace per 100 meters using average speed
-        function calculatePacePer100m(averageSpeed) {
-            if (!averageSpeed || averageSpeed === 0) return 'N/A';
-            // Pace per 100 meters in seconds
-            const pacePer100mInSeconds = 100 / averageSpeed;
-            const minutes = Math.floor(pacePer100mInSeconds / 60);
-            const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
-                
-            // Format the pace with a comma separator if needed
-            return `${minutes}:${seconds}`.toLocaleString();
-        }
+    // Function to calculate average pace per 100 meters using average speed
+    function calculatePacePer100m(averageSpeed) {
+        if (!averageSpeed || averageSpeed === 0) return 'N/A';
+        
+        // Pace per 100 meters in seconds
+        const pacePer100mInSeconds = 100 / averageSpeed;
+        const minutes = Math.floor(pacePer100mInSeconds / 60);
+        const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
+        
+        // Format the pace with a comma separator if needed
+        return `${minutes}:${seconds}`.toLocaleString();
+    }
 
         // Function to format duration in hh:mm:ss
         function formatDuration(timeInSeconds) {
