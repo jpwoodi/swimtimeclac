@@ -38,25 +38,22 @@
         
         .chart-container, .feed-container {
             flex: 1; /* Allow both containers to share the available space equally */
-            margin-bottom: 20px;
+            /* Remove margin-bottom to eliminate gaps */
+            /* margin-bottom: 20px; */
         }
         
         .chart-container {
             width: 100%;
-            height: 250px; /* Set a fixed height for the chart */
-            margin-bottom: 20px;
+            /* Remove height: 250px; */
         }
         
-        canvas#monthlyChart {
+        .chart-container canvas {
             width: 100% !important;
-            height: auto !important; /* Let the chart maintain its aspect ratio */
-
+            height: 100% !important;
         }
         
         .feed-container {
-            flex: 1;
             overflow-y: auto;
-            margin-top: 20px; /* Adds space between the chart and the swim cards */
         }
         
         .swim-card {
@@ -72,7 +69,6 @@
             margin-bottom: 10px;
             font-size: 18px;
         }
-
 
         /* Navbar styling */
         .top-nav {
@@ -169,15 +165,13 @@
         <!-- Chart Section -->
         <h2>Monthly Distance Over the Last 12 Months</h2>
         <div class="chart-container">
-            <canvas id="monthlyChart" width="400" height="200"></canvas>
+            <canvas id="monthlyChart"></canvas>
         </div>
 
         <!-- Swim feed container -->
         <div id="swim-feed" class="feed-container">Loading swims...</div>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <!-- Chart.js library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -217,19 +211,15 @@
                         // Calculate average pace per 100 meters
                         const pacePer100m = calculatePacePer100m(swim.average_speed);
 
-                        // Build the swim card using Bootstrap components
+                        // Build the swim card
                         swimDiv.innerHTML = `
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">${swim.name}</h5>
-                                    <p class="card-text">
-                                        <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
-                                        <strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km<br>
-                                        <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
-                                        <strong>Average Pace:</strong> ${pacePer100m} per 100m
-                                    </p>
-                                </div>
-                            </div>
+                            <h5>${swim.name}</h5>
+                            <p>
+                                <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
+                                <strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km<br>
+                                <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
+                                <strong>Average Pace:</strong> ${pacePer100m} per 100m
+                            </p>
                         `;
 
                         document.getElementById('swim-feed').appendChild(swimDiv);
@@ -316,6 +306,8 @@
                     }]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allow chart to fill its container
                     scales: {
                         x: {
                             display: true,
