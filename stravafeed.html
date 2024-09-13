@@ -1,77 +1,48 @@
+<!-- index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swimming</title>
-    <link rel="icon" href="images/swimming_favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('background.jpg');
-            background-size: cover;
-            background-position: center;
-            color: #212529;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        .strava-feed {
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .activity {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-bottom: 1px solid #ccc;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>My Swim Feed</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .swim { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    .swim h2 { margin: 0; }
+  </style>
 </head>
 <body>
+  <h1>My Swim Feed</h1>
+  <div id="swim-feed">Loading swims...</div>
 
-    <div id="strava-feed" class="strava-feed">
-        <h2>My Strava Swims</h2>
-        <div id="activities"></div>
-    </div>
+  <script>
+    fetch('/.netlify/functions/get-swims')
+      .then(response => response.json())
+      .then(data => {
+        const swimFeed = document.getElementById('swim-feed');
+        swimFeed.innerHTML = ''; // Clear loading text
 
-    <script>
-        // Fetch and display activities from Netlify function
-        async function fetchActivities() {
-            try {
-                const response = await fetch('/.netlify/functions/strava-auth');
-                const activities = await response.json();
-
-                const activitiesContainer = document.getElementById('activities');
-                activitiesContainer.innerHTML = '';
-
-                if (Array.isArray(activities) && activities.length > 0) {
-                    activities.forEach(activity => {
-                        const activityElement = document.createElement('div');
-                        activityElement.classList.add('activity');
-                        activityElement.innerHTML = `<strong>${activity.name}</strong> - ${activity.distance} meters`;
-                        activitiesContainer.appendChild(activityElement);
-                    });
-                } else {
-                    activitiesContainer.innerHTML = '<p>No recent swims found</p>';
-                }
-            } catch (error) {
-                console.error('Error fetching activities:', error);
-                document.getElementById('activities').innerHTML = '<p>Error loading swims</p>';
-            }
+        if (data.error) {
+          swimFeed.textContent = 'Error loading swims.';
+          return;
         }
 
-        // Fetch activities when the page loads
-        window.onload = fetchActivities;
-    </script>
-
+        data.forEach(swim => {
+          const swimDiv = document.createElement('div');
+          swimDiv.className = 'swim';
+          swimDiv.innerHTML = `
+            <h2>${swim.name}</h2>
+            <p><strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}</p>
+            <p><strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km</p>
+            <p><strong>Duration:</strong> ${Math.floor(swim.moving_time / 60)} min ${swim.moving_time % 60} sec</p>
+          `;
+          swimFeed.appendChild(swimDiv);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching swims:', error);
+        document.getElementById('swim-feed').textContent = 'Error loading swims.';
+      });
+  </script>
 </body>
 </html>
