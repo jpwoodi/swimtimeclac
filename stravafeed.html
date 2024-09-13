@@ -42,19 +42,20 @@
         }
         
         .chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%; /* Make the chart container fill its parent's height */
+            width: 100%;
+            height: 250px; /* Set a fixed height for the chart */
+            margin-bottom: 20px;
         }
         
         canvas#monthlyChart {
             width: 100% !important;
-            height: 100% !important; /* Make the chart take the full height of the container */
+            height: 100% !important; /* Adjust to match the fixed height of the container */
         }
         
         .feed-container {
+            flex: 1;
             overflow-y: auto;
+            margin-top: 20px; /* Adds space between the chart and the swim cards */
         }
         
         .swim-card {
