@@ -5,12 +5,11 @@
 <head>
   <meta charset="UTF-8">
   <title>My Swim Feed</title>
-  <!-- Add Bootstrap CSS for better styling -->
+  <!-- Bootstrap CSS for styling -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     body { margin: 20px; }
-    .swim { border-bottom: 1px solid #ccc; padding: 10px 0; }
-    .swim h2 { margin-top: 0; }
+    .swim-card { margin-bottom: 20px; }
   </style>
 </head>
 <body>
@@ -28,6 +27,14 @@
         <input class="form-check-input" type="checkbox" value="calories" id="calories">
         <label class="form-check-label" for="calories">Calories Burned</label>
       </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="max_speed" id="max_speed">
+        <label class="form-check-label" for="max_speed">Maximum Speed</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="average_heartrate" id="average_heartrate">
+        <label class="form-check-label" for="average_heartrate">Average Heart Rate</label>
+      </div>
       <!-- Add more checkboxes as needed -->
     </div>
 
@@ -38,7 +45,7 @@
     <button id="load-more" class="btn btn-primary mt-4">Load More</button>
   </div>
 
-  <!-- Add Bootstrap JS and dependencies (optional for Bootstrap JS components) -->
+  <!-- Bootstrap JS and dependencies -->
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 
   <script>
@@ -60,35 +67,50 @@
             return;
           }
 
+          // Hide Load More button if fewer swims are returned than requested
+          if (data.length < swimsPerPage) {
+            document.getElementById('load-more').style.display = 'none';
+          } else {
+            document.getElementById('load-more').style.display = 'block';
+          }
+
           if (page === 1) {
             document.getElementById('swim-feed').innerHTML = '';
           }
 
           data.forEach(swim => {
             const swimDiv = document.createElement('div');
-            swimDiv.className = 'swim';
-            swimDiv.innerHTML = `
-              <h2>${swim.name}</h2>
-              <p><strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}</p>
-              <p><strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km</p>
-              <p><strong>Duration:</strong> ${Math.floor(swim.moving_time / 60)} min ${swim.moving_time % 60} sec</p>
-            `;
+            swimDiv.className = 'swim-card';
 
-            // Add optional fields based on selections
-            if (selectedFields.includes('average_speed')) {
-              swimDiv.innerHTML += `<p><strong>Average Speed:</strong> ${(swim.average_speed * 3.6).toFixed(2)} km/h</p>`;
-            }
-            if (selectedFields.includes('calories') && swim.hasOwnProperty('calories')) {
-              swimDiv.innerHTML += `<p><strong>Calories Burned:</strong> ${swim.calories.toFixed(0)} kcal</p>`;
-            }
-            // Add more optional fields as needed
+            // Build the swim card using Bootstrap components
+            swimDiv.innerHTML = `
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">${swim.name}</h5>
+                  <p class="card-text">
+                    <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
+                    <strong>Distance:</strong> ${(swim.distance / 1000).toFixed(2)} km<br>
+                    <strong>Duration:</strong> ${Math.floor(swim.moving_time / 60)} min ${swim.moving_time % 60} sec
+                  </p>
+                  ${selectedFields.includes('average_speed') && swim.hasOwnProperty('average_speed') ? `<p class="card-text"><strong>Average Speed:</strong> ${(swim.average_speed * 3.6).toFixed(2)} km/h</p>` : ''}
+                  ${selectedFields.includes('calories') && swim.hasOwnProperty('calories') ? `<p class="card-text"><strong>Calories Burned:</strong> ${swim.calories.toFixed(0)} kcal</p>` : ''}
+                  ${selectedFields.includes('max_speed') && swim.hasOwnProperty('max_speed') ? `<p class="card-text"><strong>Maximum Speed:</strong> ${(swim.max_speed * 3.6).toFixed(2)} km/h</p>` : ''}
+                  ${selectedFields.includes('average_heartrate') && swim.hasOwnProperty('average_heartrate') ? `<p class="card-text"><strong>Average Heart Rate:</strong> ${swim.average_heartrate.toFixed(0)} bpm</p>` : ''}
+                </div>
+              </div>
+            `;
 
             document.getElementById('swim-feed').appendChild(swimDiv);
           });
         })
         .catch(error => {
           console.error('Error fetching swims:', error);
-          document.getElementById('swim-feed').textContent = 'Error loading swims.';
+          const swimFeed = document.getElementById('swim-feed');
+          swimFeed.innerHTML = `
+            <div class="alert alert-danger" role="alert">
+              An error occurred while loading swims. Please try again later.
+            </div>
+          `;
         });
     }
 
