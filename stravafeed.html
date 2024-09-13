@@ -34,123 +34,69 @@
             overflow: hidden;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
-        }
-        
-        .chart-container, .feed-container {
-            flex: 1; /* Allow both containers to share the available space equally */
-            /* Remove margin-bottom to eliminate gaps */
-            margin-bottom: 10px;
+            position: relative; /* Added for absolute positioning of record box */
         }
         
         .chart-container {
             width: 100%;
-            height: 100px/* Remove height: 250px; */
+            height: 100%; /* Allow chart to take up available space */
+            margin-bottom: 10px;
         }
         
         .chart-container canvas {
             width: 100% !important;
             height: 100% !important;
         }
-        
+
         .feed-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-height: 100%; /* Ensure the feed container doesn't exceed container height */
             overflow-y: auto;
         }
-        
+
         .swim-card {
             background-color: white;
-            padding: 15px 10px; /* Adjusted padding: top/bottom 15px, left/right 10px */
-            margin-bottom: 10px; /* Margin between cards */
+            padding: 15px 10px;
+            width: calc(50% - 20px); /* Make swim cards half the width */
             border-radius: 8px;
             box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
         }
-        
+
         .swim-card h5 {
             color: #007BFF;
-            margin-top: 0; /* Remove top margin */
-            margin-bottom: 10px; /* Adjust bottom margin */
-            font-size: 16px; /* Optional: Make the title smaller */
-        }
-        
-        .swim-card p {
-            margin: 0; /* Remove margin inside paragraphs */
-            line-height: 1.2; /* Tighter line spacing */
-        }
-
-        /* Navbar styling */
-        .top-nav {
-            width: 100%;
-            background-color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 4px 10px;
-            height: 40px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .top-nav .logo {
-            width: 35px;
-            height: auto;
-            margin-right: 10px;
-        }
-
-        .top-nav ul {
-            list-style-type: none;
             margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 10px;
+            font-size: 16px;
         }
 
-        .top-nav ul li a {
-            color: black;
-            text-decoration: none;
+        .swim-card p {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .record-box {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 250px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+
+        .record-box h5 {
+            margin: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #007BFF;
+        }
+
+        .record-box p {
+            margin: 5px 0;
             font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-            padding: 4px 8px;
-        }
-
-        .top-nav ul li a:hover {
-            background-color: #f2f2f2;
-            border-radius: 5px;
-        }
-
-        /* Hamburger menu */
-        .hamburger {
-            display: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: black;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                margin-top: 60px;
-            }
-
-            .top-nav ul {
-                display: none;
-                flex-direction: column;
-                background-color: white;
-                position: absolute;
-                top: 40px;
-                left: 0;
-                width: 100%;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-
-            .hamburger {
-                display: block;
-            }
-
-            .top-nav img.logo {
-                width: 25px;
-            }
         }
     </style>
 </head>
@@ -175,6 +121,16 @@
 
         <!-- Swim feed container -->
         <div id="swim-feed" class="feed-container">Loading swims...</div>
+
+        <!-- Record Box for personal bests and yearly total -->
+        <div class="record-box">
+            <h5>Personal Records</h5>
+            <p><strong>Best 100m:</strong> <span id="best100m">N/A</span></p>
+            <p><strong>Best 400m:</strong> <span id="best400m">N/A</span></p>
+            <p><strong>Best 1600m:</strong> <span id="best1600m">N/A</span></p>
+            <h5>Yearly Total</h5>
+            <p><strong>Total Distance:</strong> <span id="totalDistance">N/A</span> km</p>
+        </div>
     </div>
 
     <!-- Chart.js library -->
@@ -182,6 +138,11 @@
 
     <!-- JavaScript code -->
     <script>
+        let best100m = null;
+        let best400m = null;
+        let best1600m = null;
+        let totalDistanceThisYear = 0;
+
         function toggleMenu() {
             const navLinks = document.querySelector('.top-nav ul');
             navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
@@ -204,11 +165,21 @@
 
                     // Process data for the chart
                     const monthlyData = processMonthlyData(data);
+                    const currentYear = new Date().getFullYear();
+
+                    // Calculate total distance swum this year
+                    totalDistanceThisYear = data.reduce((acc, swim) => {
+                        const swimYear = new Date(swim.start_date_local).getFullYear();
+                        if (swimYear === currentYear) {
+                            return acc + swim.distance / 1000; // Convert to kilometers
+                        }
+                        return acc;
+                    }, 0);
 
                     // Render the chart
                     renderChart(monthlyData);
 
-                    // Display swims
+                    // Display swims and check for personal records
                     data.forEach(swim => {
                         const swimDiv = document.createElement('div');
                         swimDiv.className = 'swim-card';
@@ -220,15 +191,24 @@
                         swimDiv.innerHTML = `
                             <h5>${swim.name}</h5>
                             <p>
-                                    <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
-                                    <strong>Distance:</strong> ${swim.distance.toLocaleString()}m<br>
-                                    <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
-                                    <strong>Average Pace:</strong> ${pacePer100m} per 100m
+                                <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
+                                <strong>Distance:</strong> ${swim.distance.toLocaleString()}m<br>
+                                <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
+                                <strong>Average Pace:</strong> ${pacePer100m} per 100m
                             </p>
                         `;
 
                         document.getElementById('swim-feed').appendChild(swimDiv);
+
+                        // Check for personal bests (100m, 400m, 1600m)
+                        checkPersonalBests(swim);
                     });
+
+                    // Update the total distance and personal bests in the records box
+                    document.getElementById('totalDistance').textContent = totalDistanceThisYear.toFixed(2);
+                    document.getElementById('best100m').textContent = best100m ? formatTime(best100m) : "N/A";
+                    document.getElementById('best400m').textContent = best400m ? formatTime(best400m) : "N/A";
+                    document.getElementById('best1600m').textContent = best1600m ? formatTime(best1600m) : "N/A";
                 })
                 .catch(error => {
                     console.error('Error fetching swims:', error);
@@ -241,18 +221,46 @@
                 });
         }
 
-    // Function to calculate average pace per 100 meters using average speed
-    function calculatePacePer100m(averageSpeed) {
-        if (!averageSpeed || averageSpeed === 0) return 'N/A';
-        
-        // Pace per 100 meters in seconds
-        const pacePer100mInSeconds = 100 / averageSpeed;
-        const minutes = Math.floor(pacePer100mInSeconds / 60);
-        const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
-        
-        // Format the pace with a comma separator if needed
-        return `${minutes}:${seconds}`.toLocaleString();
-    }
+        // Function to check for personal bests in each swim
+        function checkPersonalBests(swim) {
+            const distance = swim.distance; // Total distance of the swim in meters
+            const movingTime = swim.moving_time; // Total time in seconds
+            const averageSpeed = distance / movingTime; // Speed in meters per second
+
+            // Calculate times for 100m, 400m, 1600m
+            if (distance >= 100) {
+                const time100m = 100 / averageSpeed;
+                if (!best100m || time100m < best100m) {
+                    best100m = time100m;
+                }
+            }
+
+            if (distance >= 400) {
+                const time400m = 400 / averageSpeed;
+                if (!best400m || time400m < best400m) {
+                    best400m = time400m;
+                }
+            }
+
+            if (distance >= 1600) {
+                const time1600m = 1600 / averageSpeed;
+                if (!best1600m || time1600m < best1600m) {
+                    best1600m = time1600m;
+                }
+            }
+        }
+
+        // Function to calculate average pace per 100 meters using average speed
+        function calculatePacePer100m(averageSpeed) {
+            if (!averageSpeed || averageSpeed === 0) return 'N/A';
+            
+            // Pace per 100 meters in seconds
+            const pacePer100mInSeconds = 100 / averageSpeed;
+            const minutes = Math.floor(pacePer100mInSeconds / 60);
+            const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
+            
+            return `${minutes}:${seconds}`;
+        }
 
         // Function to format duration in hh:mm:ss
         function formatDuration(timeInSeconds) {
@@ -265,6 +273,13 @@
             const secondsStr = `${seconds}s`;
 
             return `${hoursStr}${minutesStr}${secondsStr}`;
+        }
+
+        // Function to format time in mm:ss
+        function formatTime(timeInSeconds) {
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = Math.round(timeInSeconds % 60).toString().padStart(2, '0');
+            return `${minutes}:${seconds}`;
         }
 
         // Function to process data into monthly totals
