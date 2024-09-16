@@ -88,37 +88,48 @@
             background-color: #ffffff;
             border-radius: 10px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            max-width: 800px;
+            max-width: 1000px;  /* Increased width */
             width: 100%;
             padding: 20px;
             text-align: center;
             color: #212529;
             display: none;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
+        
         table, th, td {
             border: 1px solid #ddd;
+            font-size: 0.85em;  /* Smaller text */
         }
-
+        
         th, td {
-            padding: 12px;
-            text-align: left;
+            padding: 8px;  /* Adjust padding for smaller text */
         }
-
+        
         th {
             background-color: #007BFF;
             color: white;
         }
-
+        
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+
+        /* Style for loading spinner */
+        .spinner {
+            border: 6px solid #f3f3f3; /* Light grey */
+            border-top: 6px solid #007BFF; /* Blue */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
     </style>
 </head>
 <body>
@@ -158,6 +169,11 @@
                 <textarea id="comments" name="comments" placeholder="E.g., Make the sessions longer" rows="3"></textarea>
             </div>
             <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
+        </div>
+    </div>
+            <!-- Loading spinner, initially hidden -->
+        <div id="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
         </div>
     </div>
 
@@ -228,35 +244,41 @@ let swimPlans = [];  // Store the entire swim plan here
     }
 
     // Function to fetch the swim plan from the backend and display it
-    async function fetchAndDisplayPlan(details) {
-        try {
-            const response = await fetch('/.netlify/functions/generateSwimPlan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(details)
-            });
+async function fetchAndDisplayPlan(details) {
+    // Show the loading spinner
+    document.getElementById('loading-spinner').style.display = 'block';
 
-            const data = await response.json();
+    try {
+        const response = await fetch('/.netlify/functions/generateSwimPlan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(details)
+        });
 
-            if (response.ok) {
-                const planText = data.plan;
-                swimPlans = parseSwimPlan(planText);
-                displayAllWeeks();
+        const data = await response.json();
 
-                // Update conversation history with the latest state from the backend
-                conversationHistory = data.conversationHistory;
+        if (response.ok) {
+            const planText = data.plan;
+            swimPlans = parseSwimPlan(planText);
+            displayAllWeeks();
 
-                document.getElementById('results-container').style.display = 'block';
-            } else {
-                console.error('Backend error:', data.error);
-                alert(`Error: ${data.error}`);
-            }
-        } catch (error) {
-            alert(`An error occurred: ${error.message}`);
+            // Update conversation history with the latest state from the backend
+            conversationHistory = data.conversationHistory;
+
+            document.getElementById('results-container').style.display = 'block';
+        } else {
+            console.error('Backend error:', data.error);
+            alert(`Error: ${data.error}`);
         }
+    } catch (error) {
+        alert(`An error occurred: ${error.message}`);
+    } finally {
+        // Hide the loading spinner after the fetch is complete
+        document.getElementById('loading-spinner').style.display = 'none';
     }
+}
 
         // Function to parse the plan and prepare it for display
         function parseSwimPlan(planText) {
