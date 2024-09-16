@@ -179,7 +179,7 @@
     </table>
 </div>
 
-    <script>
+<script>
     let swimPlans = [];  // Store the entire swim plan here
 
     async function generateSwimPlan() {
@@ -230,6 +230,8 @@
         console.log("Lines:", lines);
 
         let currentWeek = [];
+        let weekNumber = 1;
+
         lines.forEach((line, index) => {
             if (line.startsWith('| Week ')) return; // Ignore the header
 
@@ -237,20 +239,21 @@
 
             if (parts.length >= 7 && !isNaN(parts[0])) {
                 if (currentWeek.length > 0) {
-                    weeklyPlans.push(currentWeek);
+                    weeklyPlans.push({ weekNumber: weekNumber, sessions: currentWeek });
                     currentWeek = [];
+                    weekNumber++;  // Move to the next week
                 }
 
                 parts.shift(); // Remove the week number from the array
             }
 
             if (parts.length === 6) {
-                currentWeek.push(parts);
+                currentWeek.push(parts);  // Collect sessions
             }
         });
 
         if (currentWeek.length > 0) {
-            weeklyPlans.push(currentWeek);
+            weeklyPlans.push({ weekNumber: weekNumber, sessions: currentWeek });
         }
 
         return weeklyPlans;
@@ -273,14 +276,13 @@
             <tbody>
         `;
 
-        swimPlans.forEach((weekData, weekIndex) => {
-            weekData.forEach((session, sessionIndex) => {
+        swimPlans.forEach((weekData) => {
+            weekData.sessions.forEach((session, sessionIndex) => {
                 if (session.length === 6) {
-                    // Use sessionIndex + 1 to correctly increment the session number per week
                     tableContent += `
                         <tr>
-                            <td>Week ${weekIndex + 1}</td>
-                            <td>Session ${sessionIndex + 1}</td>  <!-- Incremented session number -->
+                            <td>Week ${weekData.weekNumber}</td>
+                            <td>Session ${sessionIndex + 1}</td>  <!-- Session number increments for each session in a week -->
                             <td>${session[1]}</td>
                             <td>${session[2]}</td>
                             <td>${session[3]}</td>
