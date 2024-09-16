@@ -276,10 +276,11 @@
         swimPlans.forEach((weekData, weekIndex) => {
             weekData.forEach((session, sessionIndex) => {
                 if (session.length === 6) {
+                    // Use sessionIndex + 1 to correctly increment the session number per week
                     tableContent += `
                         <tr>
                             <td>Week ${weekIndex + 1}</td>
-                            <td>Session ${sessionIndex + 1}</td>
+                            <td>Session ${sessionIndex + 1}</td>  <!-- Incremented session number -->
                             <td>${session[1]}</td>
                             <td>${session[2]}</td>
                             <td>${session[3]}</td>
@@ -297,6 +298,7 @@
         table.innerHTML = tableContent;
     }
 </script>
+
 
 
     
