@@ -223,82 +223,102 @@
             alert(`An error occurred: ${error.message}`);
         }
     }
-
-    function parseSwimPlan(planText) {
-        const weeklyPlans = [];
-        const lines = planText.split('\n').filter(line => line.trim() !== '');
-        console.log("Lines:", lines);
-
-        let currentWeek = [];
-        let weekNumber = 1;
-
-        lines.forEach((line, index) => {
-            if (line.startsWith('| Week ')) return; // Ignore the header
-
-            const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
-
-            if (parts.length >= 7 && !isNaN(parts[0])) {
-                if (currentWeek.length > 0) {
-                    weeklyPlans.push({ weekNumber: weekNumber, sessions: currentWeek });
-                    currentWeek = [];
-                    weekNumber++;  // Move to the next week
-                }
-
-                parts.shift(); // Remove the week number from the array
-            }
-
-            if (parts.length === 6) {
-                currentWeek.push(parts);  // Collect sessions
-            }
-        });
-
-        if (currentWeek.length > 0) {
-            weeklyPlans.push({ weekNumber: weekNumber, sessions: currentWeek });
-        }
-
-        return weeklyPlans;
-    }
-
-    function displayAllWeeks() {
-        const table = document.getElementById('swim-plan-table');
-        let tableContent = `
-            <thead>
-                <tr>
-                    <th>Week</th>
-                    <th>Session Number</th>
-                    <th>Warm Up</th>
-                    <th>Build Set</th>
-                    <th>Main Set</th>
-                    <th>Cool Down</th>
-                    <th>Total Distance</th>
-                </tr>
-            </thead>
-            <tbody>
-        `;
-
-        swimPlans.forEach((weekData) => {
-            weekData.sessions.forEach((session, sessionIndex) => {
-                if (session.length === 6) {
-                    tableContent += `
-                        <tr>
-                            <td>Week ${weekData.weekNumber}</td>
-                            <td>Session ${sessionIndex + 1}</td>  <!-- Session number increments for each session in a week -->
-                            <td>${session[1]}</td>
-                            <td>${session[2]}</td>
-                            <td>${session[3]}</td>
-                            <td>${session[4]}</td>
-                            <td>${session[5]}</td>
-                        </tr>
-                    `;
+        function parseSwimPlan(planText) {
+            const weeklyPlans = [];
+            const lines = planText.split('\n').filter(line => line.trim() !== '');
+            console.log("Lines:", lines);
+        
+            let currentWeekNumber = null;
+            let currentWeekSessions = [];
+        
+            lines.forEach((line, index) => {
+                // Skip the header lines
+                if (index < 2) return;
+        
+                const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
+        
+                if (parts.length === 7) {
+                    const [weekStr, sessionStr, ...sessionData] = parts;
+                    const weekNumber = parseInt(weekStr);
+                    const sessionNumber = parseInt(sessionStr);
+        
+                    // Check if we're still on the same week
+                    if (currentWeekNumber !== weekNumber) {
+                        // If not the first week, push the previous week's data
+                        if (currentWeekNumber !== null) {
+                            weeklyPlans.push({
+                                weekNumber: currentWeekNumber,
+                                sessions: currentWeekSessions
+                            });
+                        }
+                        // Start collecting sessions for the new week
+                        currentWeekNumber = weekNumber;
+                        currentWeekSessions = [];
+                    }
+        
+                    currentWeekSessions.push({
+                        sessionNumber: sessionNumber,
+                        sessionData: sessionData
+                    });
                 } else {
-                    console.error("Unexpected session format:", session);
+                    console.error("Unexpected parts length:", parts);
                 }
             });
-        });
+        
+            // Push the last week's data
+            if (currentWeekNumber !== null) {
+                weeklyPlans.push({
+                    weekNumber: currentWeekNumber,
+                    sessions: currentWeekSessions
+                });
+            }
+        
+            return weeklyPlans;
+        }
 
-        tableContent += `</tbody>`;
-        table.innerHTML = tableContent;
-    }
+        function displayAllWeeks() {
+            const table = document.getElementById('swim-plan-table');
+            let tableContent = `
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Session Number</th>
+                        <th>Warm Up</th>
+                        <th>Build Set</th>
+                        <th>Main Set</th>
+                        <th>Cool Down</th>
+                        <th>Total Distance</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+        
+            swimPlans.forEach((weekData) => {
+                weekData.sessions.forEach((session) => {
+                    const sessionNumber = session.sessionNumber;
+                    const sessionDetails = session.sessionData; // Should be an array of 5 elements
+        
+                    if (sessionDetails.length === 5) {
+                        tableContent += `
+                            <tr>
+                                <td>Week ${weekData.weekNumber}</td>
+                                <td>Session ${sessionNumber}</td>
+                                <td>${sessionDetails[0]}</td>
+                                <td>${sessionDetails[1]}</td>
+                                <td>${sessionDetails[2]}</td>
+                                <td>${sessionDetails[3]}</td>
+                                <td>${sessionDetails[4]}</td>
+                            </tr>
+                        `;
+                    } else {
+                        console.error("Unexpected sessionDetails length:", sessionDetails);
+                    }
+                });
+            });
+        
+            tableContent += `</tbody>`;
+            table.innerHTML = tableContent;
+        }
 </script>
 
 
