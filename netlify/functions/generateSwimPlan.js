@@ -28,7 +28,7 @@ exports.handler = async function(event, context) {
 
         const initialMessage = {
             role: "user",
-            content: 'Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes. Make sure that each week includes a mix of speed training and distance building. Pull from actual sets that include warm-up (300 free / 100 pull always), build, main, and cool down (100 free always), and specify equipment such as pullbuoys, kickboards, and fins where applicable. Use structured examples, including drills and pacing sets, for realistic and diverse workouts. Format the output as a Markdown table with the following columns: "Week", "Session Number", "Warm Up", "Build Set", "Main Set", "Cool Down", and "Total Distance.'
+            content: 'Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes. Make sure that each week includes a mix of speed training and distance building. Pull from actual sets that include warm-up (make it 300 free and 100 pull always), build, main, and cool down (100 free always), and specify equipment such as pullbuoys, kickboards, and fins where applicable. Use structured examples, including drills and pacing sets, for realistic and diverse workouts. Format the output as a Markdown table with the following columns: "Week", "Session Number", "Warm Up", "Build Set", "Main Set", "Cool Down", and "Total Distance.'
         };
 
         messages.push(initialMessage);
