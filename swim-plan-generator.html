@@ -151,11 +151,14 @@
             <button type="button" onclick="generateSwimPlan()">Generate Plan</button>
         </form>
 
-        <div class="form-group">
-            <label for="comments">Add a Comment</label>
-            <textarea id="comments" name="comments" placeholder="E.g., Make the sessions longer" rows="3"></textarea>
+        <!-- Comment section, initially hidden -->
+        <div id="comment-section" style="display: none;">
+            <div class="form-group">
+                <label for="comments">Add a Comment</label>
+                <textarea id="comments" name="comments" placeholder="E.g., Make the sessions longer" rows="3"></textarea>
+            </div>
+            <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
         </div>
-        <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
     </div>
 
     <div class="results-container" id="results-container">
@@ -194,6 +197,9 @@
                 comments: "",  // No comments initially
                 conversationHistory: []  // Start with an empty conversation history
             });
+
+            // Show the comment section after the first plan is generated
+            document.getElementById('comment-section').style.display = 'block';
         }
 
         // Function to regenerate the plan based on user's comment
@@ -248,7 +254,7 @@
             const lines = planText.split('\n').filter(line => line.trim() !== '');
 
             let currentWeekNumber = null;
-            let currentWeekSessions = [];
+            let currentWeekSessions = []
 
             lines.forEach((line, index) => {
                 // Skip the header lines
@@ -261,23 +267,21 @@
                     const weekNumber = parseInt(weekStr);
                     const sessionNumber = parseInt(sessionStr);
 
-                    // Check if we're still on the same week
+                    // If weekNumber changes, push the last week's data and reset the week
                     if (currentWeekNumber !== weekNumber) {
-                        // If not the first week, push the previous week's data
                         if (currentWeekNumber !== null) {
                             weeklyPlans.push({
                                 weekNumber: currentWeekNumber,
                                 sessions: currentWeekSessions
                             });
                         }
-                        // Start collecting sessions for the new week
                         currentWeekNumber = weekNumber;
                         currentWeekSessions = [];
                     }
 
                     currentWeekSessions.push({
                         sessionNumber: sessionNumber,
-                        sessionData: sessionData
+                        sessionData: sessionData  // The actual details of each session
                     });
                 } else {
                     console.error("Unexpected parts length:", parts);
@@ -316,7 +320,7 @@
             swimPlans.forEach((weekData) => {
                 weekData.sessions.forEach((session) => {
                     const sessionNumber = session.sessionNumber;
-                    const sessionDetails = session.sessionData; // Should be an array of 5 elements
+                    const sessionDetails = session.sessionData;
 
                     if (sessionDetails.length === 5) {
                         tableContent += `
