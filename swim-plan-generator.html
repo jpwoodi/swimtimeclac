@@ -168,85 +168,95 @@
     </div>
 
     <script>
-        let swimPlans = [];  // Store the entire swim plan here
-        let conversationHistory = [];  // To store the conversation history with OpenAI
+let swimPlans = [];  // Store the entire swim plan here
+    let conversationHistory = [];  // To store the conversation history with OpenAI
+    let storedDetails = {};  // To store initial user inputs
 
-        // Function to generate the swim plan based on initial input
-        async function generateSwimPlan() {
-            const goal = document.getElementById('goal').value;
-            const cssMinutes = document.getElementById('cssMinutes').value;
-            const cssSeconds = document.getElementById('cssSeconds').value;
-            const duration = document.getElementById('duration').value;
-            const sessions = document.getElementById('sessions').value;
-            const sessionDuration = document.getElementById('session-duration').value;
-            const resultsContainer = document.getElementById('results-container');
+    // Function to generate the swim plan based on initial input
+    async function generateSwimPlan() {
+        const goal = document.getElementById('goal').value;
+        const cssMinutes = document.getElementById('cssMinutes').value;
+        const cssSeconds = document.getElementById('cssSeconds').value;
+        const duration = document.getElementById('duration').value;
+        const sessions = document.getElementById('sessions').value;
+        const sessionDuration = document.getElementById('session-duration').value;
 
-            if (!goal || !cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
-                alert("Please fill out all fields.");
-                return;
-            }
+        if (!goal || !cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
+            alert("Please fill out all fields.");
+            return;
+        }
 
-            // Initial plan generation, no feedback yet
-            await fetchAndDisplayPlan({
-                goal,
-                cssMinutes,
-                cssSeconds,
-                duration,
-                sessions,
-                sessionDuration,
-                comments: "",  // No comments initially
-                conversationHistory: []  // Start with an empty conversation history
+        // Store the initial inputs
+        storedDetails = {
+            goal,
+            cssMinutes,
+            cssSeconds,
+            duration,
+            sessions,
+            sessionDuration
+        };
+
+        // Initial plan generation, no feedback yet
+        await fetchAndDisplayPlan({
+            ...storedDetails,
+            comments: "",  // No comments initially
+            conversationHistory: []  // Start with an empty conversation history
+        });
+
+        // Show the comment section after the first plan is generated
+        document.getElementById('comment-section').style.display = 'block';
+    }
+
+    // Function to regenerate the plan based on user's comment
+    async function addComment() {
+        const comments = document.getElementById('comments').value;
+
+        if (!comments.trim()) {
+            alert("Please enter a comment to modify the plan.");
+            return;
+        }
+
+        // Use the stored conversation history and initial details to regenerate the plan
+        await fetchAndDisplayPlan({
+            ...storedDetails,
+            conversationHistory,  // Send the conversation history to keep the context
+            comments
+        });
+
+        // Clear the comment box after adding a comment
+        document.getElementById('comments').value = '';
+    }
+
+    // Function to fetch the swim plan from the backend and display it
+    async function fetchAndDisplayPlan(details) {
+        try {
+            const response = await fetch('/.netlify/functions/generateSwimPlan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(details)
             });
 
-            // Show the comment section after the first plan is generated
-            document.getElementById('comment-section').style.display = 'block';
-        }
+            const data = await response.json();
 
-        // Function to regenerate the plan based on user's comment
-        async function addComment() {
-            const comments = document.getElementById('comments').value;
+            if (response.ok) {
+                const planText = data.plan;
+                swimPlans = parseSwimPlan(planText);
+                displayAllWeeks();
 
-            if (!comments.trim()) {
-                alert("Please enter a comment to modify the plan.");
-                return;
+                // Update conversation history with the latest state from the backend
+                conversationHistory = data.conversationHistory;
+
+                document.getElementById('results-container').style.display = 'block';
+            } else {
+                console.error('Backend error:', data.error);
+                alert(`Error: ${data.error}`);
             }
-
-            // Use the stored conversation history and send the comment for regenerating the plan
-            await fetchAndDisplayPlan({
-                conversationHistory,  // Send the conversation history to keep the context
-                comments
-            });
+        } catch (error) {
+            alert(`An error occurred: ${error.message}`);
         }
-
-        // Function to fetch the swim plan from the backend and display it
-        async function fetchAndDisplayPlan(details) {
-            try {
-                const response = await fetch('/.netlify/functions/generateSwimPlan', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(details)  // Pass the plan details and feedback
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    const planText = data.plan;
-                    swimPlans = parseSwimPlan(planText);  // Parse the plan into weeks
-                    displayAllWeeks();  // Display the updated swim plan
-
-                    // Update conversation history with the latest state from the backend
-                    conversationHistory = data.conversationHistory;
-
-                    document.getElementById('results-container').style.display = 'block';  // Show the results container
-                } else {
-                    alert(`Error: ${data.error}`);
-                }
-            } catch (error) {
-                alert(`An error occurred: ${error.message}`);
-            }
-        }
+    }
 
         // Function to parse the plan and prepare it for display
         function parseSwimPlan(planText) {
