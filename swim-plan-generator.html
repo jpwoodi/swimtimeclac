@@ -175,16 +175,22 @@
         
         @media (max-width: 768px) {
             .top-nav ul {
-                display: none; /* Hidden by default */
+                display: none;
                 flex-direction: column;
                 background-color: white;
                 width: 100%;
+                margin-top: 10px; /* Push the menu items down */
             }
         
             .top-nav ul.expanded {
-                display: flex; /* Show when expanded */
+                display: flex;
+            }
+        
+            .hamburger {
+                display: block;
             }
         }
+
         
     </style>
 </head>
@@ -253,7 +259,7 @@
     <script>
     function toggleMenu() {
     const navMenu = document.querySelector('.top-nav ul');
-    navMenu.classList.toggle('expanded'); // Add/remove 'expanded' class
+    navMenu.classList.toggle('expanded'); // Toggle 'expanded' class
 }
         
         
