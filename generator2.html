@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swim Plan Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Merriweather', serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #003366;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 15px 25px;
+            background-color: #003366;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #00509E;
+        }
+
+        .results-container {
+            margin-top: 40px;
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-container h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #003366;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #003366;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        footer {
+            background-color: #003366;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Swim Plan Generator</h1>
+        <p>Personalized Swim Plans Just For You</p>
+    </header>
+
+    <div class="container">
+        <div class="form-container">
+            <h2>Get Your Personalized Swim Plan</h2>
+            <form id="swim-plan-form">
+                <div class="form-group">
+                    <label for="goal">Swim Goal</label>
+                    <input type="text" id="goal" name="goal" placeholder="E.g., Improve endurance, build speed">
+                </div>
+                <div class="form-group">
+                    <label for="cssMinutes">Critical Swim Speed</label>
+                    <input type="number" id="cssMinutes" name="cssMinutes" placeholder="Minutes per 100m">
+                    <input type="number" id="cssSeconds" name="cssSeconds" placeholder="Seconds per 100m">
+                </div>
+                <div class="form-group">
+                    <label for="duration">Plan Duration (weeks)</label>
+                    <input type="number" id="duration" name="duration" placeholder="E.g., 4">
+                </div>
+                <div class="form-group">
+                    <label for="sessions">Number of Sessions per Week</label>
+                    <input type="number" id="sessions" name="sessions" placeholder="E.g., 3">
+                </div>
+                <div class="form-group">
+                    <label for="session-duration">Session Duration (minutes)</label>
+                    <input type="number" id="session-duration" name="session-duration" placeholder="E.g., 60">
+                </div>
+                <button type="button" onclick="generateSwimPlan()">Generate Plan</button>
+            </form>
+
+            <div id="comment-section" style="display: none;">
+                <div class="form-group">
+                    <label for="comments">Add a Comment</label>
+                    <textarea id="comments" name="comments" placeholder="E.g., Make the sessions longer" rows="3"></textarea>
+                </div>
+                <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
+            </div>
+        </div>
+
+        <!-- Loading spinner -->
+        <div id="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-container" id="results-container">
+            <h3>Your Personalized Swim Plan</h3>
+            <table id="swim-plan-table"></table>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Swim Plan Generator</p>
+    </footer>
+
+    <script>
+        let swimPlans = [];
+        let conversationHistory = [];
+        let storedDetails = {};
+
+        async function generateSwimPlan() {
+            const goal = document.getElementById('goal').value;
+            const cssMinutes = document.getElementById('cssMinutes').value;
+            const cssSeconds = document.getElementById('cssSeconds').value;
+            const duration = document.getElementById('duration').value;
+            const sessions = document.getElementById('sessions').value;
+            const sessionDuration = document.getElementById('session-duration').value;
+
+            if (!goal || !cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            storedDetails = { goal, cssMinutes, cssSeconds, duration, sessions, sessionDuration };
+
+            await fetchAndDisplayPlan({
+                ...storedDetails,
+                comments: "",
+                conversationHistory: []
+            });
+
+            document.getElementById('comment-section').style.display = 'block';
+        }
+
+        async function addComment() {
+            const comments = document.getElementById('comments').value;
+            if (!comments.trim()) {
+                alert("Please enter a comment.");
+                return;
+            }
+            await fetchAndDisplayPlan({ ...storedDetails, conversationHistory, comments });
+            document.getElementById('comments').value = '';
+        }
+
+        async function fetchAndDisplayPlan(details) {
+            document.getElementById('loading-spinner').style.display = 'block';
+            try {
+                const response = await fetch('/.netlify/functions/generateSwimPlan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(details)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const planText = data.plan;
+                    swimPlans = parseSwimPlan(planText);
+                    displayAllWeeks();
+                    conversationHistory = data.conversationHistory;
+                    document.getElementById('results-container').style.display = 'block';
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+                
+                const data = await response.json();
+                if (response.ok) {
+                    const planText = data.plan;
+                    swimPlans = parseSwimPlan(planText);
+                    displayAllWeeks();
+                    conversationHistory = data.conversationHistory;
+                    document.getElementById('results-container').style.display = 'block';
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`An error occurred: ${error.message}`);
+            } finally {
+                document.getElementById('loading-spinner').style.display = 'none';  // Hide the spinner after response
+            }
+        }
+
+        // Function to parse the swim plan
+        function parseSwimPlan(planText) {
+            const weeklyPlans = [];
+            const lines = planText.split('\n').filter(line => line.trim() !== '');
+
+            let currentWeekNumber = null;
+            let currentWeekSessions = [];
+
+            lines.forEach((line, index) => {
+                if (index < 2) return;  // Skip the header lines
+
+                const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
+                if (parts.length === 7) {
+                    const [weekStr, sessionStr, ...sessionData] = parts;
+                    const weekNumber = parseInt(weekStr);
+                    const sessionNumber = parseInt(sessionStr);
+
+                    if (currentWeekNumber !== weekNumber) {
+                        if (currentWeekNumber !== null) {
+                            weeklyPlans.push({ weekNumber: currentWeekNumber, sessions: currentWeekSessions });
+                        }
+                        currentWeekNumber = weekNumber;
+                        currentWeekSessions = [];
+                    }
+
+                    currentWeekSessions.push({
+                        sessionNumber: sessionNumber,
+                        sessionData: sessionData
+                    });
+                }
+            });
+
+            if (currentWeekNumber !== null) {
+                weeklyPlans.push({
+                    weekNumber: currentWeekNumber,
+                    sessions: currentWeekSessions
+                });
+            }
+
+            return weeklyPlans;
+        }
+
+        // Function to display all weeks and sessions
+        function displayAllWeeks() {
+            const table = document.getElementById('swim-plan-table');
+            let tableContent = `
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Session Number</th>
+                        <th>Warm Up</th>
+                        <th>Build Set</th>
+                        <th>Main Set</th>
+                        <th>Cool Down</th>
+                        <th>Total Distance</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            swimPlans.forEach(weekData => {
+                weekData.sessions.forEach(session => {
+                    const sessionDetails = session.sessionData;
+                    tableContent += `
+                        <tr>
+                            <td>Week ${weekData.weekNumber}</td>
+                            <td>Session ${session.sessionNumber}</td>
+                            <td>${sessionDetails[0]}</td>
+                            <td>${sessionDetails[1]}</td>
+                            <td>${sessionDetails[2]}</td>
+                            <td>${sessionDetails[3]}</td>
+                            <td>${sessionDetails[4]}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tableContent += `</tbody>`;
+            table.innerHTML = tableContent;
+        }
+    </script>
+</body>
+</html>
+
+           
