@@ -9,17 +9,7 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH2N2X1XVjH7l+htjJ8e5t4Xh+WwzQocIJcXxYKmqKJ4h7ZQ0lwnzC4BnSXZAh1I8T/r3Hg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-       <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swim Calculator: Time and Pace</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <style>
+        /* Global Styles */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -33,15 +23,24 @@
             background-position: center;
             color: #212529;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
-        .container {
-            margin: 80px auto;
-            padding: 20px;
-            max-width: 1200px;
-            background-color: rgba(255, 255, 255, 0.9);
+        .calculator-container {
+            background-color: #ffffff;
             border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         h1 {
@@ -51,11 +50,16 @@
         }
 
         .form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
         label {
             width: 100%;
+            text-align: left;
             margin-bottom: 5px;
             font-weight: 600;
             color: #343A40;
@@ -67,6 +71,8 @@
             margin: 5px 0;
             border-radius: 5px;
             border: 1px solid #ced4da;
+            text-align: center;
+            font-size: 1em;
         }
 
         button {
@@ -78,98 +84,123 @@
             cursor: pointer;
             margin-top: 20px;
             width: 100%;
-        }
-
-        .top-nav {
-            width: 100%;
-            background-color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 10px 20px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .top-nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 10px;
-        }
-
-        .top-nav ul li a {
-            color: black;
-            text-decoration: none;
-            font-size: 14px;
-            padding: 8px 12px;
-        }
-
-        .hamburger {
-            display: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: black;
-        }
-
-        @media (max-width: 768px) {
-            .top-nav ul {
-                display: none;
-                flex-direction: column;
-                background-color: white;
-                position: absolute;
-                top: 40px;
-                left: 0;
-                width: 100%;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-
-            .hamburger {
-                display: block;
-            }
-
-            .top-nav ul.expanded {
-                display: flex;
-            }
+            font-size: 1em;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
             background-color: #0056b3;
         }
+
+        p {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #495057;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .toggle-container label {
+            white-space: nowrap;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .toggle-container input[type="radio"] {
+            margin-right: 8px; /* Space between radio button and text */
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #0056b3;
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        @media (max-width: 576px) {
+            .calculator-container {
+                padding: 20px;
+                min-height: auto; /* Adjust height for smaller screens */
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            button {
+                font-size: 0.9em;
+            }
+
+            input[type="text"] {
+                font-size: 0.9em;
+            }
+
+            p {
+                font-size: 1em;
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
-        <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="calculator.html">Time and Pace Calculator</a></li>
-            <li><a href="pools.html">London Swim Locations</a></li>
-            <li><a href="stravafeed.html">My Swim Feed</a></li>
-            <li><a href="swim-plan-generator.html">AI Swim Plan Generator</a></li>
-        </ul>
-    </nav>
-
-    <div class="container">
+    <div class="calculator-container">
         <h1>Swim Calculator</h1>
+        <div class="toggle-container">
+            <label>
+                <input type="radio" name="calculation-mode" value="time" checked onclick="toggleMode()"> Calculate Time
+            </label>
+            <label>
+                <input type="radio" name="calculation-mode" value="pace" onclick="toggleMode()"> Calculate Pace
+            </label>
+        </div>
+
         <form id="calculator-form">
-            <div class="form-group">
+            <div class="form-group" id="distance-group">
                 <label for="distance">Distance (meters):</label>
-                <input type="text" id="distance" name="distance" placeholder="Enter distance">
+                <input type="text" id="distance" name="distance" placeholder="Enter distance" oninput="formatInputWithCommas(this); updateTimeLabel();">
             </div>
 
-            <div class="form-group">
-                <label for="pace">Pace (minutes per 100m):</label>
-                <input type="text" id="pace" name="pace" placeholder="Enter pace">
+            <div class="form-group hidden" id="time-group">
+                <label for="time-hours">Hours:</label>
+                <input type="text" id="time-hours" name="time-hours" placeholder="Hours" oninput="formatInputWithCommas(this);">
+                <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
+                <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
+            </div>
+
+            <div class="form-group" id="pace-group">
+                <label for="pace-mins">Pace (/100m):</label>
+                <input type="text" id="pace-mins" name="pace-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
+                <input type="text" id="pace-secs" name="pace-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
             </div>
 
             <button type="button" onclick="calculate()">Calculate</button>
         </form>
-    </div>
         
         <p id="result"></p>
         <p id="error-message" class="error hidden"></p>
@@ -180,12 +211,6 @@
     </div>
 
     <script>
-       function toggleMenu() {
-            const navMenu = document.querySelector('.top-nav ul');
-            navMenu.classList.toggle('expanded');
-        }
-        
-        
         function toggleMode() {
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
             const timeGroup = document.getElementById('time-group');
