@@ -172,30 +172,17 @@
             cursor: pointer;
             color: black;
         }
-
+        
         @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                margin-top: 60px;
-            }
-
             .top-nav ul {
-                display: none;
+                display: none; /* Hidden by default */
                 flex-direction: column;
                 background-color: white;
-                position: absolute;
-                top: 40px;
-                left: 0;
                 width: 100%;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             }
-
-            .hamburger {
-                display: block;
-            }
-
-            .top-nav img.logo {
-                width: 25px;
+        
+            .top-nav ul.expanded {
+                display: flex; /* Show when expanded */
             }
         }
         
@@ -263,7 +250,13 @@
     </div>
 
     <script>
-let swimPlans = [];  // Store the entire swim plan here
+    function toggleMenu() {
+    const navMenu = document.querySelector('.top-nav ul');
+    navMenu.classList.toggle('expanded'); // Add/remove 'expanded' class
+}
+        
+        
+    let swimPlans = [];  // Store the entire swim plan here
     let conversationHistory = [];  // To store the conversation history with OpenAI
     let storedDetails = {};  // To store initial user inputs
 
