@@ -50,7 +50,7 @@
             color: #343A40;
         }
 
-        input[type="text"], input[type="number"], select {
+        input[type="text"], input[type="number"], select, textarea {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -96,47 +96,26 @@
             display: none;
         }
 
-        .week-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .week-navigation button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
         table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
-        
+
         table, th, td {
             border: 1px solid #ddd;
         }
-        
+
         th, td {
             padding: 12px;
             text-align: left;
         }
-        
+
         th {
             background-color: #007BFF;
             color: white;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
@@ -171,77 +150,117 @@
             </div>
             <button type="button" onclick="generateSwimPlan()">Generate Plan</button>
         </form>
+
+        <div class="form-group">
+            <label for="comments">Add a Comment</label>
+            <textarea id="comments" name="comments" placeholder="E.g., Make the sessions longer" rows="3"></textarea>
+        </div>
+        <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
     </div>
 
-  <div class="results-container" id="results-container">
-    <table id="swim-plan-table">
-        <!-- Table content will be dynamically inserted here -->
-    </table>
-</div>
+    <div class="results-container" id="results-container">
+        <table id="swim-plan-table">
+            <!-- Table content will be dynamically inserted here -->
+        </table>
+    </div>
 
-<script>
-    let swimPlans = [];  // Store the entire swim plan here
+    <script>
+        let swimPlans = [];  // Store the entire swim plan here
+        let conversationHistory = [];  // To store the conversation history with OpenAI
 
-    async function generateSwimPlan() {
-        const goal = document.getElementById('goal').value;
-        const cssMinutes = document.getElementById('cssMinutes').value;
-        const cssSeconds = document.getElementById('cssSeconds').value;
-        const duration = document.getElementById('duration').value;
-        const sessions = document.getElementById('sessions').value;
-        const sessionDuration = document.getElementById('session-duration').value;
-        const resultsContainer = document.getElementById('results-container');
+        // Function to generate the swim plan based on initial input
+        async function generateSwimPlan() {
+            const goal = document.getElementById('goal').value;
+            const cssMinutes = document.getElementById('cssMinutes').value;
+            const cssSeconds = document.getElementById('cssSeconds').value;
+            const duration = document.getElementById('duration').value;
+            const sessions = document.getElementById('sessions').value;
+            const sessionDuration = document.getElementById('session-duration').value;
+            const resultsContainer = document.getElementById('results-container');
 
-        if (!goal || !cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
-            alert("Please fill out all fields.");
-            return;
-        }
-
-        try {
-            const response = await fetch('/.netlify/functions/generateSwimPlan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ goal, cssMinutes, cssSeconds, duration, sessions, sessionDuration })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                const planText = data.plan;
-                console.log("Plan Text:", planText);
-
-                swimPlans = parseSwimPlan(planText);  // Parse the plan into weeks
-                console.log("Parsed Swim Plans:", swimPlans);
-
-                displayAllWeeks();  // Display all weeks' sessions in a single list
-                resultsContainer.style.display = 'block';  // Show the results container
-            } else {
-                alert(`Error: ${data.error}`);
+            if (!goal || !cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
+                alert("Please fill out all fields.");
+                return;
             }
-        } catch (error) {
-            alert(`An error occurred: ${error.message}`);
+
+            // Initial plan generation, no feedback yet
+            await fetchAndDisplayPlan({
+                goal,
+                cssMinutes,
+                cssSeconds,
+                duration,
+                sessions,
+                sessionDuration,
+                comments: "",  // No comments initially
+                conversationHistory: []  // Start with an empty conversation history
+            });
         }
-    }
+
+        // Function to regenerate the plan based on user's comment
+        async function addComment() {
+            const comments = document.getElementById('comments').value;
+
+            if (!comments.trim()) {
+                alert("Please enter a comment to modify the plan.");
+                return;
+            }
+
+            // Use the stored conversation history and send the comment for regenerating the plan
+            await fetchAndDisplayPlan({
+                conversationHistory,  // Send the conversation history to keep the context
+                comments
+            });
+        }
+
+        // Function to fetch the swim plan from the backend and display it
+        async function fetchAndDisplayPlan(details) {
+            try {
+                const response = await fetch('/.netlify/functions/generateSwimPlan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(details)  // Pass the plan details and feedback
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const planText = data.plan;
+                    swimPlans = parseSwimPlan(planText);  // Parse the plan into weeks
+                    displayAllWeeks();  // Display the updated swim plan
+
+                    // Update conversation history with the latest state from the backend
+                    conversationHistory = data.conversationHistory;
+
+                    document.getElementById('results-container').style.display = 'block';  // Show the results container
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`An error occurred: ${error.message}`);
+            }
+        }
+
+        // Function to parse the plan and prepare it for display
         function parseSwimPlan(planText) {
             const weeklyPlans = [];
             const lines = planText.split('\n').filter(line => line.trim() !== '');
-            console.log("Lines:", lines);
-        
+
             let currentWeekNumber = null;
             let currentWeekSessions = [];
-        
+
             lines.forEach((line, index) => {
                 // Skip the header lines
                 if (index < 2) return;
-        
+
                 const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
-        
+
                 if (parts.length === 7) {
                     const [weekStr, sessionStr, ...sessionData] = parts;
                     const weekNumber = parseInt(weekStr);
                     const sessionNumber = parseInt(sessionStr);
-        
+
                     // Check if we're still on the same week
                     if (currentWeekNumber !== weekNumber) {
                         // If not the first week, push the previous week's data
@@ -255,7 +274,7 @@
                         currentWeekNumber = weekNumber;
                         currentWeekSessions = [];
                     }
-        
+
                     currentWeekSessions.push({
                         sessionNumber: sessionNumber,
                         sessionData: sessionData
@@ -264,7 +283,7 @@
                     console.error("Unexpected parts length:", parts);
                 }
             });
-        
+
             // Push the last week's data
             if (currentWeekNumber !== null) {
                 weeklyPlans.push({
@@ -272,10 +291,11 @@
                     sessions: currentWeekSessions
                 });
             }
-        
+
             return weeklyPlans;
         }
 
+        // Function to display all weeks and sessions in a table
         function displayAllWeeks() {
             const table = document.getElementById('swim-plan-table');
             let tableContent = `
@@ -292,12 +312,12 @@
                 </thead>
                 <tbody>
             `;
-        
+
             swimPlans.forEach((weekData) => {
                 weekData.sessions.forEach((session) => {
                     const sessionNumber = session.sessionNumber;
                     const sessionDetails = session.sessionData; // Should be an array of 5 elements
-        
+
                     if (sessionDetails.length === 5) {
                         tableContent += `
                             <tr>
@@ -315,14 +335,11 @@
                     }
                 });
             });
-        
+
             tableContent += `</tbody>`;
             table.innerHTML = tableContent;
         }
-</script>
-
-
-
-    
+    </script>
 </body>
 </html>
+
