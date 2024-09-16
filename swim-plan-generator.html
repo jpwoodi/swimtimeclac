@@ -118,25 +118,25 @@
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
         }
-
+        
         table, th, td {
             border: 1px solid #ddd;
         }
-
+        
         th, td {
             padding: 12px;
             text-align: left;
         }
-
+        
         th {
             background-color: #007BFF;
             color: white;
         }
-
+        
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
@@ -173,22 +173,14 @@
         </form>
     </div>
 
-    <div class="results-container" id="results-container">
-        <div class="week-navigation">
-            <button onclick="previousWeek()">&larr;</button>
-            <span id="week-label">Week 1</span>
-            <button onclick="nextWeek()">&rarr;</button>
-        </div>
-        <table id="swim-plan-table">
-            <!-- Table content will be dynamically inserted here -->
-        </table>
-    </div>
-
+  <div class="results-container" id="results-container">
+    <table id="swim-plan-table">
+        <!-- Table content will be dynamically inserted here -->
+    </table>
+</div>
 
     <script>
-    let currentWeek = 1;
-    let totalWeeks = 4;
-    let swimPlans = [];
+    let swimPlans = [];  // Store the entire swim plan here
 
     async function generateSwimPlan() {
         const goal = document.getElementById('goal').value;
@@ -219,13 +211,11 @@
                 const planText = data.plan;
                 console.log("Plan Text:", planText);
 
-                swimPlans = parseSwimPlan(planText);
+                swimPlans = parseSwimPlan(planText);  // Parse the plan into weeks
                 console.log("Parsed Swim Plans:", swimPlans);
 
-                totalWeeks = swimPlans.length;
-                currentWeek = 1;
-                displayWeek(currentWeek);
-                resultsContainer.style.display = 'block';
+                displayAllWeeks();  // Display all weeks' sessions in a single list
+                resultsContainer.style.display = 'block';  // Show the results container
             } else {
                 alert(`Error: ${data.error}`);
             }
@@ -240,10 +230,8 @@
         console.log("Lines:", lines);
 
         let currentWeek = [];
-        let currentWeekNumber = null;
-
         lines.forEach((line, index) => {
-            if (line.startsWith('| Week ')) return; // Ignore header
+            if (line.startsWith('| Week ')) return; // Ignore the header
 
             const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
 
@@ -253,7 +241,6 @@
                     currentWeek = [];
                 }
 
-                currentWeekNumber = parts[0];
                 parts.shift(); // Remove the week number from the array
             }
 
@@ -269,22 +256,12 @@
         return weeklyPlans;
     }
 
-    function displayWeek(weekNumber) {
-        if (weekNumber <= 0 || weekNumber > swimPlans.length) {
-            console.error("Invalid week number:", weekNumber);
-            return;
-        }
-
-        const weekData = swimPlans[weekNumber - 1];
+    function displayAllWeeks() {
         const table = document.getElementById('swim-plan-table');
-        const weekLabel = document.getElementById('week-label');
-
-        weekLabel.innerText = `Week ${weekNumber}`;
-        console.log("Week Data:", weekData);
-
         let tableContent = `
             <thead>
                 <tr>
+                    <th>Week</th>
                     <th>Session Number</th>
                     <th>Warm Up</th>
                     <th>Build Set</th>
@@ -296,41 +273,31 @@
             <tbody>
         `;
 
-        weekData.forEach((session, index) => {
-            if (session.length === 6) {
-                tableContent += `
-                    <tr>
-                        <td>Session ${index + 1}</td>
-                        <td>${session[1]}</td>
-                        <td>${session[2]}</td>
-                        <td>${session[3]}</td>
-                        <td>${session[4]}</td>
-                        <td>${session[5]}</td>
-                    </tr>
-                `;
-            } else {
-                console.error("Unexpected session format:", session);
-            }
+        swimPlans.forEach((weekData, weekIndex) => {
+            weekData.forEach((session, sessionIndex) => {
+                if (session.length === 6) {
+                    tableContent += `
+                        <tr>
+                            <td>Week ${weekIndex + 1}</td>
+                            <td>Session ${sessionIndex + 1}</td>
+                            <td>${session[1]}</td>
+                            <td>${session[2]}</td>
+                            <td>${session[3]}</td>
+                            <td>${session[4]}</td>
+                            <td>${session[5]}</td>
+                        </tr>
+                    `;
+                } else {
+                    console.error("Unexpected session format:", session);
+                }
+            });
         });
 
         tableContent += `</tbody>`;
         table.innerHTML = tableContent;
     }
-
-    function previousWeek() {
-        if (currentWeek > 1) {
-            currentWeek--;
-            displayWeek(currentWeek);
-        }
-    }
-
-    function nextWeek() {
-        if (currentWeek < totalWeeks) {
-            currentWeek++;
-            displayWeek(currentWeek);
-        }
-    }
 </script>
+
 
     
 </body>
