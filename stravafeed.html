@@ -219,9 +219,25 @@
                     // Process data for the chart
                     const monthlyData = processMonthlyData(data);
 
+                     // Process data for the chart and M25 calculation
+                    const monthlyData = processMonthlyData(data);
+                    const totalDistance = monthlyData.data.reduce((acc, value) => acc + value, 0);
+        
+                    // Calculate how many times the total distance swum equals around the M25
+                    const m25Length = 62.67; // M25 length in km
+                    const timesAroundM25 = (totalDistance / m25Length).toFixed(2);
+
                     // Render the chart
                     renderChart(monthlyData);
 
+                                // Display the M25 calculation result
+                    document.getElementById('swim-feed').insertAdjacentHTML('beforebegin', `
+                        <div class="m25-info">
+                            <p>You have swum a total of <strong>${totalDistance.toFixed(2)} km</strong> over the last 12 months.</p>
+                            <p>This is approximately <strong>${timesAroundM25}</strong> times around the M25 (62.67 km).</p>
+                        </div>
+                    `);
+        
                     // Display swims
                     data.forEach(swim => {
                         const swimDiv = document.createElement('div');
