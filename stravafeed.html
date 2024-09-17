@@ -84,86 +84,86 @@
         }
 
         /* Navbar Styling */
-.top-nav {
-    width: 100%;
-    background-color: #ffffff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed; /* Fixed at the top */
-    top: 0;
-    left: 0;
-    z-index: 1000; /* Ensure navbar is on top */
-}
-
-.top-nav ul {
-    list-style-type: none;
-    display: flex;
-    gap: 20px;
-    margin: 0;
-    padding: 0;
-}
-
-.top-nav ul li a {
-    color: black;
-    text-decoration: none;
-    font-size: 14px;
-    font-family: 'Poppins', sans-serif;
-    padding: 8px 12px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.top-nav ul li a:hover {
-    background-color: #f2f2f2;
-    border-radius: 5px;
-}
-
-/* Hamburger menu (for mobile) */
-.hamburger {
-    display: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: black;
-}
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-    .top-nav ul {
-        display: none;
-        flex-direction: column;
-        width: 100%;
-        background-color: #ffffff;
-        padding: 10px 0;
-        border-top: 1px solid #ddd;
-        position: absolute;
-        top: 50px; /* Height of the navbar */
-        left: 0;
-    }
-
-    .top-nav ul.expanded {
-        display: flex;
-    }
-
-    .top-nav ul li {
-        width: 100%;
-    }
-
-    .top-nav ul li a {
-        width: 100%;
-        padding: 10px 20px;
-    }
-
-    .hamburger {
-        display: block;
-    }
-
-    /* Ensure body padding to avoid content being hidden behind the navbar */
-    body {
-        padding-top: 50px; /* Height of the navbar */
-    }
-}
+        .top-nav {
+            width: 100%;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed; /* Fixed at the top */
+            top: 0;
+            left: 0;
+            z-index: 1000; /* Ensure navbar is on top */
+        }
+        
+        .top-nav ul {
+            list-style-type: none;
+            display: flex;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .top-nav ul li a {
+            color: black;
+            text-decoration: none;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            padding: 8px 12px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .top-nav ul li a:hover {
+            background-color: #f2f2f2;
+            border-radius: 5px;
+        }
+        
+        /* Hamburger menu (for mobile) */
+        .hamburger {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: black;
+        }
+        
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .top-nav ul {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background-color: #ffffff;
+                padding: 10px 0;
+                border-top: 1px solid #ddd;
+                position: absolute;
+                top: 50px; /* Height of the navbar */
+                left: 0;
+            }
+        
+            .top-nav ul.expanded {
+                display: flex;
+            }
+        
+            .top-nav ul li {
+                width: 100%;
+            }
+        
+            .top-nav ul li a {
+                width: 100%;
+                padding: 10px 20px;
+            }
+        
+            .hamburger {
+                display: block;
+            }
+        
+            /* Ensure body padding to avoid content being hidden behind the navbar */
+            body {
+                padding-top: 50px; /* Height of the navbar */
+            }
+        }
     </style>
 </head>
 <body>
@@ -210,27 +210,24 @@
                         document.getElementById('swim-feed').textContent = 'Error loading swims.';
                         return;
                     }
-
+        
                     // Sort swims by start_date_local from newest to oldest
                     data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
-
+        
                     document.getElementById('swim-feed').innerHTML = '';
-
-                    // Process data for the chart
-                    const monthlyData = processMonthlyData(data);
-
-                     // Process data for the chart and M25 calculation
+        
+                    // Process data for the chart and M25 calculation
                     const monthlyData = processMonthlyData(data);
                     const totalDistance = monthlyData.data.reduce((acc, value) => acc + value, 0);
-        
+                
                     // Calculate how many times the total distance swum equals around the M25
                     const m25Length = 62.67; // M25 length in km
                     const timesAroundM25 = (totalDistance / m25Length).toFixed(2);
-
+        
                     // Render the chart
                     renderChart(monthlyData);
-
-                                // Display the M25 calculation result
+        
+                    // Display the M25 calculation result
                     document.getElementById('swim-feed').insertAdjacentHTML('beforebegin', `
                         <div class="m25-info">
                             <p>You have swum a total of <strong>${totalDistance.toFixed(2)} km</strong> over the last 12 months.</p>
@@ -242,10 +239,10 @@
                     data.forEach(swim => {
                         const swimDiv = document.createElement('div');
                         swimDiv.className = 'swim-card';
-
+        
                         // Calculate average pace per 100 meters
                         const pacePer100m = calculatePacePer100m(swim.average_speed);
-
+        
                         // Build the swim card
                         swimDiv.innerHTML = `
                             <h5>${swim.name}</h5>
@@ -256,7 +253,7 @@
                                     <strong>Average Pace:</strong> ${pacePer100m} per 100m
                             </p>
                         `;
-
+        
                         document.getElementById('swim-feed').appendChild(swimDiv);
                     });
                 })
@@ -270,49 +267,49 @@
                     `;
                 });
         }
-
-    // Function to calculate average pace per 100 meters using average speed
-    function calculatePacePer100m(averageSpeed) {
-        if (!averageSpeed || averageSpeed === 0) return 'N/A';
         
-        // Pace per 100 meters in seconds
-        const pacePer100mInSeconds = 100 / averageSpeed;
-        const minutes = Math.floor(pacePer100mInSeconds / 60);
-        const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
+        // Function to calculate average pace per 100 meters using average speed
+        function calculatePacePer100m(averageSpeed) {
+            if (!averageSpeed || averageSpeed === 0) return 'N/A';
+            
+            // Pace per 100 meters in seconds
+            const pacePer100mInSeconds = 100 / averageSpeed;
+            const minutes = Math.floor(pacePer100mInSeconds / 60);
+            const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
+            
+            // Format the pace with a comma separator if needed
+            return `${minutes}:${seconds}`.toLocaleString();
+        }
         
-        // Format the pace with a comma separator if needed
-        return `${minutes}:${seconds}`.toLocaleString();
-    }
-
         // Function to format duration in hh:mm:ss
         function formatDuration(timeInSeconds) {
             const hours = Math.floor(timeInSeconds / 3600);
             const minutes = Math.floor((timeInSeconds % 3600) / 60);
             const seconds = timeInSeconds % 60;
-
+        
             const hoursStr = hours > 0 ? `${hours}h ` : '';
             const minutesStr = minutes > 0 ? `${minutes}m ` : '';
             const secondsStr = `${seconds}s`;
-
+        
             return `${hoursStr}${minutesStr}${secondsStr}`;
         }
-
+        
         // Function to process data into monthly totals
         function processMonthlyData(swims) {
             const monthlyTotals = {};
-
+        
             swims.forEach(swim => {
                 const date = new Date(swim.start_date_local);
                 const month = date.getMonth(); // 0-11
                 const year = date.getFullYear();
                 const key = `${year}-${month + 1}`; // Month +1 for 1-12
-
+        
                 if (!monthlyTotals[key]) {
                     monthlyTotals[key] = 0;
                 }
                 monthlyTotals[key] += swim.distance / 1000; // Convert to kilometers
             });
-
+        
             // Get last 12 months labels
             const labels = [];
             const dataPoints = [];
@@ -323,10 +320,10 @@
                 labels.push(date.toLocaleString('default', { month: 'short', year: 'numeric' }));
                 dataPoints.push(parseFloat((monthlyTotals[key] || 0).toFixed(2)));
             }
-
+        
             return { labels, data: dataPoints };
         }
-
+        
         // Function to render the chart
         function renderChart(monthlyData) {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
@@ -366,11 +363,12 @@
                 }
             });
         }
-
+        
         // Initial fetch
         document.addEventListener('DOMContentLoaded', () => {
             fetchSwims();
         });
+        
     </script>
 </body>
 </html>
