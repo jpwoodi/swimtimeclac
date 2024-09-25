@@ -368,17 +368,23 @@
                 }).addTo(map);
             }
 
-            map.on('click', function() {
-                if (lastFocusedMarker) {
-                    const originalIcon = lastFocusedMarker.marker.type === 'open_water'
-                        ? L.icon({ iconUrl: 'images/map-marker-green.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' })
-                        : (lastFocusedMarker.marker.type === 'private_pool' ? L.icon({ iconUrl: 'images/map-marker-gold.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' }) : L.icon({ iconUrl: 'images/map-marker-blue.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' }));
+        map.on('click', function() {
+            if (lastFocusedMarker) {
+                const originalIcon = lastFocusedMarker.marker.type === 'open_water'
+                    ? L.icon({ iconUrl: 'images/map-marker-green.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' })
+                    : (lastFocusedMarker.marker.type === 'private_pool' ? L.icon({ iconUrl: 'images/map-marker-gold.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' }) : L.icon({ iconUrl: 'images/map-marker-blue.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' }));
+        
+                lastFocusedMarker.marker.setIcon(originalIcon);
+                lastFocusedMarker = null;
+        
+                // Reset the map zoom to default
+                map.setView([51.5074, -0.1278], defaultZoomLevel);
+        
+                // Hide the popup card when map is clicked
+                document.getElementById('popup-card').classList.remove('visible');
+            }
+});
 
-                    lastFocusedMarker.marker.setIcon(originalIcon);
-                    lastFocusedMarker = null;
-                    map.setView([51.5074, -0.1278], defaultZoomLevel);
-                }
-            });
         }
 
         const poolIcon = L.icon({
