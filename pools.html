@@ -9,14 +9,12 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        
         /* Global Styles */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
         
         body {
             font-family: 'Poppins', sans-serif;
@@ -41,7 +39,7 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin-top: 80px; /* Creates space for the navbar */
+            margin-top: 80px;
         }
 
         .table-container {
@@ -60,7 +58,7 @@
             flex: 1;
             overflow-y: auto;
             border-top: 1px solid #ddd;
-            padding-right: 10px; /* Adjust padding to avoid scrollbar overlap */
+            padding-right: 10px;
         }
 
         table {
@@ -71,7 +69,6 @@
             overflow: hidden;
         }
 
-        /* General table styling */
         table, th, td {
             border: 1px solid #ddd;
             table-layout: fixed;
@@ -105,52 +102,6 @@
         
         th:last-child {
             border-top-right-radius: 10px;
-        }
-        
-        th:nth-child(2), td:nth-child(2) {
-            text-align: center;
-        }
-
-        .scrollable-body::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .scrollable-body::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-
-        .scrollable-body::-webkit-scrollbar-track {
-            background-color: transparent;
-        }
-
-        .scrollable-body::-webkit-scrollbar {
-            display: none;
-        }
-
-        .scrollable-body:hover::-webkit-scrollbar {
-            display: block;
-        }
-
-        tr {
-            height: 40px;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        tr:hover {
-            background-color: #d1e7fd;
-        }
-
-        input#search {
-            padding: 10px;
-            margin-bottom: 10px;
-            width: 100%;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
         }
 
         .map-container {
@@ -194,92 +145,85 @@
             color: #212529;
         }
 
-        .popup-card a {
-            color: #007BFF;
-            text-decoration: none;
+        /* Navbar Styling */
+        .top-nav {
+            width: 100%;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
         }
 
-        /* Navbar Styling */
-.top-nav {
-    width: 100%;
-    background-color: #ffffff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed; /* Fixed at the top */
-    top: 0;
-    left: 0;
-    z-index: 1000; /* Ensure navbar is on top */
-}
+        .top-nav ul {
+            list-style-type: none;
+            display: flex;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+        }
 
-.top-nav ul {
-    list-style-type: none;
-    display: flex;
-    gap: 20px;
-    margin: 0;
-    padding: 0;
-}
+        .top-nav ul li a {
+            color: black;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 12px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
 
-.top-nav ul li a {
-    color: black;
-    text-decoration: none;
-    font-size: 14px;
-    font-family: 'Poppins', sans-serif;
-    padding: 8px 12px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
+        .top-nav ul li a:hover {
+            background-color: #f2f2f2;
+            border-radius: 5px;
+        }
 
-.top-nav ul li a:hover {
-    background-color: #f2f2f2;
-    border-radius: 5px;
-}
+        /* Hamburger menu (for mobile) */
+        .hamburger {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: black;
+        }
 
-/* Hamburger menu (for mobile) */
-.hamburger {
-    display: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: black;
-}
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .top-nav ul {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background-color: #ffffff;
+                padding: 10px 0;
+                border-top: 1px solid #ddd;
+                position: absolute;
+                top: 50px;
+                left: 0;
+            }
 
-/* Mobile Styles */
-@media (max-width: 768px) {
-    .top-nav ul {
-        display: none;
-        flex-direction: column;
-        width: 100%;
-        background-color: #ffffff;
-        padding: 10px 0;
-        border-top: 1px solid #ddd;
-        position: absolute;
-        top: 50px; /* Height of the navbar */
-        left: 0;
-    }
+            .top-nav ul.expanded {
+                display: flex;
+            }
 
-    .top-nav ul.expanded {
-        display: flex;
-    }
+            .top-nav ul li {
+                width: 100%;
+            }
 
-    .top-nav ul li {
-        width: 100%;
-    }
+            .top-nav ul li a {
+                width: 100%;
+                padding: 10px 20px;
+            }
 
-    .top-nav ul li a {
-        width: 100%;
-        padding: 10px 20px;
-    }
+            .hamburger {
+                display: block;
+            }
 
-    .hamburger {
-        display: block;
-    }
-
-    /* Ensure body padding to avoid content being hidden behind the navbar */
-    body {
-        padding-top: 50px; /* Height of the navbar */
-    }
-}
+            body {
+                padding-top: 50px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -300,12 +244,26 @@
         <div class="table-container">
             <div class="table-header">
                 <h1>London Swim Locations</h1>
-                <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
+
+                <!-- Swim Type Dropdown with label -->
+                <label for="type-filter">Swim Type</label>
                 <select id="type-filter" onchange="filterPools()">
                     <option value="all">All</option>
                     <option value="pool">Pool</option>
                     <option value="open_water">Open Water</option>
+                    <option value="private_pool">Private Pool</option> <!-- New Category -->
                 </select>
+
+                <!-- Length Filter Dropdown -->
+                <label for="length-filter">Length</label>
+                <select id="length-filter" onchange="filterPools()">
+                    <option value="all">All Lengths</option>
+                    <option value="short">0 - 25 meters</option>
+                    <option value="medium">25 - 50 meters</option>
+                    <option value="long">Over 50 meters</option>
+                </select>
+
+                <input type="text" id="search" placeholder="Search for pools..." onkeyup="filterPools()">
             </div>
             <div class="scrollable-body">
                 <table>
@@ -324,9 +282,7 @@
         </div>
         <div class="map-container">
             <div id="map"></div>
-            <div id="popup-card" class="popup-card">
-                <!-- Popup content will be dynamically inserted here -->
-            </div>
+            <div id="popup-card" class="popup-card"></div>
         </div>
     </div>
 
@@ -338,104 +294,97 @@
         let lastFocusedMarker = null;
         let allMarkers = [];
         let dataRecords = [];
-
         const defaultZoomLevel = 12;
 
-        function toggleMenu() {
-            const navLinks = document.querySelector('.top-nav ul');
-            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-    function initMap() {
-    if (!map) {
-        map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-    }
-
-    map.on('click', function() {
-        if (lastFocusedMarker) {
-            // Reset the last focused marker icon
-            const originalIcon = lastFocusedMarker.marker.type === 'open_water'
-                ? L.icon({ iconUrl: 'images/map-marker-green.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' })
-                : L.icon({ iconUrl: 'images/map-marker-blue.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' });
-
-            lastFocusedMarker.marker.setIcon(originalIcon);
-            lastFocusedMarker = null;
-
-            // Reset the map zoom to default
-            map.setView([51.5074, -0.1278], defaultZoomLevel);
-        }
-    });
-}
-
-
-            const poolIcon = L.icon({
-                iconUrl: 'images/map-marker-blue.png',
-                shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
-
-            const openWaterIcon = L.icon({
-                iconUrl: 'images/map-marker-green.png',
-                shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
-
-            fetch('/.netlify/functions/getPools')
-    .then(response => response.json())
-    .then(data => {
-        dataRecords = data.records;
-
-        const tableBody = document.getElementById('pool-table-body');
-        tableBody.innerHTML = data.records.map(record => `
-            <tr data-id="${record.id}" data-type="${record.fields.Type.toLowerCase()}">
-                <td>${record.fields.Name}</td>
-                <td>${record.fields.Length}</td>
-                <td>${record.fields.Borough}</td>
-            </tr>
-        `).join('');
-
-        allMarkers = data.records.map(record => {
-            if (record.fields.Latitude && record.fields.Longitude) {
-                const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
-                const icon = type === 'open_water' ? openWaterIcon : poolIcon;
-
-                const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
-                const popupContent = `<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`;
-                marker.bindPopup(popupContent);
-                marker.type = type;
-                marker.on('click', () => focusOnMarker(record.id));
-                return { id: record.id, marker };
-            }
-        }).filter(marker => marker !== undefined);
-
-        markers = [...allMarkers];
-
-        // Sort the table by default (column 0, which is 'Name')
-        sortTable(0);
-
-        document.querySelectorAll('#pool-table-body tr').forEach(row => {
-            row.addEventListener('click', () => {
-                focusOnMarker(row.getAttribute('data-id'));
-            });
+        const poolIcon = L.icon({
+            iconUrl: 'images/map-marker-blue.png',
+            shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
         });
-    })
-    .catch(error => console.error('Error fetching data:', error));
+
+        const openWaterIcon = L.icon({
+            iconUrl: 'images/map-marker-green.png',
+            shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const privatePoolIcon = L.icon({
+            iconUrl: 'images/map-marker-red.png', // Red marker for private pools
+            shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        function initMap() {
+            map = L.map('map').setView([51.5074, -0.1278], defaultZoomLevel);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+        }
+
+        fetch('/.netlify/functions/getPools')
+            .then(response => response.json())
+            .then(data => {
+                dataRecords = data.records;
+
+                const tableBody = document.getElementById('pool-table-body');
+                tableBody.innerHTML = data.records.map(record => `
+                    <tr data-id="${record.id}" data-type="${record.fields.Type.toLowerCase()}" data-length="${record.fields.Length}">
+                        <td>${record.fields.Name}</td>
+                        <td>${record.fields.Length}</td>
+                        <td>${record.fields.Borough}</td>
+                    </tr>
+                `).join('');
+
+                allMarkers = data.records.map(record => {
+                    if (record.fields.Latitude && record.fields.Longitude) {
+                        const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
+                        let icon = poolIcon;
+
+                        // Assign correct marker based on type
+                        if (type === 'open_water') {
+                            icon = openWaterIcon;
+                        } else if (type === 'private_pool') {
+                            icon = privatePoolIcon;
+                        }
+
+                        const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
+                        const popupContent = `<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`;
+                        marker.bindPopup(popupContent);
+                        marker.type = type;
+                        marker.on('click', () => focusOnMarker(record.id));
+                        return { id: record.id, marker };
+                    }
+                }).filter(marker => marker !== undefined);
+
+                markers = [...allMarkers];
+
+                sortTable(0);
+
+                document.querySelectorAll('#pool-table-body tr').forEach(row => {
+                    row.addEventListener('click', () => {
+                        focusOnMarker(row.getAttribute('data-id'));
+                    });
+                });
+            })
+            .catch(error => console.error('Error fetching data:', error));
 
         function focusOnMarker(id) {
             if (lastFocusedMarker) {
                 const originalIcon = lastFocusedMarker.marker.type === 'open_water'
-                    ? L.icon({ iconUrl: 'images/map-marker-green.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' })
-                    : L.icon({ iconUrl: 'images/map-marker-blue.png', iconSize: [25, 41], shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png' });
+                    ? openWaterIcon
+                    : lastFocusedMarker.marker.type === 'private_pool'
+                        ? privatePoolIcon
+                        : poolIcon;
 
                 lastFocusedMarker.marker.setIcon(originalIcon);
             }
@@ -443,7 +392,7 @@
             const focusedMarker = markers.find(marker => marker.id === id);
             if (focusedMarker) {
                 focusedMarker.marker.setIcon(L.icon({
-                    iconUrl: 'images/map-marker-red.png',
+                    iconUrl: 'images/map-marker-yellow.png',
                     iconSize: [25, 41],
                     shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png'
                 }));
@@ -467,6 +416,7 @@
         function filterPools() {
             const input = document.getElementById('search').value.toLowerCase();
             const typeFilter = document.getElementById('type-filter').value;
+            const lengthFilter = document.getElementById('length-filter').value;
             const rows = document.getElementById('pool-table-body').getElementsByTagName('tr');
             const filteredMarkers = [];
             const latlngs = [];
@@ -475,6 +425,7 @@
             for (let i = 0; i < rows.length; i++) {
                 const cells = rows[i].getElementsByTagName('td');
                 const type = rows[i].getAttribute('data-type');
+                const length = parseFloat(rows[i].getAttribute('data-length'));
                 let match = false;
 
                 for (let j = 0; j < cells.length; j++) {
@@ -488,6 +439,16 @@
                     match = false;
                 }
 
+                if (lengthFilter !== 'all') {
+                    if (lengthFilter === 'short' && length > 25) {
+                        match = false;
+                    } else if (lengthFilter === 'medium' && (length <= 25 || length > 50)) {
+                        match = false;
+                    } else if (lengthFilter === 'long' && length <= 50) {
+                        match = false;
+                    }
+                }
+
                 rows[i].style.display = match ? '' : 'none';
 
                 const id = rows[i].getAttribute('data-id');
@@ -495,31 +456,24 @@
                     const marker = allMarkers.find(m => m.id === id);
                     if (marker) {
                         filteredMarkers.push(marker);
-                        latlngs.push(marker.marker.getLatLng()); // Collect marker LatLngs for map fitting
+                        latlngs.push(marker.marker.getLatLng());
                     }
                 }
             }
 
-            // Remove all markers from the map
             markers.forEach(m => map.removeLayer(m.marker));
-
-            // Add only the filtered markers back to the map
             markers = filteredMarkers;
             markers.forEach(m => m.marker.addTo(map));
 
             if (latlngs.length > 0) {
                 const bounds = L.latLngBounds(latlngs);
-
-                // Fit the map to show all filtered markers with some padding
                 map.once('moveend', () => {
                     if (map.getZoom() > minZoomLevel) {
-                        map.setZoom(minZoomLevel); // Ensure the map doesn't zoom in too much
+                        map.setZoom(minZoomLevel);
                     }
                 });
-
                 map.fitBounds(bounds, { padding: [50, 50] });
             } else {
-                // Reset to the default London view if no markers match
                 map.setView([51.5074, -0.1278], defaultZoomLevel);
             }
         }
@@ -529,7 +483,6 @@
             const rows = Array.from(table.querySelectorAll('tbody tr'));
             const th = table.querySelectorAll('th')[columnIndex];
             const isAscending = th.classList.contains('sort-asc') || !th.classList.contains('sort-desc');
-
 
             rows.sort((a, b) => {
                 const cellA = a.children[columnIndex].innerText.toLowerCase();
@@ -541,18 +494,11 @@
 
             rows.forEach(row => table.querySelector('tbody').appendChild(row));
 
-            // Clear all sort classes
             table.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
-
-            // Set the correct sort class on the clicked header
             th.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
         }
 
         document.addEventListener('DOMContentLoaded', initMap);
-        document.addEventListener('DOMContentLoaded', () => {
-            initMap();
-            sortTable(0); // Sort by the first column (Name) in ascending order by default
-        });
     </script>
 </body>
 </html>
