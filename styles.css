@@ -49,3 +49,12 @@ canvas {
     height: auto;
     margin-bottom: 20px;
 }
+
+.chart-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.chart-container canvas {
+    width: 48%;
+}
