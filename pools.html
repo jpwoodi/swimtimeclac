@@ -432,7 +432,7 @@
                     if (record.fields.Latitude && record.fields.Longitude) {
                         const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
                         let icon;
-
+                
                         if (type === 'open_water') {
                             icon = openWaterIcon;
                         } else if (type === 'private_pool') {
@@ -440,15 +440,24 @@
                         } else {
                             icon = poolIcon;
                         }
-
+                
                         const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
-                        const popupContent = `<strong>${record.fields.Name}</strong><br>${record.fields.Borough}`;
+                
+                        // Check if the record has a website and add it as a link
+                        const websiteLink = record.fields.Website ? `<br><a href="${record.fields.Website}" target="_blank">Visit Website</a>` : '';
+                
+                        // Create popup content with the link if it exists
+                        const popupContent = `
+                            <strong>${record.fields.Name}</strong><br>
+                            ${record.fields.Borough}${websiteLink}`;
+                
                         marker.bindPopup(popupContent);
                         marker.type = type;
                         marker.on('click', () => focusOnMarker(record.id));
                         return { id: record.id, marker };
                     }
                 }).filter(marker => marker !== undefined);
+
 
                 markers = [...allMarkers];
 
