@@ -51,12 +51,13 @@ canvas {
     display: flex; /* Align items horizontally */
     justify-content: space-between; /* Adds space between the charts */
     flex-wrap: wrap; /* Allows the charts to wrap if the screen is too small */
-    gap: 20px; /* Adds space between the charts */
+    gap: 40px; /* Adds space between the charts */
 }
 
 .chart-wrapper {
     flex: 1 1 40%; /* Make each chart take up about half the container */
-    min-width: 300px; /* Ensure charts don't get too small on narrow screens */
+    min-width: 300px; /* Ensure charts don't get too small on narrow screens */]
+    max-width: 600px; /* Ensure charts don't get too big on wide screens*/
     height: 300px; /* Fixed height for the charts */
 }
 
