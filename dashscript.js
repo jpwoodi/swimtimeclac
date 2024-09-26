@@ -1,4 +1,4 @@
-// script.js
+// dashscript.js
 
 // Helper function to format pace in minutes and seconds per 100 meters
 function formatPace(paceInSecondsPerMeter) {
@@ -17,6 +17,38 @@ async function fetchSwimData() {
     } catch (error) {
         console.error('Error fetching swim data:', error);
     }
+}
+
+// Group swim data by month
+function groupDataByMonth(swimData) {
+    const monthlyData = {};
+    
+    swimData.forEach(session => {
+        const month = moment(session.start_date).format('YYYY-MM'); // Group by year and month
+
+        if (!monthlyData[month]) {
+            monthlyData[month] = {
+                totalDistance: 0,
+                totalTime: 0,
+                sessions: 0,
+                totalPace: 0,
+                swolfSum: 0,
+                hasSwolf: false
+            };
+        }
+
+        monthlyData[month].totalDistance += session.distance;
+        monthlyData[month].totalTime += session.moving_time;
+        monthlyData[month].totalPace += session.moving_time / session.distance;
+        monthlyData[month].sessions += 1;
+
+        if (session.swim_swolf) {
+            monthlyData[month].swolfSum += session.swim_swolf;
+            monthlyData[month].hasSwolf = true;
+        }
+    });
+
+    return monthlyData;
 }
 
 // Process the fetched data to compute metrics
@@ -71,11 +103,10 @@ function updateOverview(processedData) {
 
 // Create the Distance Chart
 function createDistanceChart(swimData) {
-    // Prepare data
-    const labels = swimData.map(session => moment(session.start_date).format('YYYY-MM-DD'));
-    const distances = swimData.map(session => (session.distance / 1000).toFixed(2)); // Convert to km
+    const monthlyData = groupDataByMonth(swimData);
+    const labels = Object.keys(monthlyData); // Get months
+    const distances = Object.values(monthlyData).map(data => (data.totalDistance / 1000).toFixed(2)); // Convert to km
 
-    // Create chart
     const ctx = document.getElementById('distanceChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -99,11 +130,10 @@ function createDistanceChart(swimData) {
 
 // Create the Time Chart
 function createTimeChart(swimData) {
-    // Prepare data
-    const labels = swimData.map(session => moment(session.start_date).format('YYYY-MM-DD'));
-    const times = swimData.map(session => (session.moving_time / 60).toFixed(2)); // Convert to minutes
+    const monthlyData = groupDataByMonth(swimData);
+    const labels = Object.keys(monthlyData);
+    const times = Object.values(monthlyData).map(data => (data.totalTime / 60).toFixed(2)); // Convert to minutes
 
-    // Create chart
     const ctx = document.getElementById('timeChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -127,11 +157,10 @@ function createTimeChart(swimData) {
 
 // Create the Pace Chart
 function createPaceChart(swimData) {
-    // Prepare data
-    const labels = swimData.map(session => moment(session.start_date).format('YYYY-MM-DD'));
-    const paces = swimData.map(session => session.moving_time / session.distance);
+    const monthlyData = groupDataByMonth(swimData);
+    const labels = Object.keys(monthlyData);
+    const paces = Object.values(monthlyData).map(data => data.totalPace / data.sessions);
 
-    // Create chart
     const ctx = document.getElementById('paceChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
@@ -139,7 +168,7 @@ function createPaceChart(swimData) {
             labels: labels,
             datasets: [{
                 label: 'Pace (/100m)',
-                data: paces.map(pace => pace * 100),
+                data: paces.map(pace => pace * 100), // Convert to pace per 100m
                 borderColor: '#43a047',
                 fill: false
             }]
@@ -174,14 +203,9 @@ function createPaceChart(swimData) {
 
 // Create the SWOLF Chart
 function createSwolfChart(swimData) {
-    // Check if SWOLF data is available
-    if (!swimData[0].hasOwnProperty('swim_swolf')) {
-        console.warn('SWOLF data not available');
-        return;
-    }
-
-    const labels = swimData.map(session => moment(session.start_date).format('YYYY-MM-DD'));
-    const swolfScores = swimData.map(session => session.swim_swolf);
+    const monthlyData = groupDataByMonth(swimData);
+    const labels = Object.keys(monthlyData);
+    const swolfScores = Object.values(monthlyData).map(data => data.hasSwolf ? (data.swolfSum / data.sessions) : null).filter(score => score !== null);
 
     const ctx = document.getElementById('swolfChart').getContext('2d');
     new Chart(ctx, {
@@ -217,7 +241,7 @@ async function initDashboard() {
     // Update Overview Section
     updateOverview(processedData);
 
-    // Create Charts
+    // Create Charts using monthly data
     createDistanceChart(swimData);
     createTimeChart(swimData);
     createPaceChart(swimData);
