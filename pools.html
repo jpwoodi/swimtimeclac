@@ -496,6 +496,7 @@
                     <p><strong>Borough:</strong> ${record.fields.Borough}</p>
                     <p><strong>Address:</strong> ${record.fields.Address}</p>
                     <p><strong>Description:</strong> ${record.fields.Opening_Hours}</p>
+                    <p>const websiteLink = record.fields.Website ? `<p><strong>Website:</strong> <a href="${record.fields.Website}" target="_blank">Visit Website</a></p>` : '';</p>
                     
                 `;
                 document.getElementById('popup-card').classList.add('visible');
