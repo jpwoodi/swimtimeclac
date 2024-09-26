@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Swim Training Dashboard</title>
+    <!-- Meta tags for responsiveness -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Moment.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Swim Training Dashboard</h1>
+    </header>
+    <main>
+        <!-- Overview Section -->
+        <section id="overview">
+            <h2>Overview</h2>
+            <div class="metrics">
+                <div class="metric" id="total-distance"></div>
+                <div class="metric" id="total-time"></div>
+                <div class="metric" id="average-pace"></div>
+                <div class="metric" id="total-calories"></div>
+                <div class="metric" id="number-of-sessions"></div>
+            </div>
+        </section>
+
+        <!-- Distance and Time Trends -->
+        <section id="distance-time-trends">
+            <h2>Distance and Time Trends</h2>
+            <canvas id="distanceChart"></canvas>
+            <canvas id="timeChart"></canvas>
+        </section>
+
+        <!-- Pace and Performance Analysis -->
+        <section id="pace-performance">
+            <h2>Pace and Performance Analysis</h2>
+            <canvas id="paceChart"></canvas>
+        </section>
+
+        <!-- SWOLF Score Analysis -->
+        <section id="swolf-analysis">
+            <h2>SWOLF Score Analysis</h2>
+            <canvas id="swolfChart"></canvas>
+        </section>
+
+        <!-- Add more sections as needed -->
+    </main>
+    <!-- External JS -->
+    <script src="script.js"></script>
+</body>
+</html>
