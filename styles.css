@@ -55,7 +55,7 @@ canvas {
 }
 
 .chart-wrapper {
-    flex: 1 1 40%; /* Make each chart take up about half the container */
+    flex: 1 1 48%; /* Make each chart take up about half the container */
     min-width: 300px; /* Ensure charts don't get too small on narrow screens */]
     max-width: 600px; /* Ensure charts don't get too big on wide screens*/
     height: 300px; /* Fixed height for the charts */
