@@ -13,6 +13,7 @@ async function fetchSwimData() {
     try {
         const response = await fetch('/.netlify/functions/get-swims');
         const data = await response.json();
+        console.log(data);
         return data;
     } catch (error) {
         console.error('Error fetching swim data:', error);
