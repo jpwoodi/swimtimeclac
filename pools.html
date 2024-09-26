@@ -442,14 +442,11 @@
                         }
                 
                         const marker = L.marker([record.fields.Latitude, record.fields.Longitude], { icon }).addTo(map);
-                
-                        // Check if the record has a website and add it as a link
-                        const websiteLink = record.fields.Website ? `<br><a href="${record.fields.Website}" target="_blank">Visit Website</a>` : '';
-                
-                        // Create popup content with the link if it exists
+                                
+                   
                         const popupContent = `
                             <strong>${record.fields.Name}</strong><br>
-                            ${record.fields.Borough}${websiteLink}`;
+                            ${record.fields.Borough}`;
                 
                         marker.bindPopup(popupContent);
                         marker.type = type;
