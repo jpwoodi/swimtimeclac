@@ -492,7 +492,7 @@
                         const record = dataRecords.find(record => record.id === id);
                 
                         // Check if the record has a website and create the website link
-                        const websiteLink = record.fields.Website ? `<p><strong>Website:</strong> <a href="${record.fields.Website}" target="_blank">Visit Website</a></p>` : '';
+                        const websiteLink = record.fields.Website ? `<p><a href="${record.fields.Website}" target="_blank">Visit Website</a></p>` : '';
                 
                         // Update the popup-card content
                         document.getElementById('popup-card').innerHTML = `
