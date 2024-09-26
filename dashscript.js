@@ -104,8 +104,8 @@ function updateOverview(processedData) {
 // Create the Distance Chart
 function createDistanceChart(swimData) {
     const monthlyData = groupDataByMonth(swimData);
-    const labels = Object.keys(monthlyData); // Get months
-    const distances = Object.values(monthlyData).map(data => (data.totalDistance / 1000).toFixed(2)); // Convert to km
+    const labels = Object.keys(monthlyData); 
+    const distances = Object.values(monthlyData).map(data => (data.totalDistance / 1000).toFixed(2)); 
 
     const ctx = document.getElementById('distanceChart').getContext('2d');
     new Chart(ctx, {
@@ -120,6 +120,7 @@ function createDistanceChart(swimData) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false, // This disables automatic aspect ratio calculation
             scales: {
                 x: { display: true },
                 y: { display: true }
@@ -132,7 +133,7 @@ function createDistanceChart(swimData) {
 function createTimeChart(swimData) {
     const monthlyData = groupDataByMonth(swimData);
     const labels = Object.keys(monthlyData);
-    const times = Object.values(monthlyData).map(data => (data.totalTime / 60).toFixed(2)); // Convert to minutes
+    const times = Object.values(monthlyData).map(data => (data.totalTime / 60).toFixed(2)); 
 
     const ctx = document.getElementById('timeChart').getContext('2d');
     new Chart(ctx, {
@@ -147,80 +148,7 @@ function createTimeChart(swimData) {
         },
         options: {
             responsive: true,
-            scales: {
-                x: { display: true },
-                y: { display: true }
-            }
-        }
-    });
-}
-
-// Create the Pace Chart
-function createPaceChart(swimData) {
-    const monthlyData = groupDataByMonth(swimData);
-    const labels = Object.keys(monthlyData);
-    const paces = Object.values(monthlyData).map(data => data.totalPace / data.sessions);
-
-    const ctx = document.getElementById('paceChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Pace (/100m)',
-                data: paces.map(pace => pace * 100), // Convert to pace per 100m
-                borderColor: '#43a047',
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { display: true },
-                y: { 
-                    display: true,
-                    ticks: {
-                        callback: function(value, index, values) {
-                            const paceInSecondsPerMeter = value / 100;
-                            return formatPace(paceInSecondsPerMeter);
-                        }
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const paceInSecondsPerMeter = context.parsed.y / 100;
-                            return formatPace(paceInSecondsPerMeter) + ' /100m';
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Create the SWOLF Chart
-function createSwolfChart(swimData) {
-    const monthlyData = groupDataByMonth(swimData);
-    const labels = Object.keys(monthlyData);
-    const swolfScores = Object.values(monthlyData).map(data => data.hasSwolf ? (data.swolfSum / data.sessions) : null).filter(score => score !== null);
-
-    const ctx = document.getElementById('swolfChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'SWOLF Score',
-                data: swolfScores,
-                borderColor: '#8e24aa',
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
+            maintainAspectRatio: false, // Disable default aspect ratio to allow custom height
             scales: {
                 x: { display: true },
                 y: { display: true }
