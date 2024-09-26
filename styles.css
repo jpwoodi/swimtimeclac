@@ -49,9 +49,10 @@ canvas {
 }
 
 .chart-container canvas {
-    flex: 1 1 48%;
-    min-width: 300px;
-    height: 300px; /* Reduced chart height */
+    max-width: 1000px; /* Set a reasonable max width */
+    max-height: 400px; /* Set a reasonable max height */
+    width: 100%; /* Let it scale with the screen size */
+    height: 300px; /* Fixed height */
 }
 
 @media (max-width: 768px) {
