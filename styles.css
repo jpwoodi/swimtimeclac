@@ -47,17 +47,26 @@ canvas {
     height: 300px; /* Fix the height of the charts */
     margin-bottom: 20px;
 }
+.chart-container {
+    display: flex; /* Align items horizontally */
+    justify-content: space-between; /* Adds space between the charts */
+    flex-wrap: wrap; /* Allows the charts to wrap if the screen is too small */
+    gap: 20px; /* Adds space between the charts */
+}
 
-.chart-container canvas {
-    max-width: 1000px; /* Set a reasonable max width */
-    max-height: 400px; /* Set a reasonable max height */
-    width: 100%; /* Let it scale with the screen size */
-    height: 300px; /* Fixed height */
+.chart-wrapper {
+    flex: 1 1 48%; /* Make each chart take up about half the container */
+    min-width: 300px; /* Ensure charts don't get too small on narrow screens */
+    height: 300px; /* Fixed height for the charts */
+}
+
+.chart-wrapper canvas {
+    width: 100%; /* Let the chart fill the wrapper */
+    height: 100%; /* Make sure the height is fixed */
 }
 
 @media (max-width: 768px) {
-    .chart-container canvas {
-        height: 250px; /* Further reduce height for mobile devices */
+    .chart-wrapper {
+        flex: 1 1 100%; /* Stack charts vertically on smaller screens */
     }
 }
-
