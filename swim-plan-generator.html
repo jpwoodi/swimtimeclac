@@ -93,7 +93,15 @@
         }
         
         .results-container {
-            display: none;
+    padding: 20px;
+        }
+        
+        #comment-section {
+            margin-top: 20px; /* Adds space between the table and the comment section */
+        }
+        
+        button {
+            margin-top: 10px; /* Adds space between the textarea and the button */
         }
         
         table {
@@ -263,15 +271,7 @@
             <button type="button" onclick="generateSwimPlan()">Generate Plan</button>
         </form>
 
-        <!-- Comment section, initially hidden -->
-        <div id="comment-section" style="display: none;">
-            <div class="form-group">
-                <label for="comments">Add a Comment</label>
-                <textarea id="comments" name="comments" placeholder="E.g., Make the sessions longer" rows="3"></textarea>
-            </div>
-            <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
-        </div>
-    </div>
+       
     <!-- Loading spinner, initially hidden -->
     <div id="loading-spinner" style="display: none;">
         <div class="spinner"></div>
@@ -281,7 +281,17 @@
         <table id="swim-plan-table">
             <!-- Table content will be dynamically inserted here -->
         </table>
+
+        <!-- Move the comment section inside the results container -->
+        <div id="comment-section" style="display: none; margin-top: 20px;">
+            <div class="form-group">
+                <label for="comments">Add a Comment</label>
+                <textarea id="comments" name="comments" placeholder="E.g., Make the sessions longer" rows="3"></textarea>
+            </div>
+            <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
+        </div>
     </div>
+    
 
     <script>
         function toggleMenu() {
@@ -350,9 +360,13 @@
 
         // Function to fetch the swim plan from the backend and display it
         async function fetchAndDisplayPlan(details) {
+            // Hide the old results and comment section while loading
+            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('comment-section').style.display = 'none';
+            
             // Show the loading spinner
             document.getElementById('loading-spinner').style.display = 'block';
-
+        
             try {
                 const response = await fetch('/.netlify/functions/generateSwimPlan', {
                     method: 'POST',
@@ -361,18 +375,25 @@
                     },
                     body: JSON.stringify(details)
                 });
-
+        
                 const data = await response.json();
-
+        
                 if (response.ok) {
                     const planText = data.plan;
                     swimPlans = parseSwimPlan(planText);
+                    
+                    // Hide the spinner once the data is ready
+                    document.getElementById('loading-spinner').style.display = 'none';
+        
+                    // Display the new swim plan
                     displayAllWeeks();
-
+        
+                    // Show the results container with the new data and the comment section
+                    document.getElementById('results-container').style.display = 'block';
+                    document.getElementById('comment-section').style.display = 'block';
+        
                     // Update conversation history with the latest state from the backend
                     conversationHistory = data.conversationHistory;
-
-                    document.getElementById('results-container').style.display = 'block';
                 } else {
                     console.error('Backend error:', data.error);
                     alert(`Error: ${data.error}`);
@@ -380,10 +401,11 @@
             } catch (error) {
                 alert(`An error occurred: ${error.message}`);
             } finally {
-                // Hide the loading spinner after the fetch is complete
+                // Hide the loading spinner if an error occurs
                 document.getElementById('loading-spinner').style.display = 'none';
             }
         }
+
 
         // Function to parse the plan and prepare it for display
         function parseSwimPlan(planText) {
