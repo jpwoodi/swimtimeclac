@@ -96,13 +96,15 @@
             display: none;
         }
         
-        table, th, td {
-            border: 1px solid #ddd;
-            font-size: 0.85em;
+        table {
+            width: 100%;  /* Make the table stretch across the entire container */
+            border-collapse: collapse;  /* Collapse borders to make the table look neater */
         }
         
         th, td {
             padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
         }
         
         th {
