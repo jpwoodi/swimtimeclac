@@ -91,17 +91,15 @@
         button:hover {
             background-color: #0056b3;
         }
-        
+
         .results-container {
-    padding: 20px;
+            padding: 20px;
+            margin-top: 20px; /* Adds space between form and results */
+            display: none; /* Hidden initially */
         }
-        
+
         #comment-section {
             margin-top: 20px; /* Adds space between the table and the comment section */
-        }
-        
-        button {
-            margin-top: 10px; /* Adds space between the textarea and the button */
         }
         
         table {
@@ -270,19 +268,20 @@
             </div>
             <button type="button" onclick="generateSwimPlan()">Generate Plan</button>
         </form>
+    </div>
 
-       
     <!-- Loading spinner, initially hidden -->
     <div id="loading-spinner" style="display: none;">
         <div class="spinner"></div>
     </div>
 
+    <!-- Results container with table -->
     <div class="results-container" id="results-container">
         <table id="swim-plan-table">
             <!-- Table content will be dynamically inserted here -->
         </table>
 
-        <!-- Move the comment section inside the results container -->
+        <!-- Comment section inside the results container -->
         <div id="comment-section" style="display: none; margin-top: 20px;">
             <div class="form-group">
                 <label for="comments">Add a Comment</label>
@@ -291,7 +290,6 @@
             <button type="button" onclick="addComment()">Add Comment and Regenerate Plan</button>
         </div>
     </div>
-    
 
     <script>
         function toggleMenu() {
@@ -366,7 +364,7 @@
             
             // Show the loading spinner
             document.getElementById('loading-spinner').style.display = 'block';
-        
+
             try {
                 const response = await fetch('/.netlify/functions/generateSwimPlan', {
                     method: 'POST',
@@ -375,23 +373,23 @@
                     },
                     body: JSON.stringify(details)
                 });
-        
+
                 const data = await response.json();
-        
+
                 if (response.ok) {
                     const planText = data.plan;
                     swimPlans = parseSwimPlan(planText);
                     
                     // Hide the spinner once the data is ready
                     document.getElementById('loading-spinner').style.display = 'none';
-        
+
                     // Display the new swim plan
                     displayAllWeeks();
-        
+
                     // Show the results container with the new data and the comment section
                     document.getElementById('results-container').style.display = 'block';
                     document.getElementById('comment-section').style.display = 'block';
-        
+
                     // Update conversation history with the latest state from the backend
                     conversationHistory = data.conversationHistory;
                 } else {
@@ -405,7 +403,6 @@
                 document.getElementById('loading-spinner').style.display = 'none';
             }
         }
-
 
         // Function to parse the plan and prepare it for display
         function parseSwimPlan(planText) {
