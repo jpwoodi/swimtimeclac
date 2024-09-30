@@ -31,8 +31,8 @@ h2 {
     justify-content: center;    
 }
 
-.metrics:hover {
-  background-color: #ddd; /* background color change on hover */
+.metric:hover {
+  background-color: #51f007; /* background color change on hover */
   border-color: #aaa
 }
 
