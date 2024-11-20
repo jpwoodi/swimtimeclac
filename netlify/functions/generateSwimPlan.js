@@ -51,7 +51,7 @@ exports.handler = async function(event, context) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: '01-preview',
+            model: 'gpt-3.5-turbo',
             messages: messages,
             max_tokens: 4096,
             temperature: 0.7
