@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Swim Time Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .calculator-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        h1 {
+            color: #007BFF;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <h1>CSS Swim Time Calculator</h1>
+        <div class="form-group">
+            <label for="cssMinutes">CSS Time (Minutes)</label>
+            <input type="number" id="cssMinutes" min="0" placeholder="Minutes per 100m">
+        </div>
+        <div class="form-group">
+            <label for="cssSeconds">CSS Time (Seconds)</label>
+            <input type="number" id="cssSeconds" min="0" max="59" placeholder="Seconds per 100m">
+        </div>
+        <div class="form-group">
+            <label for="distance">Distance (meters)</label>
+            <input type="number" id="distance" min="0" placeholder="Enter distance">
+        </div>
+        <button onclick="calculateTime()">Calculate</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        function calculateTime() {
+            const minutes = parseInt(document.getElementById('cssMinutes').value) || 0;
+            const seconds = parseInt(document.getElementById('cssSeconds').value) || 0;
+            const distance = parseInt(document.getElementById('distance').value);
+
+            if (!distance) {
+                alert("Please enter a valid distance.");
+                return;
+            }
+
+            const totalCSSSeconds = (minutes * 60) + seconds;
+            const pacePerMeter = totalCSSSeconds / 100;
+            const totalTimeSeconds = pacePerMeter * distance;
+
+            const resultMinutes = Math.floor(totalTimeSeconds / 60);
+            const resultSeconds = Math.round(totalTimeSeconds % 60);
+
+            document.getElementById('result').textContent = `Estimated Time: ${resultMinutes} min ${resultSeconds} sec`;
+        }
+    </script>
+</body>
+</html>
