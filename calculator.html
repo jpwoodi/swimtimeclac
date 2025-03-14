@@ -3,395 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swim Calculator: Time and Pace</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <title>Swim Calculator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
     <style>
-        /* Global Styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family: 'Poppins', sans-serif;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://raw.githubusercontent.com/jpwoodi/swimtimeclac/2b6290fea10bcf90c5230f878fb3116be7d4e29a/people-2588747.jpg');
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('https://raw.githubusercontent.com/jwoodnott/swim-calculator/main/people-2588747.jpg');
             background-size: cover;
             background-position: center;
-            color: #212529;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 60px 20px 20px;
+            margin: 0;
         }
 
-        .calculator-container {
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            max-width: 400px;
-            width: 100%;
-            padding: 40px;
-            text-align: center;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            margin: 80px auto 20px;
         }
 
         h1 {
-            margin-bottom: 20px;
-            color: #007BFF;
-            font-size: 2em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
         }
 
         .form-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 15px;
-            flex-wrap: wrap;
         }
 
         label {
-            width: 100%;
-            text-align: left;
+            display: block;
             margin-bottom: 5px;
-            font-weight: 600;
-            color: #343A40;
+            font-weight: bold;
         }
 
-        input[type="text"] {
+        input {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
+            padding: 8px;
+            border: 1px solid #ccc;
             border-radius: 5px;
-            border: 1px solid #ced4da;
-            text-align: center;
-            font-size: 1em;
         }
 
         button {
-            padding: 12px 20px;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 25px;
             background-color: #007BFF;
             color: white;
-            border: none;
-            border-radius: 50px;
             cursor: pointer;
-            margin-top: 20px;
-            width: 100%;
-            font-size: 1em;
-            transition: background-color 0.3s ease;
+            font-size: 1rem;
         }
 
         button:hover {
             background-color: #0056b3;
         }
 
-        p {
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: #495057;
+        #result, #error-message {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
         }
 
-        .hidden {
-            display: none;
-        }
-
-        .toggle-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-
-        .toggle-container label {
-            white-space: nowrap;
-            margin-right: 10px;
-            display: flex;
-            align-items: center;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .toggle-container input[type="radio"] {
-            margin-right: 8px; /* Space between radio button and text */
-        }
-
-        .error {
-            color: red;
-            font-size: 0.9em;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #007BFF;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .back-link:hover {
-            color: #0056b3;
-        }
-
-        .back-link i {
-            margin-right: 8px;
-        }
-
-        @media (max-width: 576px) {
-            .calculator-container {
-                padding: 20px;
-                min-height: auto; /* Adjust height for smaller screens */
-            }
-
-            h1 {
-                font-size: 1.5em;
-            }
-
-            button {
-                font-size: 0.9em;
-            }
-
-            input[type="text"] {
-                font-size: 0.9em;
-            }
-
-            p {
-                font-size: 1em;
-            }
-        }
-
-        /* Navbar styling */
         .top-nav {
             width: 100%;
-            background-color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-            position: fixed; /* Fixed at the top */
+            background-color: white;
+            position: fixed;
             top: 0;
             left: 0;
-            z-index: 1000; /* Ensure navbar is on top */
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
         .top-nav ul {
-            list-style-type: none;
+            list-style: none;
             display: flex;
-            gap: 20px;
+            gap: 15px;
         }
 
-        .top-nav ul li a {
-            color: black;
+        .top-nav a {
+            color: #333;
             text-decoration: none;
-            font-size: 14px;
-            font-family: 'Poppins', sans-serif;
-            padding: 8px 12px;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: 0.3s;
         }
 
-        .top-nav ul li a:hover {
-            background-color: #f2f2f2;
-            border-radius: 5px;
+        .top-nav a:hover {
+            color: #007BFF;
         }
 
-        /* Hamburger menu */
         .hamburger {
             display: none;
-            font-size: 24px;
             cursor: pointer;
-            color: black;
+            font-size: 1.5rem;
         }
 
-        /* Mobile Styles */
         @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
             .top-nav ul {
                 display: none;
                 flex-direction: column;
                 width: 100%;
-                background-color: #ffffff;
-                padding: 10px 0;
-                border-top: 1px solid #ddd;
                 position: absolute;
                 top: 50px;
                 left: 0;
+                background-color: white;
             }
 
             .top-nav ul.expanded {
                 display: flex;
             }
-
-            .hamburger {
-                display: block;
-            }
-
-            .top-nav ul li a {
-                padding: 10px 20px;
-                width: 100%;
-            }
-
-            /* Adjust body padding to prevent content being hidden behind navbar */
-            body {
-                padding-top: 50px;
-            }
-        }
-
-        button:hover {
-            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Menu -->
-    <nav class="top-nav">
-        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
-        <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="calculator.html">Time and Pace Calculator</a></li>
-            <li><a href="pools.html">London Swim Locations</a></li>
-            <li><a href="stravafeed.html">My Swim Feed</a></li>
-            <li><a href="swim-plan-generator.html">AI Swim Plan Generator</a></li>
-        </ul>
-    </nav>
-    <div class="calculator-container">
-        <h1>Swim Calculator</h1>
-        <div class="toggle-container">
-            <label>
-                <input type="radio" name="calculation-mode" value="time" checked onclick="toggleMode()"> Calculate Time
-            </label>
-            <label>
-                <input type="radio" name="calculation-mode" value="pace" onclick="toggleMode()"> Calculate Pace
-            </label>
-        </div>
+<nav class="top-nav">
+    <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="calculator.html">Calculator</a></li>
+        <li><a href="swim-plan-generator.html">AI Swim Plans</a></li>
+    </ul>
+</nav>
 
-        <form id="calculator-form">
-            <div class="form-group" id="distance-group">
-                <label for="distance">Distance (meters):</label>
-                <input type="text" id="distance" name="distance" placeholder="Enter distance" oninput="formatInputWithCommas(this); updateTimeLabel();">
-            </div>
-
-            <div class="form-group hidden" id="time-group">
-                <label for="time-hours">Hours:</label>
-                <input type="text" id="time-hours" name="time-hours" placeholder="Hours" oninput="formatInputWithCommas(this);">
-                <input type="text" id="time-mins" name="time-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
-                <input type="text" id="time-secs" name="time-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
-            </div>
-
-            <div class="form-group" id="pace-group">
-                <label for="pace-mins">Pace (/100m):</label>
-                <input type="text" id="pace-mins" name="pace-mins" placeholder="Minutes" oninput="formatInputWithCommas(this);">
-                <input type="text" id="pace-secs" name="pace-secs" placeholder="Seconds" oninput="formatInputWithCommas(this);">
-            </div>
-
-            <button type="button" onclick="calculate()">Calculate</button>
-        </form>
-        
-        <p id="result"></p>
-        <p id="error-message" class="error hidden"></p>
-
+<div class="container">
+    <h1>Swim Calculator</h1>
+    <div class="form-group">
+        <label>Distance (meters)</label>
+        <input type="number" id="distance">
     </div>
 
-    <script>
+    <div class="form-group">
+        <label>Pace (min:sec per 100m)</label>
+        <input type="number" id="pace-mins" placeholder="Minutes">
+        <input type="number" id="pace-secs" placeholder="Seconds">
+    </div>
 
-         function toggleMenu() {
-            const navMenu = document.querySelector('.top-nav ul');
-            navMenu.classList.toggle('expanded');
-        }
-        
-        
-        function toggleMode() {
-            const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
-            const timeGroup = document.getElementById('time-group');
-            const paceGroup = document.getElementById('pace-group');
+    <button onclick="calculateTime()">Calculate Time</button>
 
-            if (mode === 'time') {
-                timeGroup.classList.add('hidden');
-                paceGroup.classList.remove('hidden');
-            } else {
-                timeGroup.classList.remove('hidden');
-                paceGroup.classList.add('hidden');
-            }
+    <p id="result"></p>
+    <p id="error-message"></p>
+</div>
 
-            document.getElementById('result').innerText = ''; // Clear the result when switching modes
-            document.getElementById('error-message').classList.add('hidden'); // Clear any previous error messages
-        }
+<script>
+function calculateTime(){
+    const distance = parseFloat(document.getElementById('distance').value);
+    const paceMins = parseInt(document.getElementById('pace-mins').value || 0);
+    const paceSecs = parseInt(document.getElementById('pace-secs').value) || 0;
 
-        function validateSeconds(seconds) {
-            return seconds >= 0 && seconds <= 59.9;
-        }
+    if (!distance || paceSecs > 59 || paceSecs < 0) {
+        document.getElementById('error-message').innerText = "Please enter valid inputs.";
+        document.getElementById('result').innerText = '';
+        return;
+    }
 
-        function validateInputs(hours, mins, secs) {
-            return (hours > 0 || mins > 0 || secs > 0);
-        }
+    const paceTotalSecs = paceMins * 60 + paceSecs;
+    const totalSecs = (distance / 100) * paceTotalSecs;
 
-        function formatNumberWithCommas(number) {
-            return Number(number).toLocaleString();
-        }
+    let minutes = Math.floor(totalTime / 60);
+    let seconds = Math.round(totalTime % 60);
 
-        function formatInputWithCommas(input) {
-            let value = input.value.replace(/,/g, ''); // Remove existing commas
-            if (!isNaN(value) && value !== '') {
-                input.value = formatNumberWithCommas(value);
-            }
-        }
+    document.getElementById('result').innerText = `Total Time: ${minutes} min ${seconds} sec`;
+    document.getElementById('error-message').innerText = '';
+}
 
-        function calculate() {
-            const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
-            let paceMins = document.getElementById("pace-mins").value.replace(/,/g, '') || 0;
-            let paceSecs = document.getElementById("pace-secs").value.replace(/,/g, '') || 0;
-            let timeHours = document.getElementById("time-hours").value.replace(/,/g, '') || 0;
-            let timeMins = document.getElementById("time-mins").value.replace(/,/g, '') || 0;
-            let timeSecs = document.getElementById("time-secs").value.replace(/,/g, '') || 0;
-            let distance = document.getElementById("distance").value.replace(/,/g, '');
-            let errorMessage = document.getElementById("error-message");
-
-            // Validate that at least one of the time inputs is non-zero
-            if ((mode === 'pace' && !validateInputs(timeHours, timeMins, timeSecs)) || (mode === 'time' && (!validateSeconds(paceMins) || !validateSeconds(paceSecs)))) {
-                errorMessage.innerText = "Please enter a valid pace or time.";
-                errorMessage.classList.remove('hidden');
-                return; // Stop calculation if validation fails
-            } else {
-                errorMessage.classList.add('hidden'); // Hide error message if validation passes
-            }
-
-            if (mode === 'time') {
-                // Convert pace to total seconds per 100 meters
-                let totalPace = (parseInt(paceMins) * 60) + parseFloat(paceSecs);
-
-                // Calculate time required for the specified distance
-                let totalTime = (distance / 100) * totalPace;
-
-                // Convert total time to hours, minutes, and seconds if applicable
-                let hours = Math.floor(totalTime / 3600);
-                totalTime %= 3600;
-                let mins = Math.floor(totalTime / 60);
-                let secs = (totalTime % 60).toFixed(0);
-
-                let resultText = hours > 0 ? `${formatNumberWithCommas(hours)} hr ` : "";
-                resultText += `${formatNumberWithCommas(mins)} min ${formatNumberWithCommas(secs)} sec`;
-
-                document.getElementById("result").innerText = "Time: " + resultText;
-            } else if (mode === 'pace') {
-                // Convert time to total seconds
-                let totalTime = (parseInt(timeHours) * 3600) + (parseInt(timeMins) * 60) + parseFloat(timeSecs);
-
-                // Calculate pace based on distance and time
-                let totalPace = totalTime / (distance / 100);
-
-                // Convert total pace back to minutes and seconds
-                let paceMins = Math.floor(totalPace / 60);
-                let paceSecs = (totalPace % 60).toFixed(0);
-
-                document.getElementById("result").innerText = "Pace: " + formatNumberWithCommas(paceMins) + " min " + formatNumberWithCommas(paceSecs) + " sec /100m";
-            }
-        }
-    </script>
+function toggleMenu() {
+    document.querySelector('.top-nav ul').classList.toggle('expanded');
+}
+</script>
 </body>
 </html>
