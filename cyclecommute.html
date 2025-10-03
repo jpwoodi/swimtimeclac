@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Cycle Commutes</title>
+  <link rel="icon" href="images/bike_favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+                  url('https://images.unsplash.com/photo-1508973372-bd987c1ea9a5');
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #212529;
+    }
+    .container {
+      background: rgba(255,255,255,0.95);
+      border-radius: 10px;
+      padding: 20px;
+      width: 100%;
+      max-width: 1000px;
+      height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .chart-container { flex: 1; }
+    .feed-container { flex: 1; overflow-y: auto; margin-top: 10px; }
+    .ride-card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .ride-card h5 { color: #28a745; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>My Cycle Commutes</h1>
+
+    <!-- Chart -->
+    <div class="chart-container">
+      <canvas id="monthlyChart"></canvas>
+    </div>
+
+    <!-- Totals -->
+    <div id="savings-info"></div>
+
+    <!-- Feed -->
+    <div id="ride-feed" class="feed-container">Loading rides...</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const tubeFare = 3.4; // £ per commute ride equivalent
+
+    function fetchRides() {
+      fetch('/.netlify/functions/get-rides') // <-- update this function in backend
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById('ride-feed').textContent = 'Error loading rides.';
+            return;
+          }
+
+          // Only commutes
+          const rides = data.filter(r => r.commute);
+
+          // Sort newest → oldest
+          rides.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+
+          // Chart data
+          const monthlyData = processMonthlyData(rides);
+          renderChart(monthlyData);
+
+          // Totals + savings
+          const totalDistance = monthlyData.data.reduce((a, b) => a + b, 0);
+          const totalRides = rides.length;
+          const savings = (totalRides * tubeFare).toFixed(2);
+
+          document.getElementById('savings-info').innerHTML = `
+            <p>You have cycled <strong>${totalDistance.toFixed(1)} km</strong> over ${totalRides} commutes.</p>
+            <p>Estimated Tube savings: <strong>£${savings}</strong></p>
+          `;
+
+          // Ride feed
+          const feed = document.getElementById('ride-feed');
+          feed.innerHTML = '';
+          rides.forEach(ride => {
+            const div = document.createElement('div');
+            div.className = 'ride-card';
+            div.innerHTML = `
+              <h5>${ride.name}</h5>
+              <p><strong>Date:</strong> ${new Date(ride.start_date_local).toLocaleDateString()}<br>
+                 <strong>Distance:</strong> ${(ride.distance/1000).toFixed(2)} km<br>
+                 <strong>Duration:</strong> ${formatDuration(ride.moving_time)}</p>
+            `;
+            feed.appendChild(div);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('ride-feed').textContent = 'Error loading rides.';
+        });
+    }
+
+    function formatDuration(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return `${h ? h+'h ' : ''}${m ? m+'m ' : ''}${s}s`;
+    }
+
+    function processMonthlyData(rides) {
+      const monthly = {};
+      rides.forEach(r => {
+        const d = new Date(r.start_date_local);
+        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+        monthly[key] = (monthly[key] || 0) + r.distance/1000;
+      });
+
+      const labels = [];
+      const values = [];
+      const now = new Date();
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+        labels.push(d.toLocaleString('default', { month: 'short', year: 'numeric' }));
+        values.push(parseFloat((monthly[key] || 0).toFixed(1)));
+      }
+      return { labels, data: values };
+    }
+
+    function renderChart(monthlyData) {
+      const ctx = document.getElementById('monthlyChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: monthlyData.labels,
+          datasets: [{
+            label: 'Monthly Commute Distance (km)',
+            data: monthlyData.data,
+            backgroundColor: 'rgba(40, 167, 69, 0.6)',
+            borderColor: 'rgba(40, 167, 69, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchRides);
+  </script>
+</body>
+</html>
