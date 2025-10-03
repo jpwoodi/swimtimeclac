@@ -12,10 +12,11 @@ exports.handler = async (event, context) => {
   const refresh_token = process.env.STRAVA_REFRESH_TOKEN;
 
   const currentTime = Date.now();
+  const forceRefresh = event.queryStringParameters.refresh === "true";
 
   try {
-    // Serve from cache if still valid
-    if (cachedRides.length > 0 && (currentTime - cacheTimestamp < CACHE_DURATION)) {
+    // ✅ Use cache only if not forcing refresh
+    if (!forceRefresh && cachedRides.length > 0 && (currentTime - cacheTimestamp < CACHE_DURATION)) {
       return {
         statusCode: 200,
         body: JSON.stringify(cachedRides),
@@ -59,12 +60,12 @@ exports.handler = async (event, context) => {
       page++;
     } while (activities.length === per_page);
 
-    // Filter for rides that are marked as commute
+    // Filter for rides marked as commute
     const rides = allActivities.filter(
       (activity) => activity.type === "Ride" && activity.commute === true
     );
 
-    // Cache result
+    // ✅ Update cache
     cachedRides = rides;
     cacheTimestamp = currentTime;
 
