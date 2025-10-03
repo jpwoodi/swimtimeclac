@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Cycle Commutes</title>
-  <link rel="icon" href="images/bike_favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
@@ -26,11 +25,12 @@
       padding: 20px;
       width: 100%;
       max-width: 1000px;
-      height: 80vh;
+      height: 85vh;
       display: flex;
       flex-direction: column;
     }
-    .chart-container { flex: 1; }
+    h1 { margin-bottom: 10px; }
+    .chart-container { flex: 1; min-height: 200px; }
     .feed-container { flex: 1; overflow-y: auto; margin-top: 10px; }
     .ride-card {
       background: white;
@@ -40,11 +40,26 @@
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
     .ride-card h5 { color: #28a745; margin-bottom: 8px; }
+    #savings-info { margin: 10px 0; }
+    button {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border: none;
+      background: #28a745;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover { background: #218838; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>My Cycle Commutes</h1>
+
+    <!-- Refresh Button -->
+    <button id="refresh-btn">🔄 Refresh from Strava</button>
 
     <!-- Chart -->
     <div class="chart-container">
@@ -60,19 +75,19 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const tubeFare = 3.4; // £ per commute ride equivalent
+    const tubeFare = 3.40; // £ per fare
+    const co2PerKm = 0.120; // kg CO₂ per km (car vs cycle saving)
 
-    function fetchRides() {
-      fetch('/.netlify/functions/get-rides') // <-- update this function in backend
+    // Fetch rides (commutes only) from Netlify function
+    function fetchRides(forceRefresh = false) {
+      const url = '/.netlify/functions/get-rides' + (forceRefresh ? '?refresh=true' : '');
+      fetch(url)
         .then(res => res.json())
-        .then(data => {
-          if (data.error) {
+        .then(rides => {
+          if (rides.error) {
             document.getElementById('ride-feed').textContent = 'Error loading rides.';
             return;
           }
-
-          // Only commutes
-          const rides = data.filter(r => r.commute);
 
           // Sort newest → oldest
           rides.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
@@ -81,14 +96,16 @@
           const monthlyData = processMonthlyData(rides);
           renderChart(monthlyData);
 
-          // Totals + savings
+          // Totals
           const totalDistance = monthlyData.data.reduce((a, b) => a + b, 0);
-          const totalRides = rides.length;
-          const savings = (totalRides * tubeFare).toFixed(2);
+          const fareCount = countCommuteFares(rides);
+          const savings = (fareCount * tubeFare).toFixed(2);
+          const co2Saved = (totalDistance * co2PerKm).toFixed(1);
 
           document.getElementById('savings-info').innerHTML = `
-            <p>You have cycled <strong>${totalDistance.toFixed(1)} km</strong> over ${totalRides} commutes.</p>
-            <p>Estimated Tube savings: <strong>£${savings}</strong></p>
+            <p>You have cycled <strong>${totalDistance.toFixed(1)} km</strong> across ${rides.length} commute rides.</p>
+            <p>That’s about <strong>${fareCount}</strong> Tube fares saved = <strong>£${savings}</strong>.</p>
+            <p>CO₂ saved vs. driving: <strong>${co2Saved} kg</strong>.</p>
           `;
 
           // Ride feed
@@ -99,9 +116,11 @@
             div.className = 'ride-card';
             div.innerHTML = `
               <h5>${ride.name}</h5>
-              <p><strong>Date:</strong> ${new Date(ride.start_date_local).toLocaleDateString()}<br>
-                 <strong>Distance:</strong> ${(ride.distance/1000).toFixed(2)} km<br>
-                 <strong>Duration:</strong> ${formatDuration(ride.moving_time)}</p>
+              <p>
+                <strong>Date:</strong> ${new Date(ride.start_date_local).toLocaleDateString()}<br>
+                <strong>Distance:</strong> ${(ride.distance/1000).toFixed(2)} km<br>
+                <strong>Duration:</strong> ${formatDuration(ride.moving_time)}
+              </p>
             `;
             feed.appendChild(div);
           });
@@ -112,13 +131,26 @@
         });
     }
 
-    function formatDuration(seconds) {
-      const h = Math.floor(seconds / 3600);
-      const m = Math.floor((seconds % 3600) / 60);
-      const s = seconds % 60;
-      return `${h ? h+'h ' : ''}${m ? m+'m ' : ''}${s}s`;
+    // Merge commutes within 2 hours → 1 fare
+    function countCommuteFares(rides) {
+      // Sort by start time
+      const sorted = [...rides].sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
+      let fares = 0;
+      let lastFareTime = null;
+
+      sorted.forEach(ride => {
+        const rideTime = new Date(ride.start_date_local).getTime();
+        if (!lastFareTime || (rideTime - lastFareTime) > (2 * 60 * 60 * 1000)) {
+          fares++;
+          lastFareTime = rideTime;
+        }
+        // else: merged into previous fare
+      });
+
+      return fares;
     }
 
+    // Chart data by month
     function processMonthlyData(rides) {
       const monthly = {};
       rides.forEach(r => {
@@ -157,7 +189,18 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', fetchRides);
+    function formatDuration(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return `${h ? h+'h ' : ''}${m ? m+'m ' : ''}${s}s`;
+    }
+
+    // Refresh button
+    document.getElementById('refresh-btn').addEventListener('click', () => fetchRides(true));
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => fetchRides());
   </script>
 </body>
 </html>
