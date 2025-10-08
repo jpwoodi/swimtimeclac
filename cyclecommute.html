@@ -171,23 +171,31 @@
       return { labels, data: values };
     }
 
-    function renderChart(monthlyData) {
-      const ctx = document.getElementById('monthlyChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: monthlyData.labels,
-          datasets: [{
-            label: 'Monthly Commute Distance (km)',
-            data: monthlyData.data,
-            backgroundColor: 'rgba(40, 167, 69, 0.6)',
-            borderColor: 'rgba(40, 167, 69, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
+let chartInstance = null; // declare outside the function (top of script)
+
+function renderChart(monthlyData) {
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+
+  // Destroy existing chart if one exists
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: monthlyData.labels,
+      datasets: [{
+        label: 'Monthly Commute Distance (km)',
+        data: monthlyData.data,
+        backgroundColor: 'rgba(40, 167, 69, 0.6)',
+        borderColor: 'rgba(40, 167, 69, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
 
     function formatDuration(seconds) {
       const h = Math.floor(seconds / 3600);
