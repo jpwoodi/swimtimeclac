@@ -32,14 +32,6 @@
     h1 { margin-bottom: 10px; }
     .chart-container { flex: 1; min-height: 200px; }
     .feed-container { flex: 1; overflow-y: auto; margin-top: 10px; }
-    .ride-card {
-      background: white;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .ride-card h5 { color: #28a745; margin-bottom: 8px; }
     #savings-info { margin: 10px 0; }
     button {
       margin-bottom: 10px;
@@ -52,6 +44,58 @@
       cursor: pointer;
     }
     button:hover { background: #218838; }
+
+    /* Commute List Table */
+    .commute-list {
+      margin-top: 20px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    .commute-list h2 {
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+
+    #commute-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    #commute-table th, #commute-table td {
+      border-bottom: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    #commute-table th {
+      background-color: #f8f8f8;
+      font-weight: 600;
+    }
+
+    #commute-table tr:hover {
+      background-color: #f2f2f2;
+    }
+
+    .status-tag {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .status-tag.normal {
+      background-color: #28a745; /* green */
+    }
+
+    .status-tag.split {
+      background-color: #ff9800; /* orange */
+    }
   </style>
 </head>
 <body>
@@ -69,14 +113,30 @@
     <!-- Totals -->
     <div id="savings-info"></div>
 
-    <!-- Feed -->
-    <div id="ride-feed" class="feed-container">Loading rides...</div>
+    <!-- Commute List -->
+    <div id="commute-list" class="commute-list">
+      <h2>🚲 All Commutes</h2>
+      <table id="commute-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Distance (km)</th>
+            <th>Duration</th>
+            <th>Avg Speed (km/h)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const tubeFare = 3.40; // £ per fare
-    const co2PerKm = 0.120; // kg CO₂ per km (car vs cycle saving)
+    const co2PerKm = 0.120; // kg CO₂ saved per km (vs car)
+    let chartInstance = null;
 
     // Fetch rides (commutes only) from Netlify function
     function fetchRides(forceRefresh = false) {
@@ -85,12 +145,15 @@
         .then(res => res.json())
         .then(rides => {
           if (rides.error) {
-            document.getElementById('ride-feed').textContent = 'Error loading rides.';
+            document.getElementById('commute-list').textContent = 'Error loading rides.';
             return;
           }
 
           // Sort newest → oldest
           rides.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+
+          // Identify split rides (within 2h window)
+          const { fares, splitRides } = tagSplitRides(rides);
 
           // Chart data
           const monthlyData = processMonthlyData(rides);
@@ -98,65 +161,54 @@
 
           // Totals
           const totalDistance = monthlyData.data.reduce((a, b) => a + b, 0);
-          const fareCount = countCommuteFares(rides);
-          const savings = (fareCount * tubeFare).toFixed(2);
+          const savings = (fares * tubeFare).toFixed(2);
           const co2Saved = (totalDistance * co2PerKm).toFixed(1);
 
           document.getElementById('savings-info').innerHTML = `
             <p>You have cycled <strong>${totalDistance.toFixed(1)} km</strong> across ${rides.length} commute rides.</p>
-            <p>That’s about <strong>${fareCount}</strong> Tube fares saved = <strong>£${savings}</strong>.</p>
+            <p>That’s about <strong>${fares}</strong> Tube fares saved = <strong>£${savings}</strong>.</p>
             <p>CO₂ saved vs. driving: <strong>${co2Saved} kg</strong>.</p>
           `;
 
-          // Ride feed
-          const feed = document.getElementById('ride-feed');
-          feed.innerHTML = '';
-          rides.forEach(ride => {
-            const div = document.createElement('div');
-            div.className = 'ride-card';
-            div.innerHTML = `
-              <h5>${ride.name}</h5>
-              <p>
-                <strong>Date:</strong> ${new Date(ride.start_date_local).toLocaleDateString()}<br>
-                <strong>Distance:</strong> ${(ride.distance/1000).toFixed(2)} km<br>
-                <strong>Duration:</strong> ${formatDuration(ride.moving_time)}
-              </p>
-            `;
-            feed.appendChild(div);
-          });
+          // Render commute table
+          renderCommuteList(rides, splitRides);
         })
         .catch(err => {
           console.error(err);
-          document.getElementById('ride-feed').textContent = 'Error loading rides.';
+          document.getElementById('commute-list').textContent = 'Error loading rides.';
         });
     }
 
-    // Merge commutes within 2 hours → 1 fare
-    function countCommuteFares(rides) {
-      // Sort by start time
+    // Detect split rides (within N hours)
+    function tagSplitRides(rides, mergeHours = 2) {
       const sorted = [...rides].sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
+      const windowMs = mergeHours * 60 * 60 * 1000;
+
       let fares = 0;
       let lastFareTime = null;
+      const splitRides = new Set();
 
       sorted.forEach(ride => {
         const rideTime = new Date(ride.start_date_local).getTime();
-        if (!lastFareTime || (rideTime - lastFareTime) > (2 * 60 * 60 * 1000)) {
+        if (!lastFareTime || (rideTime - lastFareTime) > windowMs) {
           fares++;
           lastFareTime = rideTime;
+        } else {
+          // within merge window → mark as split
+          splitRides.add(ride.id);
         }
-        // else: merged into previous fare
       });
 
-      return fares;
+      return { fares, splitRides };
     }
 
-    // Chart data by month
+    // Monthly data
     function processMonthlyData(rides) {
       const monthly = {};
       rides.forEach(r => {
         const d = new Date(r.start_date_local);
-        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
-        monthly[key] = (monthly[key] || 0) + r.distance/1000;
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        monthly[key] = (monthly[key] || 0) + r.distance / 1000;
       });
 
       const labels = [];
@@ -164,38 +216,65 @@
       const now = new Date();
       for (let i = 11; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
         labels.push(d.toLocaleString('default', { month: 'short', year: 'numeric' }));
         values.push(parseFloat((monthly[key] || 0).toFixed(1)));
       }
       return { labels, data: values };
     }
 
-let chartInstance = null; // declare outside the function (top of script)
+    // Chart.js rendering with destroy fix
+    function renderChart(monthlyData) {
+      const ctx = document.getElementById('monthlyChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
 
-function renderChart(monthlyData) {
-  const ctx = document.getElementById('monthlyChart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: monthlyData.labels,
+          datasets: [{
+            label: 'Monthly Commute Distance (km)',
+            data: monthlyData.data,
+            backgroundColor: 'rgba(40, 167, 69, 0.6)',
+            borderColor: 'rgba(40, 167, 69, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Month' } },
+            y: { title: { display: true, text: 'Distance (km)' }, beginAtZero: true }
+          }
+        }
+      });
+    }
 
-  // Destroy existing chart if one exists
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
+    // Render commute list with Split tag
+    function renderCommuteList(rides, splitRides) {
+      const tbody = document.querySelector('#commute-table tbody');
+      tbody.innerHTML = '';
 
-  chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: monthlyData.labels,
-      datasets: [{
-        label: 'Monthly Commute Distance (km)',
-        data: monthlyData.data,
-        backgroundColor: 'rgba(40, 167, 69, 0.6)',
-        borderColor: 'rgba(40, 167, 69, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
+      rides.forEach(ride => {
+        const row = document.createElement('tr');
+        const date = new Date(ride.start_date_local).toLocaleDateString();
+        const distance = (ride.distance / 1000).toFixed(1);
+        const duration = formatDuration(ride.moving_time);
+        const avgSpeed = ride.average_speed ? (ride.average_speed * 3.6).toFixed(1) : '—';
+        const isSplit = splitRides.has(ride.id);
+
+        row.innerHTML = `
+          <td>${date}</td>
+          <td>${ride.name || 'Commute'}</td>
+          <td>${distance}</td>
+          <td>${duration}</td>
+          <td>${avgSpeed}</td>
+          <td><span class="status-tag ${isSplit ? 'split' : 'normal'}">${isSplit ? 'Split' : 'Normal'}</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
 
     function formatDuration(seconds) {
       const h = Math.floor(seconds / 3600);
@@ -204,10 +283,7 @@ function renderChart(monthlyData) {
       return `${h ? h+'h ' : ''}${m ? m+'m ' : ''}${s}s`;
     }
 
-    // Refresh button
     document.getElementById('refresh-btn').addEventListener('click', () => fetchRides(true));
-
-    // Initial load
     document.addEventListener('DOMContentLoaded', () => fetchRides());
   </script>
 </body>
