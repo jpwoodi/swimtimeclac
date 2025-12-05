@@ -188,6 +188,7 @@
             return;
           }
 
+          // Keep main list newest → oldest for the table
           rides.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
 
           const { fares, splitRides } = tagSplitRides(rides);
@@ -284,44 +285,65 @@
       });
     }
 
-    // Process commute times:
+    // Process commute times into chronological events
     // - Morning commute: start time (leave home)
     // - Evening commute: end time (arrive), based on elapsed_time (incl. stops)
     function processCommuteTimes(rides) {
-      const morningStartTimes = [];
-      const eveningEndTimes = [];
+      const events = [];
 
       rides.forEach(r => {
         const start = new Date(r.start_date_local);
         const startHour = start.getHours();
         const startMinute = start.getMinutes();
-        const dateLabel = start.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
 
         // duration including stops: prefer elapsed_time, fall back to moving_time
-        const elapsedSeconds = r.elapsed_time || r.elapsed_time === 0
+        const elapsedSeconds = (r.elapsed_time || r.elapsed_time === 0)
           ? r.elapsed_time
           : (r.moving_time || 0);
         const durationMinutes = elapsedSeconds / 60;
 
         if (startHour < 12) {
-          // Morning commute – plot start time
+          // Morning commute – start time
           const startMinutes = startHour * 60 + startMinute;
-          morningStartTimes.push({
-            x: dateLabel,
-            y: startMinutes,
+          events.push({
+            type: 'morning',
+            date: start,
+            xLabel: start.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }),
+            minutes: startMinutes,
             durationMinutes
           });
         } else {
-          // Evening commute – plot end time (start + elapsed_time)
+          // Evening commute – end time (start + elapsed_time)
           const end = new Date(start.getTime() + elapsedSeconds * 1000);
           const endHour = end.getHours();
           const endMinute = end.getMinutes();
           const endMinutes = endHour * 60 + endMinute;
-          eveningEndTimes.push({
-            x: dateLabel,
-            y: endMinutes,
+          events.push({
+            type: 'evening',
+            date: end, // use end time for ordering
+            xLabel: end.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }),
+            minutes: endMinutes,
             durationMinutes
           });
+        }
+      });
+
+      // Sort oldest → newest by actual time
+      events.sort((a, b) => a.date - b.date);
+
+      const morningStartTimes = [];
+      const eveningEndTimes = [];
+
+      events.forEach(ev => {
+        const point = {
+          x: ev.xLabel,
+          y: ev.minutes,
+          durationMinutes: ev.durationMinutes
+        };
+        if (ev.type === 'morning') {
+          morningStartTimes.push(point);
+        } else {
+          eveningEndTimes.push(point);
         }
       });
 
@@ -430,7 +452,6 @@
                   const m = minutes % 60;
                   const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 
-                  // For scatter points we have durationMinutes; for trend line we don't
                   const raw = ctx.raw || {};
                   if (typeof raw.durationMinutes === 'number') {
                     const dur = raw.durationMinutes;
@@ -460,7 +481,7 @@
         const distance = (ride.distance / 1000).toFixed(1);
 
         // Duration including stops: use elapsed_time if available
-        const elapsedSeconds = ride.elapsed_time || ride.elapsed_time === 0
+        const elapsedSeconds = (ride.elapsed_time || ride.elapsed_time === 0)
           ? ride.elapsed_time
           : (ride.moving_time || 0);
         const duration = formatDuration(elapsedSeconds);
