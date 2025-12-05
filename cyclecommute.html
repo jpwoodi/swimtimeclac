@@ -144,7 +144,7 @@
         <canvas id="monthlyChart"></canvas>
       </div>
 
-      <h2 style="text-align:center;">Departure Times (Leave Home / Leave Work)</h2>
+      <h2 style="text-align:center;">Commute Times (Morning Start / Evening Finish)</h2>
       <div class="chart-container">
         <canvas id="departureChart"></canvas>
       </div>
@@ -159,7 +159,7 @@
             <th>Date</th>
             <th>Title</th>
             <th>Distance (km)</th>
-            <th>Duration</th>
+            <th>Duration (incl. stops)</th>
             <th>Avg Speed (km/h)</th>
             <th>Status</th>
           </tr>
@@ -181,8 +181,10 @@
       fetch(url)
         .then(res => res.json())
         .then(rides => {
+          const tbody = document.querySelector('#commute-table tbody');
+
           if (rides.error) {
-            document.getElementById('commute-table').innerHTML = '<tr><td colspan="6">Error loading rides.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6">Error loading rides.</td></tr>';
             return;
           }
 
@@ -193,7 +195,8 @@
           renderMonthlyChart(monthlyData);
           renderDepartureChart(rides);
 
-          const totalDistance = monthlyData.data.reduce((a, b) => a + b, 0);
+          // All-time total distance (km)
+          const totalDistance = rides.reduce((sum, r) => sum + r.distance / 1000, 0);
           const savings = (fares * tubeFare).toFixed(2);
           const co2Saved = (totalDistance * co2PerKm).toFixed(1);
 
@@ -206,7 +209,8 @@
         })
         .catch(err => {
           console.error(err);
-          document.getElementById('commute-table').innerHTML = '<tr><td colspan="6">Error fetching data.</td></tr>';
+          const tbody = document.querySelector('#commute-table tbody');
+          tbody.innerHTML = '<tr><td colspan="6">Error fetching data.</td></tr>';
         });
     }
 
@@ -280,30 +284,86 @@
       });
     }
 
-    // Departure Time Chart
-    function processDepartureTimes(rides) {
-      const homeTimes = [];
-      const workTimes = [];
+    // Process commute times:
+    // - Morning commute: start time (leave home)
+    // - Evening commute: end time (arrive), based on elapsed_time (incl. stops)
+    function processCommuteTimes(rides) {
+      const morningStartTimes = [];
+      const eveningEndTimes = [];
 
       rides.forEach(r => {
-        const date = new Date(r.start_date_local);
-        const hour = date.getHours();
-        const minute = date.getMinutes();
-        const timeInMinutes = hour * 60 + minute;
-        const label = date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+        const start = new Date(r.start_date_local);
+        const startHour = start.getHours();
+        const startMinute = start.getMinutes();
+        const dateLabel = start.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
 
-        if (hour < 12) {
-          homeTimes.push({ x: label, y: timeInMinutes });
+        // duration including stops: prefer elapsed_time, fall back to moving_time
+        const elapsedSeconds = r.elapsed_time || r.elapsed_time === 0
+          ? r.elapsed_time
+          : (r.moving_time || 0);
+        const durationMinutes = elapsedSeconds / 60;
+
+        if (startHour < 12) {
+          // Morning commute – plot start time
+          const startMinutes = startHour * 60 + startMinute;
+          morningStartTimes.push({
+            x: dateLabel,
+            y: startMinutes,
+            durationMinutes
+          });
         } else {
-          workTimes.push({ x: label, y: timeInMinutes });
+          // Evening commute – plot end time (start + elapsed_time)
+          const end = new Date(start.getTime() + elapsedSeconds * 1000);
+          const endHour = end.getHours();
+          const endMinute = end.getMinutes();
+          const endMinutes = endHour * 60 + endMinute;
+          eveningEndTimes.push({
+            x: dateLabel,
+            y: endMinutes,
+            durationMinutes
+          });
         }
       });
 
-      return { homeTimes, workTimes };
+      return { morningStartTimes, eveningEndTimes };
     }
 
+    // Simple linear regression for morning start trend line
+    function computeTrendLine(points) {
+      if (points.length < 2) return [];
+
+      const n = points.length;
+      let sumX = 0;
+      let sumY = 0;
+      let sumXY = 0;
+      let sumX2 = 0;
+
+      points.forEach((p, i) => {
+        const x = i;
+        const y = p.y;
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumX2 += x * x;
+      });
+
+      const denom = n * sumX2 - sumX * sumX;
+      if (denom === 0) return [];
+
+      const m = (n * sumXY - sumX * sumY) / denom;
+      const b = (sumY - m * sumX) / n;
+
+      return points.map((p, i) => ({
+        x: p.x,
+        y: m * i + b
+      }));
+    }
+
+    // Departure / Arrival Time Chart with trend line
     function renderDepartureChart(rides) {
-      const { homeTimes, workTimes } = processDepartureTimes(rides);
+      const { morningStartTimes, eveningEndTimes } = processCommuteTimes(rides);
+      const morningTrend = computeTrendLine(morningStartTimes);
+
       const ctx = document.getElementById('departureChart').getContext('2d');
       if (departureChartInstance) departureChartInstance.destroy();
 
@@ -312,18 +372,28 @@
         data: {
           datasets: [
             {
-              label: 'Leave Home (AM)',
-              data: homeTimes,
+              label: 'Morning start (leave home)',
+              data: morningStartTimes,
               borderColor: 'rgba(40,167,69,0.8)',
               backgroundColor: 'rgba(40,167,69,0.6)',
               pointRadius: 4
             },
             {
-              label: 'Leave Work (PM)',
-              data: workTimes,
+              label: 'Evening finish (arrive)',
+              data: eveningEndTimes,
               borderColor: 'rgba(54,162,235,0.8)',
               backgroundColor: 'rgba(54,162,235,0.6)',
               pointRadius: 4
+            },
+            {
+              label: 'Morning start trend',
+              data: morningTrend,
+              type: 'line',
+              borderColor: 'rgba(0,0,0,0.8)',
+              backgroundColor: 'rgba(0,0,0,0)',
+              pointRadius: 0,
+              borderWidth: 2,
+              tension: 0.2
             }
           ]
         },
@@ -332,19 +402,20 @@
           maintainAspectRatio: false,
           scales: {
             x: {
+              type: 'category',
               title: { display: true, text: 'Date' },
               ticks: { maxRotation: 0, autoSkip: true }
             },
             y: {
               title: { display: true, text: 'Time of Day' },
-              min: 240,
-              max: 1320,
+              min: 240,   // 04:00
+              max: 1440,  // 24:00
               ticks: {
                 stepSize: 60,
                 callback: v => {
                   const h = Math.floor(v / 60);
                   const m = v % 60;
-                  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
                 }
               }
             }
@@ -354,9 +425,22 @@
             tooltip: {
               callbacks: {
                 label: ctx => {
-                  const h = Math.floor(ctx.parsed.y / 60);
-                  const m = ctx.parsed.y % 60;
-                  return `${ctx.dataset.label}: ${h}:${m.toString().padStart(2,'0')}`;
+                  const minutes = ctx.parsed.y;
+                  const h = Math.floor(minutes / 60);
+                  const m = minutes % 60;
+                  const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+
+                  // For scatter points we have durationMinutes; for trend line we don't
+                  const raw = ctx.raw || {};
+                  if (typeof raw.durationMinutes === 'number') {
+                    const dur = raw.durationMinutes;
+                    const dh = Math.floor(dur / 60);
+                    const dm = Math.round(dur % 60);
+                    const durStr = dh ? `${dh}h ${dm}m` : `${dm}m`;
+                    return `${ctx.dataset.label}: ${timeStr} • Duration: ${durStr}`;
+                  }
+
+                  return `${ctx.dataset.label}: ${timeStr}`;
                 }
               }
             }
@@ -374,7 +458,13 @@
         const row = document.createElement('tr');
         const date = new Date(ride.start_date_local).toLocaleDateString();
         const distance = (ride.distance / 1000).toFixed(1);
-        const duration = formatDuration(ride.moving_time);
+
+        // Duration including stops: use elapsed_time if available
+        const elapsedSeconds = ride.elapsed_time || ride.elapsed_time === 0
+          ? ride.elapsed_time
+          : (ride.moving_time || 0);
+        const duration = formatDuration(elapsedSeconds);
+
         const avgSpeed = ride.average_speed ? (ride.average_speed * 3.6).toFixed(1) : '—';
         const isSplit = splitRides.has(ride.id);
 
@@ -391,10 +481,11 @@
     }
 
     function formatDuration(seconds) {
-      const h = Math.floor(seconds / 3600);
-      const m = Math.floor((seconds % 3600) / 60);
-      const s = seconds % 60;
-      return `${h ? h+'h ' : ''}${m ? m+'m ' : ''}${s}s`;
+      const total = Math.round(seconds || 0);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      return `${h ? h + 'h ' : ''}${m ? m + 'm ' : ''}${s}s`;
     }
 
     document.getElementById('refresh-btn').addEventListener('click', () => fetchRides(true));
