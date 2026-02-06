@@ -12,11 +12,14 @@ function formatPace(paceInSecondsPerMeter) {
 async function fetchSwimData() {
     try {
         const response = await fetch('/.netlify/functions/get-swims');
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
         const data = await response.json();
-        console.log(data);
         return data;
     } catch (error) {
         console.error('Error fetching swim data:', error);
+        return [];
     }
 }
 
@@ -158,9 +161,95 @@ function createTimeChart(swimData) {
     });
 }
 
+// Create the Pace Chart (average pace per 100m by month)
+function createPaceChart(swimData) {
+    const monthlyData = groupDataByMonth(swimData);
+    const labels = Object.keys(monthlyData);
+    const paces = Object.values(monthlyData).map(data => {
+        const avgPaceSecsPerMeter = data.totalPace / data.sessions;
+        return (avgPaceSecsPerMeter * 100).toFixed(0); // seconds per 100m
+    });
+
+    const ctx = document.getElementById('paceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Avg Pace (sec/100m)',
+                data: paces,
+                borderColor: '#2e7d32',
+                backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                fill: true,
+                tension: 0.3,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { display: true },
+                y: { display: true, reverse: true }
+            }
+        }
+    });
+}
+
+// Create the SWOLF Chart (average SWOLF by month)
+function createSwolfChart(swimData) {
+    const monthlyData = groupDataByMonth(swimData);
+    const labels = [];
+    const swolfValues = [];
+
+    Object.entries(monthlyData).forEach(([month, data]) => {
+        if (data.hasSwolf) {
+            labels.push(month);
+            swolfValues.push((data.swolfSum / data.sessions).toFixed(1));
+        }
+    });
+
+    if (swolfValues.length === 0) {
+        const canvas = document.getElementById('swolfChart');
+        canvas.parentElement.innerHTML = '<p style="text-align:center;color:#888;">No SWOLF data available</p>';
+        return;
+    }
+
+    const ctx = document.getElementById('swolfChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Avg SWOLF',
+                data: swolfValues,
+                borderColor: '#8e24aa',
+                backgroundColor: 'rgba(142, 36, 170, 0.1)',
+                fill: true,
+                tension: 0.3,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { display: true },
+                y: { display: true, reverse: true }
+            }
+        }
+    });
+}
+
 // Main function to initialize the dashboard
 async function initDashboard() {
+    const spinner = document.getElementById('loading-spinner');
     const swimData = await fetchSwimData();
+
+    if (spinner) spinner.style.display = 'none';
+
+    if (!swimData || swimData.length === 0) {
+        document.getElementById('total-distance').innerHTML = '<h3>No swim data available</h3>';
+        return;
+    }
 
     // Sort swimData by date
     swimData.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
@@ -174,7 +263,7 @@ async function initDashboard() {
     createDistanceChart(swimData);
     createTimeChart(swimData);
     createPaceChart(swimData);
-    createSwolfChart(swimData); // If SWOLF data is available
+    createSwolfChart(swimData);
 }
 
 // Call the main function on page load

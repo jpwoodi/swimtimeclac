@@ -3,10 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>Swim Training Dashboard</title>
+    <link rel="icon" href="images/swimming_favicon.ico">
+    <meta name="description" content="Track your swim training with distance, time, pace, and SWOLF charts.">
     <!-- Meta tags for responsiveness -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- External CSS -->
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+        }
+        .loading-spinner .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #0277bd;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Moment.js CDN -->
@@ -17,6 +38,11 @@
         <h1>Swim Training Dashboard</h1>
     </header>
     <main>
+        <!-- Loading spinner -->
+        <div id="loading-spinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading swim data...</p>
+        </div>
         <!-- Overview Section -->
         <section id="overview">
             <h2>Overview</h2>
@@ -43,7 +69,18 @@
         </section>
 
 
-        <!-- Add more sections as needed -->
+        <!-- Pace and SWOLF Trends -->
+        <section id="pace-swolf-trends">
+            <h2>Pace and SWOLF Trends</h2>
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="paceChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="swolfChart"></canvas>
+                </div>
+            </div>
+        </section>
     </main>
     <!-- External JS -->
     <script src="dashscript.js"></script>

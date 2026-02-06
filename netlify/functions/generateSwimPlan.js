@@ -1,6 +1,17 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    }
+
+    let parsed;
+    try {
+        parsed = JSON.parse(event.body);
+    } catch (e) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
+    }
+
     const {
         goal,
         cssMinutes,
@@ -10,7 +21,7 @@ exports.handler = async function(event, context) {
         sessionDuration,
         comments,
         conversationHistory
-    } = JSON.parse(event.body);
+    } = parsed;
 
     const apiKey = process.env.OPENAI_API_KEY;
 
@@ -28,7 +39,7 @@ exports.handler = async function(event, context) {
 
         const initialMessage = {
             role: "user",
-            content: 'Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes. Make sure that each week includes a mix of speed training and distance building and use the CSS to inform pacing. Pull from actual sets that include warm-up (make it 300 free and 100 pull always), build, main, and cool down (100 free always), and specify equipment such as pullbuoys, kickboards, and fins where applicable. Always in metres. Format the output as a Markdown table with the following columns: "Week", "Session Number", "Warm Up", "Build Set", "Main Set", "Cool Down", and "Total Distance. Do not include any additional text, just the table'
+            content: `Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes. Make sure that each week includes a mix of speed training and distance building and use the CSS to inform pacing. Pull from actual sets that include warm-up (make it 300 free and 100 pull always), build, main, and cool down (100 free always), and specify equipment such as pullbuoys, kickboards, and fins where applicable. Always in metres. Format the output as a Markdown table with the following columns: "Week", "Session Number", "Warm Up", "Build Set", "Main Set", "Cool Down", and "Total Distance. Do not include any additional text, just the table`
         };
 
         messages.push(initialMessage);
@@ -51,7 +62,7 @@ exports.handler = async function(event, context) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o-mini',
             messages: messages,
             max_tokens: 4096,
             temperature: 0.7
