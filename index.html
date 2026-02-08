@@ -3,45 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swimming</title>
+    <title>SwimTimeCalc - Swim Training Tools</title>
     <link rel="icon" href="images/swimming_favicon.ico">
+    <meta name="description" content="Swimming training tools: calculators, dashboards, pool finder, and AI-powered swim plans.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="nav.css">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #172137; /* Set the background color */
-            background-size: cover;
-            background-position: center;
-            color: #ffffff; /* Ensure the text color contrasts with the background */
+        * {
             margin: 0;
             padding: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            box-sizing: border-box;
         }
 
-        h1 {
-            color: white;
-            font-size: 48px;
-            margin-bottom: 20px;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #212529;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        img {
-            width: 150px;
+        .hero {
+            text-align: center;
+            padding: 80px 20px 40px;
+        }
+
+        .hero img {
+            width: 100px;
             height: auto;
+            margin-bottom: 16px;
         }
 
+        .hero h1 {
+            color: #ffffff;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1em;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .tool-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 30px 24px;
+            text-decoration: none;
+            color: #212529;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        .tool-card h2 {
+            color: #007BFF;
+            font-size: 1.3em;
+            margin-bottom: 8px;
+        }
+
+        .tool-card p {
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .tool-card.cycling h2 {
+            color: #28a745;
+        }
+
+        @media (max-width: 576px) {
+            .hero h1 {
+                font-size: 1.8em;
+            }
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="calculator.html">Swim Calculator</a></li>
+            <li><a href="css.html">CSS Calculator</a></li>
+            <li><a href="dash.html">Dashboard</a></li>
+            <li><a href="pools.html">Pool Finder</a></li>
+            <li><a href="stravafeed.html">Swim Feed</a></li>
+            <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
+            <li><a href="cyclecommute.html">Cycle Commute</a></li>
+        </ul>
+    </nav>
 
-    <!-- Coming Soon Section -->
-    <h1>Coming soon</h1>
-    <img src="images/swimmer_head_full_transparent_background.png" alt="Swimming Logo">
+    <div class="hero">
+        <img src="images/swimmer_head_full_transparent_background.png" alt="SwimTimeCalc Logo">
+        <h1>SwimTimeCalc</h1>
+        <p>Your swimming training toolkit</p>
+    </div>
 
+    <div class="tools-grid">
+        <a href="calculator.html" class="tool-card">
+            <h2>Swim Calculator</h2>
+            <p>Calculate your swim time from pace, or pace from time, for any distance.</p>
+        </a>
+        <a href="css.html" class="tool-card">
+            <h2>CSS Calculator</h2>
+            <p>Work out your Critical Swim Speed from 200m and 400m time trials.</p>
+        </a>
+        <a href="dash.html" class="tool-card">
+            <h2>Training Dashboard</h2>
+            <p>View your distance, time, pace, and SWOLF trends from Strava data.</p>
+        </a>
+        <a href="pools.html" class="tool-card">
+            <h2>Pool Finder</h2>
+            <p>Find swimming pools and open water locations across London.</p>
+        </a>
+        <a href="stravafeed.html" class="tool-card">
+            <h2>Swim Feed</h2>
+            <p>Browse your recent swim activities pulled from Strava.</p>
+        </a>
+        <a href="swim-plan-generator.html" class="tool-card">
+            <h2>AI Swim Plan</h2>
+            <p>Generate a personalised training plan powered by AI using your CSS.</p>
+        </a>
+        <a href="cyclecommute.html" class="tool-card cycling">
+            <h2>Cycle Commute</h2>
+            <p>Track your cycle commute rides, distances, and savings.</p>
+        </a>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
+    </script>
 </body>
 </html>

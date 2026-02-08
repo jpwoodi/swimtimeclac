@@ -7,6 +7,7 @@
   <link rel="icon" href="images/swimming_favicon.ico">
   <meta name="description" content="Track your cycle commute data with distance, speed, and savings charts.">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="nav.css">
 
   <style>
     body {
@@ -132,7 +133,26 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <nav class="top-nav">
+      <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+      <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="calculator.html">Swim Calculator</a></li>
+          <li><a href="css.html">CSS Calculator</a></li>
+          <li><a href="dash.html">Dashboard</a></li>
+          <li><a href="pools.html">Pool Finder</a></li>
+          <li><a href="stravafeed.html">Swim Feed</a></li>
+          <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
+          <li><a href="cyclecommute.html">Cycle Commute</a></li>
+      </ul>
+  </nav>
+  <script>
+      function toggleMenu() {
+          const navMenu = document.querySelector('.top-nav ul');
+          navMenu.classList.toggle('expanded');
+      }
+  </script>
+  <div class="container" style="margin-top: 80px;">
     <h1>🚲 My Cycle Commutes</h1>
 
     <button id="refresh-btn">🔄 Refresh from Strava</button>

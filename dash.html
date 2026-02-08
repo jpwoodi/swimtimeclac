@@ -9,6 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- External CSS -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         .loading-spinner {
             text-align: center;
@@ -34,9 +36,28 @@
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 </head>
 <body>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="calculator.html">Swim Calculator</a></li>
+            <li><a href="css.html">CSS Calculator</a></li>
+            <li><a href="dash.html">Dashboard</a></li>
+            <li><a href="pools.html">Pool Finder</a></li>
+            <li><a href="stravafeed.html">Swim Feed</a></li>
+            <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
+            <li><a href="cyclecommute.html">Cycle Commute</a></li>
+        </ul>
+    </nav>
     <header>
         <h1>Swim Training Dashboard</h1>
     </header>
+    <script>
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
+    </script>
     <main>
         <!-- Loading spinner -->
         <div id="loading-spinner" class="loading-spinner">
