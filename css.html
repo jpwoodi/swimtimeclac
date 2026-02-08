@@ -7,6 +7,7 @@
     <link rel="icon" href="images/swimming_favicon.ico">
     <meta name="description" content="Calculate your Critical Swim Speed from 200m and 400m time trial results.">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="nav.css">
     <style>
         * {
             margin: 0;
@@ -16,19 +17,22 @@
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f4f4f4;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('people-2588747.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #212529;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            flex-direction: column;
+            padding: 20px;
         }
 
         .calculator-container {
             background-color: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
             text-align: center;
             width: 90%;
             max-width: 400px;
@@ -37,6 +41,7 @@
         h1 {
             color: #007BFF;
             margin-bottom: 20px;
+            font-size: 1.8em;
         }
 
         .form-group {
@@ -48,6 +53,16 @@
             font-weight: 600;
             display: block;
             margin-bottom: 5px;
+            color: #343A40;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .time-inputs input {
+            flex: 1;
         }
 
         input {
@@ -56,6 +71,7 @@
             border: 1px solid #ced4da;
             border-radius: 5px;
             font-size: 1em;
+            text-align: center;
         }
 
         button {
@@ -64,10 +80,11 @@
             background-color: #007BFF;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
             font-size: 1em;
             margin-top: 10px;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
@@ -78,39 +95,88 @@
             margin-top: 20px;
             font-size: 1.2em;
             font-weight: bold;
-            color: #333;
+            color: #495057;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="calculator.html">Swim Calculator</a></li>
+            <li><a href="css.html">CSS Calculator</a></li>
+            <li><a href="dash.html">Dashboard</a></li>
+            <li><a href="pools.html">Pool Finder</a></li>
+            <li><a href="stravafeed.html">Swim Feed</a></li>
+            <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
+            <li><a href="cyclecommute.html">Cycle Commute</a></li>
+        </ul>
+    </nav>
+
     <div class="calculator-container">
         <h1>CSS Swim Speed Calculator</h1>
         <div class="form-group">
-            <label for="time200">200m Time (seconds)</label>
-            <input type="number" id="time200" min="0" placeholder="Enter time for 200m">
+            <label>200m Time</label>
+            <div class="time-inputs">
+                <input type="number" id="time200-mins" min="0" placeholder="Minutes">
+                <input type="number" id="time200-secs" min="0" max="59" placeholder="Seconds">
+            </div>
         </div>
         <div class="form-group">
-            <label for="time400">400m Time (seconds)</label>
-            <input type="number" id="time400" min="0" placeholder="Enter time for 400m">
+            <label>400m Time</label>
+            <div class="time-inputs">
+                <input type="number" id="time400-mins" min="0" placeholder="Minutes">
+                <input type="number" id="time400-secs" min="0" max="59" placeholder="Seconds">
+            </div>
         </div>
         <button onclick="calculateCSS()">Calculate CSS</button>
         <div class="result" id="result"></div>
+        <div class="error" id="error"></div>
     </div>
 
     <script>
-        function calculateCSS() {
-            const time200 = parseFloat(document.getElementById('time200').value);
-            const time400 = parseFloat(document.getElementById('time400').value);
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
 
-            if (!time200 || !time400 || time400 <= time200) {
-                alert("Please enter valid times where 400m time is greater than 200m time.");
+        function calculateCSS() {
+            const mins200 = parseInt(document.getElementById('time200-mins').value) || 0;
+            const secs200 = parseInt(document.getElementById('time200-secs').value) || 0;
+            const mins400 = parseInt(document.getElementById('time400-mins').value) || 0;
+            const secs400 = parseInt(document.getElementById('time400-secs').value) || 0;
+
+            const time200 = (mins200 * 60) + secs200;
+            const time400 = (mins400 * 60) + secs400;
+
+            const errorEl = document.getElementById('error');
+            const resultEl = document.getElementById('result');
+            errorEl.textContent = '';
+            resultEl.textContent = '';
+
+            if (!time200 || !time400) {
+                errorEl.textContent = 'Please enter both times.';
                 return;
             }
 
-            const cssSpeed = (400 - 200) / (time400 - time200); // m/s
-            const cssPer100m = (100 / cssSpeed).toFixed(2); // sec per 100m
+            if (time400 <= time200) {
+                errorEl.textContent = '400m time must be greater than 200m time.';
+                return;
+            }
 
-            document.getElementById('result').textContent = `Critical Swim Speed: ${cssPer100m} sec per 100m`;
+            const cssSpeed = (400 - 200) / (time400 - time200);
+            const cssPer100mTotal = 100 / cssSpeed;
+            const cssMins = Math.floor(cssPer100mTotal / 60);
+            const cssSecs = Math.round(cssPer100mTotal % 60);
+
+            resultEl.textContent = `Critical Swim Speed: ${cssMins}:${cssSecs.toString().padStart(2, '0')} per 100m`;
         }
     </script>
 </body>
