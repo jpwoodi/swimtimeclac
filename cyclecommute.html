@@ -1,846 +1,488 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cycle Commute Dashboard</title>
-  <link rel="icon" href="images/swimming_favicon.ico">
-  <meta name="description" content="Track your cycle commute data with distance, speed, and savings charts.">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="nav.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Commute Dashboard</title>
+    <link rel="icon" href="images/swimming_favicon.ico">
+    <meta name="description" content="Track your cycle commute data with distance, speed, and savings charts.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-        url('https://images.unsplash.com/photo-1508973372-bd987c1ea9a5');
-      background-size: cover;
-      background-position: center;
-      color: #212529;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      overflow-y: scroll;
-    }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
+            min-height: 100vh;
+            padding: 80px 0 60px;
+        }
 
-    .container {
-      background: rgba(255,255,255,0.96);
-      border-radius: 12px;
-      width: 95%;
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 30px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
+        .page-header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 0;
+        }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #28a745;
-    }
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1f36;
+        }
 
-    button {
-      margin: 0 auto 20px;
-      display: block;
-      padding: 10px 16px;
-      border: none;
-      background: #28a745;
-      color: white;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+        .page-header p {
+            color: #697386;
+            font-size: 15px;
+            margin-top: 4px;
+        }
 
-    button:hover { background: #218838; }
+        .controls {
+            max-width: 1200px;
+            margin: 16px auto 0;
+            padding: 0 24px;
+        }
 
-    button:disabled {
-      opacity: 0.7;
-      cursor: wait;
-    }
+        .controls button {
+            padding: 10px 20px;
+            background-color: #635bff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
 
-    .chart-section {
-      margin-bottom: 40px;
-    }
+        .controls button:hover { background-color: #5851ea; }
 
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-bottom: 30px;
-    }
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            max-width: 1200px;
+            margin: 16px auto 0;
+            padding: 0 24px;
+        }
 
-    #savings-info {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 15px;
-    }
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 20px 24px;
+            flex: 1;
+            min-width: 0;
+        }
 
-    /* Commute List Table */
-    .commute-list {
-      margin-top: 20px;
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      padding: 15px;
-    }
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #697386;
+            margin-bottom: 8px;
+        }
 
-    .commute-list h2 {
-      color: #28a745;
-      margin-bottom: 10px;
-      text-align: center;
-    }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
 
-    #commute-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
+        .stat-sub {
+            font-size: 13px;
+            color: #8792a2;
+            margin-top: 4px;
+        }
 
-    #commute-table th, #commute-table td {
-      border-bottom: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8792a2;
+            font-size: 14px;
+        }
 
-    #commute-table th {
-      background-color: #f8f8f8;
-      font-weight: 600;
-      text-align: left;
-    }
+        .loading .spinner {
+            border: 3px solid #e3e8ee;
+            border-top: 3px solid #635bff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
 
-    #commute-table tr:hover {
-      background-color: #f2f2f2;
-    }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-    .status-tag {
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: white;
-    }
+        /* Charts */
+        .charts-section {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
 
-    .status-tag.normal {
-      background-color: #28a745;
-    }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
 
-    .status-tag.split {
-      background-color: #ff9800;
-    }
+        .chart-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 24px;
+        }
 
-    @media (max-width: 768px) {
-      .chart-container {
-        height: 250px;
-      }
+        .chart-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 16px;
+        }
 
-      #commute-table {
-        font-size: 12px;
-      }
-    }
-  </style>
+        .chart-container {
+            position: relative;
+            height: 260px;
+        }
+
+        /* Commute table */
+        .table-section {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
+
+        .table-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 20px 24px 0;
+            margin-bottom: 12px;
+        }
+
+        .table-scroll {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: #f6f9fc;
+            color: #697386;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid #e3e8ee;
+        }
+
+        td {
+            color: #1a1f36;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        tr:hover td {
+            background-color: #f6f9fc;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-tag.normal { background-color: #2e7d32; }
+        .status-tag.split { background-color: #ef6c00; }
+
+        @media (max-width: 768px) {
+            .stats-row { flex-direction: column; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 200px; }
+        }
+    </style>
 </head>
 <body>
-  <nav class="top-nav">
-    <button
-      class="hamburger"
-      type="button"
-      aria-label="Toggle navigation menu"
-      aria-controls="primary-nav"
-      aria-expanded="false"
-      onclick="toggleMenu()"
-    >
-      &#9776;
-    </button>
-    <ul id="primary-nav">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="calculator.html">Swim Calculator</a></li>
-      <li><a href="css.html">CSS Calculator</a></li>
-      <li><a href="dash.html">Dashboard</a></li>
-      <li><a href="pools.html">Pool Finder</a></li>
-      <li><a href="stravafeed.html">Swim Feed</a></li>
-      <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
-      <li><a href="cyclecommute.html">Cycle Commute</a></li>
-    </ul>
-  </nav>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="calculator.html">Swim Calculator</a></li>
+            <li><a href="css.html">CSS Calculator</a></li>
+            <li><a href="dash.html">Dashboard</a></li>
+            <li><a href="pools.html">Pool Finder</a></li>
+            <li><a href="stravafeed.html">Swim Feed</a></li>
+            <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
+            <li><a href="cyclecommute.html">Cycle Commute</a></li>
+        </ul>
+    </nav>
 
-  <div class="container" style="margin-top: 80px;">
-    <h1>My Cycle Commutes</h1>
-    <button id="refresh-btn">Refresh from Strava</button>
+    <div class="page-header">
+        <h1>Cycle Commute</h1>
+        <p>Your cycle commute data and savings</p>
+    </div>
 
-    <div id="savings-info"></div>
+    <div class="controls">
+        <button id="refresh-btn">Refresh from Strava</button>
+    </div>
 
-    <section class="chart-section">
-      <h2 style="text-align:center;">Monthly Distance</h2>
-      <div class="chart-container">
-        <canvas id="monthlyChart"></canvas>
-      </div>
+    <div id="loading-area" class="loading" style="display:none;">
+        <div class="spinner"></div>
+        Loading commute data...
+    </div>
 
-      <h2 style="text-align:center;">Weekly Commute Times (Median + Variability)</h2>
-      <div class="chart-container">
-        <canvas id="departureChart"></canvas>
-      </div>
-    </section>
+    <div class="stats-row" id="stats-row" style="display:none;"></div>
 
-    <section class="commute-list">
-      <h2>All Commutes</h2>
-      <table id="commute-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Title</th>
-            <th>Distance (km)</th>
-            <th>Duration (incl. stops)</th>
-            <th>Avg Speed (km/h)</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="6">Loading rides...</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-  </div>
+    <div class="charts-section">
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>Distance per Ride</h3>
+                <div class="chart-container">
+                    <canvas id="distanceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Average Speed</h3>
+                <div class="chart-container">
+                    <canvas id="speedChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const tubeFare = 3.40;
-    const co2PerKm = 0.120;
-    let chartInstance = null;
-    let departureChartInstance = null;
+    <div class="table-section">
+        <div class="table-card">
+            <h3>All Commutes</h3>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Distance</th>
+                            <th>Time</th>
+                            <th>Avg Speed</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commute-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-    function getRideStartTimestamp(ride) {
-      const timestamp = Date.parse(ride.start_date || ride.start_date_local);
-      return Number.isFinite(timestamp) ? timestamp : 0;
-    }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
 
-    function parseStravaLocalDateParts(localDateString, fallbackDateString) {
-      const localMatch = typeof localDateString === 'string'
-        ? localDateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
-        : null;
-
-      if (localMatch) {
-        return {
-          year: Number(localMatch[1]),
-          month: Number(localMatch[2]),
-          day: Number(localMatch[3]),
-          hour: Number(localMatch[4]),
-          minute: Number(localMatch[5]),
-          second: Number(localMatch[6] || 0)
+        const CHART_COLORS = {
+            green: 'rgba(46, 125, 50, 0.75)',
+            purple: 'rgba(99, 91, 255, 0.75)',
+            gridLine: '#f0f3f7',
+            tick: '#8792a2',
         };
-      }
 
-      // Fallback: treat parsed UTC fields as local-clock components.
-      const fallbackSource = fallbackDateString || localDateString;
-      const fallback = new Date(fallbackSource);
-      if (Number.isNaN(fallback.getTime())) {
-        return { year: 1970, month: 1, day: 1, hour: 0, minute: 0, second: 0 };
-      }
+        document.getElementById('refresh-btn').addEventListener('click', fetchCommutes);
 
-      return {
-        year: fallback.getUTCFullYear(),
-        month: fallback.getUTCMonth() + 1,
-        day: fallback.getUTCDate(),
-        hour: fallback.getUTCHours(),
-        minute: fallback.getUTCMinutes(),
-        second: fallback.getUTCSeconds()
-      };
-    }
+        async function fetchCommutes() {
+            const loading = document.getElementById('loading-area');
+            loading.style.display = 'block';
 
-    function addSecondsToLocalParts(parts, secondsToAdd) {
-      const dt = new Date(Date.UTC(
-        parts.year,
-        parts.month - 1,
-        parts.day,
-        parts.hour,
-        parts.minute,
-        parts.second
-      ));
-      dt.setUTCSeconds(dt.getUTCSeconds() + secondsToAdd);
-      return {
-        year: dt.getUTCFullYear(),
-        month: dt.getUTCMonth() + 1,
-        day: dt.getUTCDate(),
-        hour: dt.getUTCHours(),
-        minute: dt.getUTCMinutes(),
-        second: dt.getUTCSeconds()
-      };
-    }
+            try {
+                const response = await fetch('/.netlify/functions/get-cycle-commutes');
+                const data = await response.json();
 
-    function getDayKey(parts) {
-      return `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
-    }
-
-    function formatDayKey(dayKey, includeYear = false) {
-      const [yearStr, monthStr, dayStr] = String(dayKey).split('-');
-      const dt = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)));
-      return dt.toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: includeYear ? 'numeric' : undefined,
-        timeZone: 'UTC'
-      });
-    }
-
-    function getWeekStartKey(dayKey) {
-      const [yearStr, monthStr, dayStr] = String(dayKey).split('-');
-      const dt = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)));
-      const daysFromMonday = (dt.getUTCDay() + 6) % 7;
-      dt.setUTCDate(dt.getUTCDate() - daysFromMonday);
-      return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
-    }
-
-    function formatWeekKey(weekKey) {
-      return `w/c ${formatDayKey(weekKey)}`;
-    }
-
-    function formatMinutesOfDay(totalMinutes) {
-      if (!Number.isFinite(totalMinutes)) return '--:--';
-      const rounded = Math.round(totalMinutes);
-      const h = Math.floor(rounded / 60) % 24;
-      const m = rounded % 60;
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    }
-
-    function percentile(values, p) {
-      if (!values.length) return null;
-      const sorted = [...values].sort((a, b) => a - b);
-      const index = (sorted.length - 1) * p;
-      const lower = Math.floor(index);
-      const upper = Math.ceil(index);
-      if (lower === upper) return sorted[lower];
-      const weight = index - lower;
-      return sorted[lower] * (1 - weight) + sorted[upper] * weight;
-    }
-
-    function toggleMenu() {
-      const toggleBtn = document.querySelector('.hamburger');
-      const navMenu = document.querySelector('.top-nav ul');
-      const isExpanded = navMenu.classList.toggle('expanded');
-      if (toggleBtn) {
-        toggleBtn.setAttribute('aria-expanded', String(isExpanded));
-      }
-    }
-
-    function fetchRides(forceRefresh = false) {
-      const refreshBtn = document.getElementById('refresh-btn');
-      const url = '/.netlify/functions/get-rides' + (forceRefresh ? '?refresh=true' : '');
-
-      if (forceRefresh && refreshBtn) {
-        refreshBtn.disabled = true;
-        refreshBtn.textContent = 'Refreshing...';
-      }
-
-      fetch(url)
-        .then(res => res.json())
-        .then(rides => {
-          const tbody = document.querySelector('#commute-table tbody');
-
-          if (!Array.isArray(rides)) {
-            tbody.innerHTML = '<tr><td colspan="6">Error loading rides.</td></tr>';
-            return;
-          }
-
-          // Keep main list newest -> oldest for the table
-          rides.sort((a, b) => getRideStartTimestamp(b) - getRideStartTimestamp(a));
-
-          const { fares, splitRides } = tagSplitRides(rides);
-          const monthlyData = processMonthlyData(rides);
-          renderMonthlyChart(monthlyData);
-          renderDepartureChart(rides);
-
-          // All-time total distance (km)
-          const totalDistance = rides.reduce((sum, r) => sum + r.distance / 1000, 0);
-          const savings = (fares * tubeFare).toFixed(2);
-          const co2Saved = (totalDistance * co2PerKm).toFixed(1);
-
-          document.getElementById('savings-info').innerHTML = `
-            <p><strong>${rides.length}</strong> commute rides, totalling <strong>${totalDistance.toFixed(1)} km</strong>.</p>
-            <p><strong>${fares}</strong> Tube fares saved ~= <strong>GBP ${savings}</strong> | CO2 saved ~= <strong>${co2Saved} kg</strong></p>
-          `;
-
-          renderCommuteList(rides, splitRides);
-        })
-        .catch(err => {
-          console.error(err);
-          const tbody = document.querySelector('#commute-table tbody');
-          tbody.innerHTML = '<tr><td colspan="6">Error fetching data.</td></tr>';
-        })
-        .finally(() => {
-          if (refreshBtn) {
-            refreshBtn.disabled = false;
-            refreshBtn.textContent = 'Refresh from Strava';
-          }
-        });
-    }
-
-    // Tag rides that fall within merge window
-    function tagSplitRides(rides, mergeHours = 2) {
-      const sorted = [...rides].sort((a, b) => getRideStartTimestamp(a) - getRideStartTimestamp(b));
-      const windowMs = mergeHours * 60 * 60 * 1000;
-      let fares = 0;
-      let lastFareTime = null;
-      const splitRides = new Set();
-
-      sorted.forEach(ride => {
-        const rideTime = getRideStartTimestamp(ride);
-        if (!lastFareTime || (rideTime - lastFareTime) > windowMs) {
-          fares++;
-          lastFareTime = rideTime;
-        } else {
-          splitRides.add(ride.id);
-        }
-      });
-
-      return { fares, splitRides };
-    }
-
-    // Monthly totals
-    function processMonthlyData(rides) {
-      const monthly = {};
-      rides.forEach(r => {
-        const parts = parseStravaLocalDateParts(r.start_date_local, r.start_date);
-        const key = `${parts.year}-${parts.month}`;
-        monthly[key] = (monthly[key] || 0) + r.distance / 1000;
-      });
-
-      const labels = [];
-      const values = [];
-      const now = new Date();
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-        labels.push(d.toLocaleString('default', { month: 'short', year: 'numeric' }));
-        values.push(parseFloat((monthly[key] || 0).toFixed(1)));
-      }
-      return { labels, data: values };
-    }
-
-    // Monthly chart
-    function renderMonthlyChart(monthlyData) {
-      const ctx = document.getElementById('monthlyChart').getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: monthlyData.labels,
-          datasets: [{
-            label: 'Monthly Commute Distance (km)',
-            data: monthlyData.data,
-            backgroundColor: 'rgba(40, 167, 69, 0.6)',
-            borderColor: 'rgba(40, 167, 69, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { title: { display: true, text: 'Month' } },
-            y: { title: { display: true, text: 'Distance (km)' }, beginAtZero: true }
-          }
-        }
-      });
-    }
-
-    // Process commute times into chronological events with local date semantics.
-    function processCommuteTimes(rides) {
-      const events = [];
-
-      rides.forEach(r => {
-        const startParts = parseStravaLocalDateParts(r.start_date_local, r.start_date);
-        const startHour = startParts.hour;
-        const startMinute = startParts.minute;
-        const startTimestamp = getRideStartTimestamp(r);
-
-        // duration including stops: prefer elapsed_time, fall back to moving_time
-        const elapsedSeconds = (r.elapsed_time || r.elapsed_time === 0)
-          ? r.elapsed_time
-          : (r.moving_time || 0);
-        const durationMinutes = elapsedSeconds / 60;
-        const startMinutes = startHour * 60 + startMinute;
-        const startDayKey = getDayKey(startParts);
-        const startWeekKey = getWeekStartKey(startDayKey);
-
-        if (startHour < 12) {
-          events.push({
-            type: 'morning',
-            timestampMs: startTimestamp,
-            dayKey: startDayKey,
-            weekKey: startWeekKey,
-            minutes: startMinutes,
-            durationMinutes
-          });
-        } else {
-          const endParts = addSecondsToLocalParts(startParts, elapsedSeconds);
-          const endHour = endParts.hour;
-          const endMinute = endParts.minute;
-          const endMinutes = endHour * 60 + endMinute;
-          const endDayKey = getDayKey(endParts);
-          const endWeekKey = getWeekStartKey(endDayKey);
-          events.push({
-            type: 'evening',
-            timestampMs: startTimestamp + elapsedSeconds * 1000,
-            dayKey: endDayKey,
-            weekKey: endWeekKey,
-            minutes: endMinutes,
-            durationMinutes
-          });
-        }
-      });
-
-      events.sort((a, b) => a.timestampMs - b.timestampMs);
-      return events;
-    }
-
-    function buildWeeklyCommuteSeries(events) {
-      const weeklyBuckets = new Map();
-      const morningDaily = [];
-      const eveningDaily = [];
-
-      events.forEach(ev => {
-        if (!weeklyBuckets.has(ev.weekKey)) {
-          weeklyBuckets.set(ev.weekKey, { morning: [], evening: [] });
-        }
-        weeklyBuckets.get(ev.weekKey)[ev.type].push(ev.minutes);
-
-        const point = {
-          x: ev.weekKey,
-          y: ev.minutes,
-          dayLabel: formatDayKey(ev.dayKey, true),
-          durationMinutes: ev.durationMinutes
-        };
-        if (ev.type === 'morning') {
-          morningDaily.push(point);
-        } else {
-          eveningDaily.push(point);
-        }
-      });
-
-      const weekKeys = Array.from(weeklyBuckets.keys()).sort();
-      const morningQ1Points = [];
-      const morningQ3Points = [];
-      const morningMedianPoints = [];
-      const eveningQ1Points = [];
-      const eveningQ3Points = [];
-      const eveningMedianPoints = [];
-
-      weekKeys.forEach(weekKey => {
-        const bucket = weeklyBuckets.get(weekKey);
-        const morningValues = bucket.morning;
-        const eveningValues = bucket.evening;
-        const morningQ1 = percentile(morningValues, 0.25);
-        const morningQ3 = percentile(morningValues, 0.75);
-        const morningMedian = percentile(morningValues, 0.5);
-        const eveningQ1 = percentile(eveningValues, 0.25);
-        const eveningQ3 = percentile(eveningValues, 0.75);
-        const eveningMedian = percentile(eveningValues, 0.5);
-
-        morningQ1Points.push({ x: weekKey, y: morningQ1 });
-        morningQ3Points.push({ x: weekKey, y: morningQ3 });
-        morningMedianPoints.push({ x: weekKey, y: morningMedian, sampleSize: morningValues.length });
-        eveningQ1Points.push({ x: weekKey, y: eveningQ1 });
-        eveningQ3Points.push({ x: weekKey, y: eveningQ3 });
-        eveningMedianPoints.push({ x: weekKey, y: eveningMedian, sampleSize: eveningValues.length });
-      });
-
-      return {
-        weekKeys,
-        morningQ1Points,
-        morningQ3Points,
-        morningMedianPoints,
-        eveningQ1Points,
-        eveningQ3Points,
-        eveningMedianPoints,
-        morningDaily,
-        eveningDaily
-      };
-    }
-
-    // Simple linear regression for morning start trend line
-    function computeTrendLine(points) {
-      if (points.length < 2) return [];
-
-      const n = points.length;
-      let sumX = 0;
-      let sumY = 0;
-      let sumXY = 0;
-      let sumX2 = 0;
-
-      points.forEach((p, i) => {
-        const x = i;
-        const y = p.y;
-        sumX += x;
-        sumY += y;
-        sumXY += x * y;
-        sumX2 += x * x;
-      });
-
-      const denom = n * sumX2 - sumX * sumX;
-      if (denom === 0) return [];
-
-      const m = (n * sumXY - sumX * sumY) / denom;
-      const b = (sumY - m * sumX) / n;
-
-      return points.map((p, i) => ({
-        x: p.x,
-        y: m * i + b
-      }));
-    }
-
-    // Weekly median + IQR bands with daily points and trend lines.
-    function renderDepartureChart(rides) {
-      const commuteEvents = processCommuteTimes(rides);
-      const {
-        weekKeys,
-        morningQ1Points,
-        morningQ3Points,
-        morningMedianPoints,
-        eveningQ1Points,
-        eveningQ3Points,
-        eveningMedianPoints,
-        morningDaily,
-        eveningDaily
-      } = buildWeeklyCommuteSeries(commuteEvents);
-      const morningTrend = computeTrendLine(morningMedianPoints.filter(point => Number.isFinite(point.y)));
-      const eveningTrend = computeTrendLine(eveningMedianPoints.filter(point => Number.isFinite(point.y)));
-      const allTimes = [...morningDaily, ...eveningDaily].map(point => point.y).filter(Number.isFinite);
-      let yMin = 240;
-      let yMax = 1440;
-      if (allTimes.length) {
-        yMin = Math.max(240, Math.floor((Math.min(...allTimes) - 30) / 30) * 30);
-        yMax = Math.min(1440, Math.ceil((Math.max(...allTimes) + 30) / 30) * 30);
-        if (yMax - yMin < 120) {
-          yMax = Math.min(1440, yMin + 120);
-        }
-      }
-
-      const ctx = document.getElementById('departureChart').getContext('2d');
-      if (departureChartInstance) departureChartInstance.destroy();
-
-      departureChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: weekKeys,
-          datasets: [
-            {
-              label: 'Morning band lower',
-              data: morningQ1Points,
-              borderColor: 'rgba(40,167,69,0)',
-              backgroundColor: 'rgba(40,167,69,0)',
-              pointRadius: 0,
-              borderWidth: 0,
-              fill: false,
-              spanGaps: true,
-              hideFromLegend: true,
-              hideFromTooltip: true
-            },
-            {
-              label: 'Morning variability (IQR)',
-              data: morningQ3Points,
-              borderColor: 'rgba(40,167,69,0)',
-              backgroundColor: 'rgba(40,167,69,0.14)',
-              pointRadius: 0,
-              borderWidth: 0,
-              fill: '-1',
-              spanGaps: true,
-              hideFromTooltip: true
-            },
-            {
-              label: 'Evening band lower',
-              data: eveningQ1Points,
-              borderColor: 'rgba(54,162,235,0)',
-              backgroundColor: 'rgba(54,162,235,0)',
-              pointRadius: 0,
-              borderWidth: 0,
-              fill: false,
-              spanGaps: true,
-              hideFromLegend: true,
-              hideFromTooltip: true
-            },
-            {
-              label: 'Evening variability (IQR)',
-              data: eveningQ3Points,
-              borderColor: 'rgba(54,162,235,0)',
-              backgroundColor: 'rgba(54,162,235,0.14)',
-              pointRadius: 0,
-              borderWidth: 0,
-              fill: '-1',
-              spanGaps: true,
-              hideFromTooltip: true
-            },
-            {
-              label: 'Morning daily points',
-              data: morningDaily,
-              type: 'scatter',
-              borderColor: 'rgba(40,167,69,0.22)',
-              backgroundColor: 'rgba(40,167,69,0.22)',
-              pointRadius: 2,
-              pointHoverRadius: 3,
-              hideFromLegend: true,
-              seriesType: 'daily'
-            },
-            {
-              label: 'Evening daily points',
-              data: eveningDaily,
-              type: 'scatter',
-              borderColor: 'rgba(54,162,235,0.24)',
-              backgroundColor: 'rgba(54,162,235,0.24)',
-              pointRadius: 2,
-              pointHoverRadius: 3,
-              hideFromLegend: true,
-              seriesType: 'daily'
-            },
-            {
-              label: 'Morning median leave',
-              data: morningMedianPoints,
-              borderColor: 'rgba(40,167,69,0.95)',
-              backgroundColor: 'rgba(40,167,69,0.95)',
-              pointRadius: 3,
-              pointHoverRadius: 4,
-              tension: 0.25,
-              spanGaps: true,
-              seriesType: 'median'
-            },
-            {
-              label: 'Evening median arrive',
-              data: eveningMedianPoints,
-              borderColor: 'rgba(54,162,235,0.95)',
-              backgroundColor: 'rgba(54,162,235,0.95)',
-              pointRadius: 3,
-              pointHoverRadius: 4,
-              tension: 0.25,
-              spanGaps: true,
-              seriesType: 'median'
-            },
-            {
-              label: 'Morning start trend',
-              data: morningTrend,
-              type: 'line',
-              borderColor: 'rgba(40,167,69,0.8)',
-              backgroundColor: 'rgba(0,0,0,0)',
-              pointRadius: 0,
-              borderWidth: 2,
-              borderDash: [6, 4],
-              tension: 0.2,
-              seriesType: 'trend'
-            },
-            {
-              label: 'Evening finish trend',
-              data: eveningTrend,
-              type: 'line',
-              borderColor: 'rgba(54,162,235,0.85)',
-              backgroundColor: 'rgba(0,0,0,0)',
-              pointRadius: 0,
-              borderWidth: 2,
-              borderDash: [6, 4],
-              tension: 0.2,
-              seriesType: 'trend'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: {
-              type: 'category',
-              title: { display: true, text: 'Date' },
-              ticks: {
-                maxRotation: 0,
-                autoSkip: true,
-                callback: function(value) {
-                  const key = this.getLabelForValue(value);
-                  return formatWeekKey(key);
+                if (data.error) {
+                    loading.innerHTML = '<p>Error loading commute data.</p>';
+                    return;
                 }
-              }
-            },
-            y: {
-              title: { display: true, text: 'Time of Day' },
-              min: yMin,
-              max: yMax,
-              ticks: {
-                stepSize: 60,
-                callback: v => formatMinutesOfDay(v)
-              }
+
+                loading.style.display = 'none';
+
+                data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+
+                renderStats(data);
+                renderCharts(data);
+                renderTable(data);
+            } catch (err) {
+                console.error('Error:', err);
+                loading.innerHTML = '<p>Something went wrong. Please try again.</p>';
             }
-          },
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {
-                filter: (item, data) => !data.datasets[item.datasetIndex].hideFromLegend
-              }
-            },
-            tooltip: {
-              filter: (ctx) => !ctx.dataset.hideFromTooltip,
-              callbacks: {
-                title: (items) => {
-                  const weekKey = items[0]?.label || items[0]?.raw?.x;
-                  return weekKey ? `Week of ${formatDayKey(weekKey, true)}` : '';
+        }
+
+        function renderStats(rides) {
+            const totalDist = rides.reduce((t, r) => t + r.distance, 0) / 1000;
+            const totalRides = rides.length;
+            const tubeCostPerTrip = 2.80;
+            const savings = (totalRides * tubeCostPerTrip).toFixed(2);
+
+            const row = document.getElementById('stats-row');
+            row.style.display = 'flex';
+            row.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Distance</div>
+                    <div class="stat-value">${totalDist.toFixed(1)} km</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rides</div>
+                    <div class="stat-value">${totalRides}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tube Savings</div>
+                    <div class="stat-value">&pound;${savings}</div>
+                    <div class="stat-sub">vs. &pound;${tubeCostPerTrip}/trip</div>
+                </div>
+            `;
+        }
+
+        function renderCharts(rides) {
+            const sorted = [...rides].sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
+            const labels = sorted.map(r => {
+                const d = new Date(r.start_date_local);
+                return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+            });
+
+            const distances = sorted.map(r => (r.distance / 1000).toFixed(1));
+            const speeds = sorted.map(r => (r.average_speed * 3.6).toFixed(1));
+
+            const defaults = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1f36',
+                        titleFont: { family: 'Inter', weight: '600' },
+                        bodyFont: { family: 'Inter' },
+                        padding: 12,
+                        cornerRadius: 8,
+                    }
                 },
-                label: ctx => {
-                  const timeStr = formatMinutesOfDay(ctx.parsed.y);
-                  const raw = ctx.raw || {};
-                  if (ctx.dataset.seriesType === 'daily') {
-                    return `${ctx.dataset.label}: ${timeStr} (${raw.dayLabel})`;
-                  }
-                  if (ctx.dataset.seriesType === 'median') {
-                    const sampleText = raw.sampleSize ? `, n=${raw.sampleSize}` : '';
-                    return `${ctx.dataset.label}: ${timeStr}${sampleText}`;
-                  }
-                  return `${ctx.dataset.label}: ${timeStr}`;
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick, maxRotation: 45 },
+                    },
+                    y: {
+                        grid: { color: CHART_COLORS.gridLine },
+                        border: { display: false },
+                        ticks: { font: { family: 'Inter', size: 12 }, color: CHART_COLORS.tick },
+                        beginAtZero: true,
+                    }
                 }
-              }
-            }
-          }
+            };
+
+            new Chart(document.getElementById('distanceChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: distances,
+                        backgroundColor: CHART_COLORS.green,
+                        borderRadius: 4,
+                        borderWidth: 0,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    ...defaults,
+                    plugins: {
+                        ...defaults.plugins,
+                        tooltip: { ...defaults.plugins.tooltip, callbacks: { label: ctx => `${ctx.parsed.y} km` } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('speedChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: speeds,
+                        borderColor: CHART_COLORS.purple,
+                        backgroundColor: 'rgba(99, 91, 255, 0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: CHART_COLORS.purple,
+                    }]
+                },
+                options: {
+                    ...defaults,
+                    plugins: {
+                        ...defaults.plugins,
+                        tooltip: { ...defaults.plugins.tooltip, callbacks: { label: ctx => `${ctx.parsed.y} km/h` } }
+                    }
+                }
+            });
         }
-      });
-    }
 
-    // Commute table
-    function renderCommuteList(rides, splitRides) {
-      const tbody = document.querySelector('#commute-table tbody');
-      tbody.innerHTML = '';
+        function renderTable(rides) {
+            const tbody = document.getElementById('commute-body');
+            tbody.innerHTML = rides.map(r => {
+                const date = new Date(r.start_date_local).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                });
+                const dist = (r.distance / 1000).toFixed(1) + ' km';
+                const mins = Math.floor(r.moving_time / 60);
+                const secs = r.moving_time % 60;
+                const time = `${mins}m ${secs}s`;
+                const speed = (r.average_speed * 3.6).toFixed(1) + ' km/h';
+                const isSplit = r.name && r.name.toLowerCase().includes('split');
+                const tag = isSplit
+                    ? '<span class="status-tag split">Split</span>'
+                    : '<span class="status-tag normal">Normal</span>';
 
-      rides.forEach(ride => {
-        const row = document.createElement('tr');
-        const parts = parseStravaLocalDateParts(ride.start_date_local, ride.start_date);
-        const date = formatDayKey(getDayKey(parts), true);
-        const distance = (ride.distance / 1000).toFixed(1);
+                return `<tr>
+                    <td>${date}</td>
+                    <td>${r.name}</td>
+                    <td>${dist}</td>
+                    <td>${time}</td>
+                    <td>${speed}</td>
+                    <td>${tag}</td>
+                </tr>`;
+            }).join('');
+        }
 
-        // Duration including stops: use elapsed_time if available
-        const elapsedSeconds = (ride.elapsed_time || ride.elapsed_time === 0)
-          ? ride.elapsed_time
-          : (ride.moving_time || 0);
-        const duration = formatDuration(elapsedSeconds);
-
-        const avgSpeed = ride.average_speed ? (ride.average_speed * 3.6).toFixed(1) : '-';
-        const isSplit = splitRides.has(ride.id);
-
-        row.innerHTML = `
-          <td>${date}</td>
-          <td>${ride.name || 'Commute'}</td>
-          <td>${distance}</td>
-          <td>${duration}</td>
-          <td>${avgSpeed}</td>
-          <td><span class="status-tag ${isSplit ? 'split' : 'normal'}">${isSplit ? 'Split' : 'Normal'}</span></td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    function formatDuration(seconds) {
-      const total = Math.round(seconds || 0);
-      const h = Math.floor(total / 3600);
-      const m = Math.floor((total % 3600) / 60);
-      const s = total % 60;
-      return `${h ? h + 'h ' : ''}${m ? m + 'm ' : ''}${s}s`;
-    }
-
-    document.getElementById('refresh-btn').addEventListener('click', () => fetchRides(true));
-    document.addEventListener('DOMContentLoaded', () => fetchRides());
-  </script>
+        // Auto-load on page load
+        document.addEventListener('DOMContentLoaded', fetchCommutes);
+    </script>
 </body>
 </html>

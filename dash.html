@@ -2,37 +2,146 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swim Training Dashboard</title>
     <link rel="icon" href="images/swimming_favicon.ico">
     <meta name="description" content="Track your swim training with distance, time, pace, and SWOLF charts.">
-    <!-- Meta tags for responsiveness -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- External CSS -->
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="nav.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        .loading-spinner {
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
+            min-height: 100vh;
+            padding: 80px 0 60px;
+        }
+
+        .page-header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 0;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1f36;
+        }
+
+        .page-header p {
+            color: #697386;
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        /* Loading */
+        .loading {
             text-align: center;
-            padding: 40px;
+            padding: 60px 20px;
+            color: #8792a2;
+            font-size: 14px;
         }
-        .loading-spinner .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #0277bd;
+
+        .loading .spinner {
+            border: 3px solid #e3e8ee;
+            border-top: 3px solid #635bff;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 20px 24px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #697386;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
+
+        /* Charts */
+        .charts-section {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 12px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .chart-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .chart-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-row { flex-direction: column; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 200px; }
+        }
     </style>
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Moment.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 </head>
 <body>
@@ -49,61 +158,71 @@
             <li><a href="cyclecommute.html">Cycle Commute</a></li>
         </ul>
     </nav>
-    <header>
-        <h1>Swim Training Dashboard</h1>
-    </header>
+
+    <div class="page-header">
+        <h1>Training Dashboard</h1>
+        <p>Your swim training metrics and trends</p>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="loading-spinner" class="loading">
+        <div class="spinner"></div>
+        Loading swim data...
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row" style="display: none;">
+        <div class="stat-card" id="total-distance"></div>
+        <div class="stat-card" id="total-time"></div>
+        <div class="stat-card" id="average-pace"></div>
+        <div class="stat-card" id="total-calories"></div>
+        <div class="stat-card" id="number-of-sessions"></div>
+    </div>
+
+    <!-- Distance & Time Charts -->
+    <div class="charts-section" style="margin-top: 24px;">
+        <div class="section-title">Distance &amp; Time Trends</div>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>Distance</h3>
+                <div class="chart-container">
+                    <canvas id="distanceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Time</h3>
+                <div class="chart-container">
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pace & SWOLF Charts -->
+    <div class="charts-section" style="margin-top: 24px;">
+        <div class="section-title">Pace &amp; SWOLF Trends</div>
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>Pace</h3>
+                <div class="chart-container">
+                    <canvas id="paceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>SWOLF</h3>
+                <div class="chart-container">
+                    <canvas id="swolfChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function toggleMenu() {
             const navMenu = document.querySelector('.top-nav ul');
             navMenu.classList.toggle('expanded');
         }
     </script>
-    <main>
-        <!-- Loading spinner -->
-        <div id="loading-spinner" class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Loading swim data...</p>
-        </div>
-        <!-- Overview Section -->
-        <section id="overview">
-            <h2>Overview</h2>
-            <div class="metrics">
-                <div class="metric" id="total-distance"></div>
-                <div class="metric" id="total-time"></div>
-                <div class="metric" id="average-pace"></div>
-                <div class="metric" id="total-calories"></div>
-                <div class="metric" id="number-of-sessions"></div>
-            </div>
-        </section>
-
-        <!-- Distance and Time Trends -->
-        <section id="distance-time-trends">
-            <h2>Distance and Time Trends</h2>
-            <div class="chart-container">
-                <div class="chart-wrapper">
-                    <canvas id="distanceChart"></canvas>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="timeChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-
-        <!-- Pace and SWOLF Trends -->
-        <section id="pace-swolf-trends">
-            <h2>Pace and SWOLF Trends</h2>
-            <div class="chart-container">
-                <div class="chart-wrapper">
-                    <canvas id="paceChart"></canvas>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="swolfChart"></canvas>
-                </div>
-            </div>
-        </section>
-    </main>
-    <!-- External JS -->
     <script src="dashscript.js"></script>
 </body>
 </html>
