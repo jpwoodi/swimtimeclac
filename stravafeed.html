@@ -258,8 +258,17 @@
 </head>
 <body>
     <nav class="top-nav">
-        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
-        <ul>
+        <button
+            class="hamburger"
+            type="button"
+            aria-label="Toggle navigation menu"
+            aria-controls="primary-nav"
+            aria-expanded="false"
+            onclick="toggleMenu()"
+        >
+            &#9776;
+        </button>
+        <ul id="primary-nav">
             <li><a href="index.html">Home</a></li>
             <li><a href="calculator.html">Swim Calculator</a></li>
             <li><a href="css.html">CSS Calculator</a></li>
@@ -276,7 +285,7 @@
         <p>Your swimming activity over the last 12 months</p>
     </div>
 
-    <!-- Stats row — populated by JS -->
+    <!-- Stats row populated by JS -->
     <div class="stats-row" id="stats-row" style="display: none;"></div>
 
     <!-- Chart -->
@@ -304,8 +313,12 @@
 
     <script>
         function toggleMenu() {
+            const toggleBtn = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.top-nav ul');
-            navLinks.classList.toggle('expanded');
+            const isExpanded = navLinks.classList.toggle('expanded');
+            if (toggleBtn) {
+                toggleBtn.setAttribute('aria-expanded', String(isExpanded));
+            }
         }
 
         function fetchSwims() {
@@ -351,6 +364,10 @@
                     // Render swim rows
                     const feedEl = document.getElementById('swim-feed');
                     feedEl.innerHTML = '';
+                    if (data.length === 0) {
+                        feedEl.innerHTML = '<div class="loading">No swim activity found yet.</div>';
+                        return;
+                    }
 
                     data.forEach(swim => {
                         const pace = calculatePacePer100m(swim.average_speed);
