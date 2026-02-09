@@ -1,162 +1,488 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cycle Commute Dashboard</title>
-  <link rel="icon" href="images/swimming_favicon.ico">
-  <meta name="description" content="Track your cycle commute data with distance, speed, and savings charts.">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="nav.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Commute Dashboard</title>
+    <link rel="icon" href="images/swimming_favicon.ico">
+    <meta name="description" content="Track your cycle commute data with distance, speed, and savings charts.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-        url('https://images.unsplash.com/photo-1508973372-bd987c1ea9a5');
-      background-size: cover;
-      background-position: center;
-      color: #212529;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      overflow-y: scroll;
-    }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
+            min-height: 100vh;
+            padding: 80px 0 60px;
+        }
 
-    .container {
-      background: rgba(255,255,255,0.96);
-      border-radius: 12px;
-      width: 95%;
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 30px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
+        .page-header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 0;
+        }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #28a745;
-    }
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1f36;
+        }
 
-    button {
-      margin: 0 auto 20px;
-      display: block;
-      padding: 10px 16px;
-      border: none;
-      background: #28a745;
-      color: white;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+        .page-header p {
+            color: #697386;
+            font-size: 15px;
+            margin-top: 4px;
+        }
 
-    button:hover { background: #218838; }
+        .controls {
+            max-width: 1200px;
+            margin: 16px auto 0;
+            padding: 0 24px;
+        }
 
-    .chart-section {
-      margin-bottom: 40px;
-    }
+        .controls button {
+            padding: 10px 20px;
+            background-color: #635bff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
 
-    .chart-container {
-      position: relative;
-      height: 300px;
-      margin-bottom: 30px;
-    }
+        .controls button:hover { background-color: #5851ea; }
 
-    #savings-info {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 15px;
-    }
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            max-width: 1200px;
+            margin: 16px auto 0;
+            padding: 0 24px;
+        }
 
-    /* Commute List Table */
-    .commute-list {
-      margin-top: 20px;
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      padding: 15px;
-    }
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 20px 24px;
+            flex: 1;
+            min-width: 0;
+        }
 
-    .commute-list h2 {
-      color: #28a745;
-      margin-bottom: 10px;
-      text-align: center;
-    }
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #697386;
+            margin-bottom: 8px;
+        }
 
-    #commute-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
 
-    #commute-table th, #commute-table td {
-      border-bottom: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
+        .stat-sub {
+            font-size: 13px;
+            color: #8792a2;
+            margin-top: 4px;
+        }
 
-    #commute-table th {
-      background-color: #f8f8f8;
-      font-weight: 600;
-      text-align: left;
-    }
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8792a2;
+            font-size: 14px;
+        }
 
-    #commute-table tr:hover {
-      background-color: #f2f2f2;
-    }
+        .loading .spinner {
+            border: 3px solid #e3e8ee;
+            border-top: 3px solid #635bff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
 
-    .status-tag {
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      color: white;
-    }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
-    .status-tag.normal {
-      background-color: #28a745;
-    }
+        /* Charts */
+        .charts-section {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
 
-    .status-tag.split {
-      background-color: #ff9800;
-    }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
 
-    @media (max-width: 768px) {
-      .chart-container {
-        height: 250px;
-      }
-      #commute-table {
-        font-size: 12px;
-      }
-    }
-  </style>
+        .chart-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .chart-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+        }
+
+        /* Commute table */
+        .table-section {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
+
+        .table-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 20px 24px 0;
+            margin-bottom: 12px;
+        }
+
+        .table-scroll {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: #f6f9fc;
+            color: #697386;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid #e3e8ee;
+        }
+
+        td {
+            color: #1a1f36;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        tr:hover td {
+            background-color: #f6f9fc;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-tag.normal { background-color: #2e7d32; }
+        .status-tag.split { background-color: #ef6c00; }
+
+        @media (max-width: 768px) {
+            .stats-row { flex-direction: column; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .chart-container { height: 200px; }
+        }
+    </style>
 </head>
 <body>
-  <nav class="top-nav">
-      <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
-      <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="calculator.html">Swim Calculator</a></li>
-          <li><a href="css.html">CSS Calculator</a></li>
-          <li><a href="dash.html">Dashboard</a></li>
-          <li><a href="pools.html">Pool Finder</a></li>
-          <li><a href="stravafeed.html">Swim Feed</a></li>
-          <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
-          <li><a href="cyclecommute.html">Cycle Commute</a></li>
-      </ul>
-  </nav>
-  <script>
-      function toggleMenu() {
-          const navMenu = document.querySelector('.top-nav ul');
-          navMenu.classList.toggle('expanded');
-      }
-  </script>
-  <div class="container" style="margin-top: 80px;">
-    <h1>🚲 My Cycle Commutes</h1>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="calculator.html">Swim Calculator</a></li>
+            <li><a href="css.html">CSS Calculator</a></li>
+            <li><a href="dash.html">Dashboard</a></li>
+            <li><a href="pools.html">Pool Finder</a></li>
+            <li><a href="stravafeed.html">Swim Feed</a></li>
+            <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
+            <li><a href="cyclecommute.html">Cycle Commute</a></li>
+        </ul>
+    </nav>
 
-    <button id="refresh-btn">🔄 Refresh from Strava</button>
+    <div class="page-header">
+        <h1>Cycle Commute</h1>
+        <p>Your cycle commute data and savings</p>
+    </div>
 
-    <div id="savings-info"></div>
+    <div class="controls">
+        <button id="refresh-btn">Refresh from Strava</button>
+    </div>
 
-    <
+    <div id="loading-area" class="loading" style="display:none;">
+        <div class="spinner"></div>
+        Loading commute data...
+    </div>
+
+    <div class="stats-row" id="stats-row" style="display:none;"></div>
+
+    <div class="charts-section">
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>Distance per Ride</h3>
+                <div class="chart-container">
+                    <canvas id="distanceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Average Speed</h3>
+                <div class="chart-container">
+                    <canvas id="speedChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-section">
+        <div class="table-card">
+            <h3>All Commutes</h3>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Distance</th>
+                            <th>Time</th>
+                            <th>Avg Speed</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commute-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
+
+        const CHART_COLORS = {
+            green: 'rgba(46, 125, 50, 0.75)',
+            purple: 'rgba(99, 91, 255, 0.75)',
+            gridLine: '#f0f3f7',
+            tick: '#8792a2',
+        };
+
+        document.getElementById('refresh-btn').addEventListener('click', fetchCommutes);
+
+        async function fetchCommutes() {
+            const loading = document.getElementById('loading-area');
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch('/.netlify/functions/get-cycle-commutes');
+                const data = await response.json();
+
+                if (data.error) {
+                    loading.innerHTML = '<p>Error loading commute data.</p>';
+                    return;
+                }
+
+                loading.style.display = 'none';
+
+                data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+
+                renderStats(data);
+                renderCharts(data);
+                renderTable(data);
+            } catch (err) {
+                console.error('Error:', err);
+                loading.innerHTML = '<p>Something went wrong. Please try again.</p>';
+            }
+        }
+
+        function renderStats(rides) {
+            const totalDist = rides.reduce((t, r) => t + r.distance, 0) / 1000;
+            const totalRides = rides.length;
+            const tubeCostPerTrip = 2.80;
+            const savings = (totalRides * tubeCostPerTrip).toFixed(2);
+
+            const row = document.getElementById('stats-row');
+            row.style.display = 'flex';
+            row.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Distance</div>
+                    <div class="stat-value">${totalDist.toFixed(1)} km</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Rides</div>
+                    <div class="stat-value">${totalRides}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tube Savings</div>
+                    <div class="stat-value">&pound;${savings}</div>
+                    <div class="stat-sub">vs. &pound;${tubeCostPerTrip}/trip</div>
+                </div>
+            `;
+        }
+
+        function renderCharts(rides) {
+            const sorted = [...rides].sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
+            const labels = sorted.map(r => {
+                const d = new Date(r.start_date_local);
+                return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+            });
+
+            const distances = sorted.map(r => (r.distance / 1000).toFixed(1));
+            const speeds = sorted.map(r => (r.average_speed * 3.6).toFixed(1));
+
+            const defaults = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1f36',
+                        titleFont: { family: 'Inter', weight: '600' },
+                        bodyFont: { family: 'Inter' },
+                        padding: 12,
+                        cornerRadius: 8,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick, maxRotation: 45 },
+                    },
+                    y: {
+                        grid: { color: CHART_COLORS.gridLine },
+                        border: { display: false },
+                        ticks: { font: { family: 'Inter', size: 12 }, color: CHART_COLORS.tick },
+                        beginAtZero: true,
+                    }
+                }
+            };
+
+            new Chart(document.getElementById('distanceChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: distances,
+                        backgroundColor: CHART_COLORS.green,
+                        borderRadius: 4,
+                        borderWidth: 0,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    ...defaults,
+                    plugins: {
+                        ...defaults.plugins,
+                        tooltip: { ...defaults.plugins.tooltip, callbacks: { label: ctx => `${ctx.parsed.y} km` } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('speedChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: speeds,
+                        borderColor: CHART_COLORS.purple,
+                        backgroundColor: 'rgba(99, 91, 255, 0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: CHART_COLORS.purple,
+                    }]
+                },
+                options: {
+                    ...defaults,
+                    plugins: {
+                        ...defaults.plugins,
+                        tooltip: { ...defaults.plugins.tooltip, callbacks: { label: ctx => `${ctx.parsed.y} km/h` } }
+                    }
+                }
+            });
+        }
+
+        function renderTable(rides) {
+            const tbody = document.getElementById('commute-body');
+            tbody.innerHTML = rides.map(r => {
+                const date = new Date(r.start_date_local).toLocaleDateString('en-GB', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                });
+                const dist = (r.distance / 1000).toFixed(1) + ' km';
+                const mins = Math.floor(r.moving_time / 60);
+                const secs = r.moving_time % 60;
+                const time = `${mins}m ${secs}s`;
+                const speed = (r.average_speed * 3.6).toFixed(1) + ' km/h';
+                const isSplit = r.name && r.name.toLowerCase().includes('split');
+                const tag = isSplit
+                    ? '<span class="status-tag split">Split</span>'
+                    : '<span class="status-tag normal">Normal</span>';
+
+                return `<tr>
+                    <td>${date}</td>
+                    <td>${r.name}</td>
+                    <td>${dist}</td>
+                    <td>${time}</td>
+                    <td>${speed}</td>
+                    <td>${tag}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // Auto-load on page load
+        document.addEventListener('DOMContentLoaded', fetchCommutes);
+    </script>
+</body>
+</html>
