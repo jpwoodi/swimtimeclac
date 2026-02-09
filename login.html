@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woodnott.com Login</title>
+    <link rel="icon" href="/images/swimming_favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/auth.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f6f9fc;
+            color: #1a1f36;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 10px;
+            padding: 28px;
+            box-shadow: 0 10px 28px rgba(26, 31, 54, 0.08);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            color: #697386;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            padding: 11px 12px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 12px;
+            background: #635bff;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #554ee6;
+        }
+
+        #error {
+            min-height: 20px;
+            color: #b42318;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <main class="login-card">
+        <h1>Woodnott.com</h1>
+        <p>Enter the site password to continue.</p>
+        <form id="login-form">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="submit">Unlock Site</button>
+            <div id="error"></div>
+        </form>
+    </main>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const passwordInput = document.getElementById('password');
+        const errorEl = document.getElementById('error');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const ok = window.WOODNOTT_AUTH && window.WOODNOTT_AUTH.login(passwordInput.value);
+            if (!ok) {
+                errorEl.textContent = 'Incorrect password.';
+                passwordInput.focus();
+                passwordInput.select();
+                return;
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const redirect = params.get('redirect');
+            const target = redirect && redirect.startsWith('/') ? redirect : '/index.html';
+            window.location.replace(target);
+        });
+    </script>
+</body>
+</html>
