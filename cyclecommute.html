@@ -318,14 +318,17 @@
             tick: '#8792a2',
         };
 
-        document.getElementById('refresh-btn').addEventListener('click', fetchCommutes);
+        document.getElementById('refresh-btn').addEventListener('click', () => fetchCommutes(true));
 
-        async function fetchCommutes() {
+        async function fetchCommutes(forceRefresh = false) {
             const loading = document.getElementById('loading-area');
             loading.style.display = 'block';
 
             try {
-                const response = await fetch('/.netlify/functions/get-cycle-commutes');
+                const url = forceRefresh
+                    ? '/.netlify/functions/get-rides?refresh=true'
+                    : '/.netlify/functions/get-rides';
+                const response = await fetch(url);
                 const data = await response.json();
 
                 if (data.error) {
