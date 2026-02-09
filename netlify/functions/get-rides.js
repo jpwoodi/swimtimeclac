@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
   const refresh_token = process.env.STRAVA_REFRESH_TOKEN;
 
   const currentTime = Date.now();
-  const forceRefresh = event.queryStringParameters.refresh === "true";
+  const forceRefresh = event.queryStringParameters?.refresh === "true";
 
   try {
     // ✅ Use cache only if not forcing refresh

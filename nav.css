@@ -22,12 +22,15 @@
     padding: 0;
 }
 
+.top-nav ul li {
+    flex-shrink: 0;
+}
+
 .top-nav ul li a {
     color: #697386;
     text-decoration: none;
     font-size: 14px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-weight: 500;
+    font-family: inherit;
     padding: 8px 12px;
     border-radius: 6px;
     transition: color 0.15s ease, background-color 0.15s ease;
