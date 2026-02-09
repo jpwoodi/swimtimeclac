@@ -5,143 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Swim Feed</title>
     <link rel="icon" href="images/swimming_favicon.ico">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="nav.css">
     <style>
-        
-        /* Global Styles */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-                
-        
+
         body {
-            font-family: 'Poppins', sans-serif;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('people-2588747.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: #212529;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
             min-height: 100vh;
-            padding: 80px 20px 20px;
-            margin: 0;
+            padding: 80px 0 40px;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1400px;
+        .page-header {
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 32px 24px 0;
         }
 
-        h1 {
-            color: #007BFF;
-            margin-bottom: 20px;
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
-            padding: 20px 30px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1f36;
+            letter-spacing: -0.02em;
         }
 
-        .content-layout {
+        .page-header p {
+            color: #697386;
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        /* Summary stat cards */
+        .stats-row {
             display: flex;
-            gap: 20px;
-            align-items: flex-start;
+            gap: 16px;
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
         }
 
-        .left-panel {
-            flex: 0 0 55%;
-            position: sticky;
-            top: 80px;
-        }
-
-        .right-panel {
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 20px 24px;
             flex: 1;
-            max-height: calc(100vh - 120px);
-            overflow-y: auto;
-            padding-right: 4px;
+            min-width: 0;
         }
 
-        /* Custom scrollbar for the feed */
-        .right-panel::-webkit-scrollbar {
-            width: 6px;
-        }
-        .right-panel::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 3px;
+        .stat-card .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #697386;
+            margin-bottom: 8px;
         }
 
-        .m25-info {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
-            padding: 20px 30px;
-            margin-top: 20px;
-            line-height: 1.6;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 13px;
+            color: #8792a2;
+            margin-top: 4px;
+        }
+
+        /* Chart section */
+        .chart-section {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
+
+        .chart-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .chart-card h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 16px;
         }
 
         .chart-container {
             position: relative;
-            width: 100%;
-            height: 350px;
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            height: 260px;
         }
 
-        .feed-container {
-            margin-top: 0;
+        /* Activity feed */
+        .feed-section {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
         }
-        
-        .swim-card {
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 18px 20px;
+
+        .feed-header {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1f36;
             margin-bottom: 12px;
+        }
+
+        .feed-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
             border-radius: 8px;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
 
-        .swim-card h5 {
-            color: #007BFF;
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 16px;
+        .swim-row {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f3f7;
+            transition: background-color 0.15s ease;
+            gap: 16px;
         }
 
-        .swim-card p {
+        .swim-row:last-child {
+            border-bottom: none;
+        }
+
+        .swim-row:hover {
+            background-color: #f6f9fc;
+        }
+
+        .swim-name {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .swim-name h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1f36;
             margin: 0;
-            line-height: 1.6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        @media (max-width: 900px) {
-            .content-layout {
+        .swim-name .swim-date {
+            font-size: 13px;
+            color: #8792a2;
+            margin-top: 2px;
+        }
+
+        .swim-stats {
+            display: flex;
+            gap: 32px;
+            flex-shrink: 0;
+        }
+
+        .swim-stat {
+            text-align: right;
+            min-width: 70px;
+        }
+
+        .swim-stat .stat-val {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1f36;
+        }
+
+        .swim-stat .stat-lbl {
+            font-size: 11px;
+            color: #8792a2;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .pace-badge {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8792a2;
+            font-size: 14px;
+        }
+
+        .loading .spinner {
+            border: 3px solid #e3e8ee;
+            border-top: 3px solid #635bff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-row {
                 flex-direction: column;
             }
 
-            .left-panel {
-                flex: none;
-                width: 100%;
-                position: static;
+            .swim-stats {
+                gap: 16px;
             }
 
-            .right-panel {
-                max-height: none;
-                overflow-y: visible;
+            .swim-stat {
+                min-width: 50px;
             }
 
             .chart-container {
-                height: 250px;
-                margin-bottom: 0;
+                height: 200px;
+            }
+
+            .swim-row {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .swim-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .swim-stat {
+                text-align: left;
             }
         }
-
     </style>
 </head>
 <body>
-    <!-- Navigation Menu -->
     <nav class="top-nav">
         <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
         <ul>
@@ -156,202 +271,228 @@
         </ul>
     </nav>
 
-    <div class="container">
-        <h1>My Swim Feed</h1>
+    <div class="page-header">
+        <h1>Swim Feed</h1>
+        <p>Your swimming activity over the last 12 months</p>
+    </div>
 
-        <div class="content-layout">
-            <!-- Left: Chart + Stats -->
-            <div class="left-panel">
-                <div class="chart-container">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </div>
+    <!-- Stats row — populated by JS -->
+    <div class="stats-row" id="stats-row" style="display: none;"></div>
 
-            <!-- Right: Scrollable swim cards -->
-            <div class="right-panel">
-                <div id="swim-feed" class="feed-container">Loading swims...</div>
+    <!-- Chart -->
+    <div class="chart-section">
+        <div class="chart-card">
+            <h2>Monthly Distance</h2>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Chart.js library -->
+    <!-- Feed -->
+    <div class="feed-section">
+        <div class="feed-header">Recent Activity</div>
+        <div class="feed-card" id="swim-feed">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading your swims...
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- JavaScript code -->
     <script>
         function toggleMenu() {
             const navLinks = document.querySelector('.top-nav ul');
-            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            navLinks.classList.toggle('expanded');
         }
 
-        // Function to fetch and display swims
         function fetchSwims() {
             fetch('/.netlify/functions/get-swims')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        document.getElementById('swim-feed').textContent = 'Error loading swims.';
+                        document.getElementById('swim-feed').innerHTML = '<div class="loading">Error loading swims.</div>';
                         return;
                     }
-        
-                    // Sort swims by start_date_local from newest to oldest
+
                     data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
-        
-                    document.getElementById('swim-feed').innerHTML = '';
-        
-                    // Process data for the chart and M25 calculation
+
                     const monthlyData = processMonthlyData(data);
-                    const totalDistance = monthlyData.data.reduce((acc, value) => acc + value, 0);
-                
-                    // Calculate how many times the total distance swum equals around the M25
-                    const m25Length = 188.3; // M25 length in km
-                    const timesAroundM25 = (totalDistance / m25Length).toFixed(2);
-        
-                    // Render the chart
-                    renderChart(monthlyData);
-        
-                    // Display the M25 calculation result in the left panel
-                    document.querySelector('.left-panel').insertAdjacentHTML('beforeend', `
-                        <div class="m25-info">
-                            <p>You have swum a total of <strong>${totalDistance.toFixed(2)} km</strong> over the last 12 months.</p>
-                            <p>This is approximately <strong>${timesAroundM25}</strong> times around the M25.</p>
+                    const totalDistance = monthlyData.data.reduce((acc, v) => acc + v, 0);
+                    const m25Length = 188.3;
+                    const timesAroundM25 = (totalDistance / m25Length).toFixed(1);
+                    const totalSessions = data.length;
+                    const avgDistance = totalSessions > 0 ? (totalDistance / totalSessions).toFixed(1) : 0;
+
+                    // Render stats
+                    const statsRow = document.getElementById('stats-row');
+                    statsRow.style.display = 'flex';
+                    statsRow.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-label">Total Distance</div>
+                            <div class="stat-value">${totalDistance.toFixed(1)} km</div>
+                            <div class="stat-sub">${timesAroundM25}x around the M25</div>
                         </div>
-                    `);
-        
-                    // Display swims
+                        <div class="stat-card">
+                            <div class="stat-label">Sessions</div>
+                            <div class="stat-value">${totalSessions}</div>
+                            <div class="stat-sub">Last 12 months</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Avg per Session</div>
+                            <div class="stat-value">${avgDistance} km</div>
+                        </div>
+                    `;
+
+                    renderChart(monthlyData);
+
+                    // Render swim rows
+                    const feedEl = document.getElementById('swim-feed');
+                    feedEl.innerHTML = '';
+
                     data.forEach(swim => {
-                        const swimDiv = document.createElement('div');
-                        swimDiv.className = 'swim-card';
-        
-                        // Calculate average pace per 100 meters
-                        const pacePer100m = calculatePacePer100m(swim.average_speed);
-        
-                        // Build the swim card
-                        swimDiv.innerHTML = `
-                            <h5>${swim.name}</h5>
-                            <p>
-                                    <strong>Date:</strong> ${new Date(swim.start_date_local).toLocaleDateString()}<br>
-                                    <strong>Distance:</strong> ${swim.distance.toLocaleString()}m<br>
-                                    <strong>Duration:</strong> ${formatDuration(swim.moving_time)}<br>
-                                    <strong>Average Pace:</strong> ${pacePer100m} / 100m
-                            </p>
+                        const pace = calculatePacePer100m(swim.average_speed);
+                        const date = new Date(swim.start_date_local);
+                        const dateStr = date.toLocaleDateString('en-GB', {
+                            day: 'numeric', month: 'short', year: 'numeric'
+                        });
+
+                        const row = document.createElement('div');
+                        row.className = 'swim-row';
+                        row.innerHTML = `
+                            <div class="swim-name">
+                                <h4>${swim.name}</h4>
+                                <div class="swim-date">${dateStr}</div>
+                            </div>
+                            <div class="swim-stats">
+                                <div class="swim-stat">
+                                    <div class="stat-val">${swim.distance.toLocaleString()}m</div>
+                                    <div class="stat-lbl">Distance</div>
+                                </div>
+                                <div class="swim-stat">
+                                    <div class="stat-val">${formatDuration(swim.moving_time)}</div>
+                                    <div class="stat-lbl">Duration</div>
+                                </div>
+                                <div class="swim-stat">
+                                    <span class="pace-badge">${pace}/100m</span>
+                                </div>
+                            </div>
                         `;
-        
-                        document.getElementById('swim-feed').appendChild(swimDiv);
+                        feedEl.appendChild(row);
                     });
                 })
                 .catch(error => {
                     console.error('Error fetching swims:', error);
-                    const swimFeed = document.getElementById('swim-feed');
-                    swimFeed.innerHTML = `
-                        <div class="alert alert-danger" role="alert">
-                            An error occurred while loading swims. Please try again later.
-                        </div>
-                    `;
+                    document.getElementById('swim-feed').innerHTML =
+                        '<div class="loading">Something went wrong. Please try again later.</div>';
                 });
         }
-        
-        // Function to calculate average pace per 100 meters using average speed
+
         function calculatePacePer100m(averageSpeed) {
             if (!averageSpeed || averageSpeed === 0) return 'N/A';
-            
-            // Pace per 100 meters in seconds
-            const pacePer100mInSeconds = 100 / averageSpeed;
-            const minutes = Math.floor(pacePer100mInSeconds / 60);
-            const seconds = Math.round(pacePer100mInSeconds % 60).toString().padStart(2, '0');
-            
-            // Format the pace with a comma separator if needed
-            return `${minutes}:${seconds}`.toLocaleString();
+            const paceSecs = 100 / averageSpeed;
+            const mins = Math.floor(paceSecs / 60);
+            const secs = Math.round(paceSecs % 60).toString().padStart(2, '0');
+            return `${mins}:${secs}`;
         }
-        
-        // Function to format duration in hh:mm:ss
+
         function formatDuration(timeInSeconds) {
             const hours = Math.floor(timeInSeconds / 3600);
             const minutes = Math.floor((timeInSeconds % 3600) / 60);
             const seconds = timeInSeconds % 60;
-        
-            const hoursStr = hours > 0 ? `${hours}h ` : '';
-            const minutesStr = minutes > 0 ? `${minutes}m ` : '';
-            const secondsStr = `${seconds}s`;
-        
-            return `${hoursStr}${minutesStr}${secondsStr}`;
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            return `${minutes}m ${seconds}s`;
         }
-        
-        // Function to process data into monthly totals
+
         function processMonthlyData(swims) {
             const monthlyTotals = {};
-        
             swims.forEach(swim => {
                 const date = new Date(swim.start_date_local);
-                const month = date.getMonth(); // 0-11
-                const year = date.getFullYear();
-                const key = `${year}-${month + 1}`; // Month +1 for 1-12
-        
-                if (!monthlyTotals[key]) {
-                    monthlyTotals[key] = 0;
-                }
-                monthlyTotals[key] += swim.distance / 1000; // Convert to kilometers
+                const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+                monthlyTotals[key] = (monthlyTotals[key] || 0) + swim.distance / 1000;
             });
-        
-            // Get last 12 months labels
+
             const labels = [];
             const dataPoints = [];
-            const currentDate = new Date();
+            const now = new Date();
             for (let i = 11; i >= 0; i--) {
-                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-                const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
-                labels.push(date.toLocaleString('default', { month: 'short', year: 'numeric' }));
-                dataPoints.push(parseFloat((monthlyTotals[key] || 0).toFixed(2)));
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+                labels.push(d.toLocaleString('default', { month: 'short' }));
+                dataPoints.push(parseFloat((monthlyTotals[key] || 0).toFixed(1)));
             }
-        
             return { labels, data: dataPoints };
         }
-        
-        // Function to render the chart
+
         function renderChart(monthlyData) {
             const ctx = document.getElementById('monthlyChart').getContext('2d');
+
+            // Stripe-inspired gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+            gradient.addColorStop(0, 'rgba(99, 91, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(99, 91, 255, 0)');
+
             new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: monthlyData.labels,
                     datasets: [{
-                        label: 'Monthly Distance (km)',
                         data: monthlyData.data,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                        fill: true,
+                        backgroundColor: 'rgba(99, 91, 255, 0.75)',
+                        borderColor: 'rgba(99, 91, 255, 1)',
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        borderSkipped: false,
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Allow chart to fill its container
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1a1f36',
+                            titleFont: { family: 'Inter', weight: '600' },
+                            bodyFont: { family: 'Inter' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: (ctx) => `${ctx.parsed.y} km`
+                            }
+                        }
+                    },
                     scales: {
                         x: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 'Month'
-                            }
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Inter', size: 12 },
+                                color: '#8792a2',
+                            },
+                            border: { display: false }
                         },
                         y: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 'Distance (km)'
+                            grid: {
+                                color: '#f0f3f7',
+                                drawBorder: false,
                             },
+                            ticks: {
+                                font: { family: 'Inter', size: 12 },
+                                color: '#8792a2',
+                                callback: (v) => v + ' km'
+                            },
+                            border: { display: false },
                             beginAtZero: true
                         }
                     }
                 }
             });
         }
-        
-        // Initial fetch
+
         document.addEventListener('DOMContentLoaded', () => {
             fetchSwims();
         });
-        
     </script>
 </body>
 </html>
