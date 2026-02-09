@@ -4,7 +4,7 @@ This file provides guidance for AI assistants working with the **swimtimecalc** 
 
 ## Project Overview
 
-A full-stack swimming training web application that provides swim time/pace calculators, training dashboards, pool finders, and AI-powered workout plan generation. Built as a static site with Netlify serverless functions.
+A personal website covering work, music and sports. The sports section includes swim time/pace calculators, training dashboards, pool finders, and AI-powered workout plan generation. Built as a static site with Netlify serverless functions.
 
 ## Tech Stack
 
@@ -18,35 +18,57 @@ A full-stack swimming training web application that provides swim time/pace calc
 
 ```
 /
-├── index.html                     # Landing page
-├── calculator.html                # Swim time/pace calculator
-├── css.html                       # Critical Swim Speed calculator
-├── dash.html                      # Training dashboard (charts)
-├── pools.html                     # Pool finder with interactive map
-├── stravafeed.html                # Strava swim activity feed
-├── swim-plan-generator.html       # AI-powered swim plan generator
-├── cyclecommute.html              # Cycle commute tracker
-├── dashscript.js                  # Dashboard chart logic (Chart.js)
-├── nav.css                        # Shared navigation bar styles
-├── styles.css                     # Global styles (minimal)
-├── images/                        # Image assets (icons, markers, favicons)
+├── index.html                         # Personal landing page (Work, Music, Sports)
+├── nav.css                            # Shared navigation bar styles
+├── styles.css                         # Global styles (minimal)
+├── images/                            # Image assets (icons, markers, favicons)
+│
+├── work/
+│   └── index.html                     # Work section landing page
+│
+├── music/
+│   └── index.html                     # Music section landing page
+│
+├── sports/
+│   ├── index.html                     # Sports section landing page (tool grid)
+│   ├── calculator.html                # Swim time/pace calculator
+│   ├── css.html                       # Critical Swim Speed calculator
+│   ├── dash.html                      # Training dashboard (charts)
+│   ├── dashscript.js                  # Dashboard chart logic (Chart.js)
+│   ├── pools.html                     # Pool finder with interactive map
+│   ├── stravafeed.html                # Strava swim activity feed
+│   ├── swim-plan-generator.html       # AI-powered swim plan generator
+│   └── cyclecommute.html              # Cycle commute tracker
+│
 ├── netlify/
-│   └── functions/                 # Serverless API functions
-│       ├── client-config.js       # Strava OAuth config endpoint
-│       ├── generateSwimPlan.js    # OpenAI swim plan generation
-│       ├── geocode.js             # Address geocoding via Nominatim
-│       ├── get-rides.js           # Fetch cycle rides from Strava
-│       ├── get-swim-plan2.js      # Legacy swim plan generator
-│       ├── get-swims.js           # Fetch swim activities from Strava
-│       └── getPools.js            # Fetch pool data from Airtable
-├── netlify.toml                   # Netlify deployment config
-└── package.json                   # Node.js dependencies
+│   └── functions/                     # Serverless API functions
+│       ├── client-config.js           # Strava OAuth config endpoint
+│       ├── generateSwimPlan.js        # OpenAI swim plan generation
+│       ├── geocode.js                 # Address geocoding via Nominatim
+│       ├── get-rides.js               # Fetch cycle rides from Strava
+│       ├── get-swim-plan2.js          # Legacy swim plan generator
+│       ├── get-swims.js               # Fetch swim activities from Strava
+│       └── getPools.js               # Fetch pool data from Airtable
+├── netlify.toml                       # Netlify deployment config
+└── package.json                       # Node.js dependencies
 ```
 
-## Architecture
+## Site Architecture
+
+### Navigation
+- **Primary nav** (all pages): Home | Work | Music | Sports
+- **Sub-nav** (sports section only): Overview | Swim Calculator | CSS Calculator | Dashboard | Pool Finder | Swim Feed | AI Swim Plan | Cycle Commute
+- Styled via `nav.css` (shared across all pages via absolute path `/nav.css`)
+- Pages with sub-nav use `padding-top: 124px` (56px primary + 44px sub-nav + 24px spacing)
+- Pages without sub-nav use `padding-top: 80px`
+
+### Sections
+- **Work** (`/work/`): Articles and project write-ups (placeholder for now)
+- **Music** (`/music/`): Playlists, gigs and music content (placeholder for now)
+- **Sports** (`/sports/`): All existing swim/cycle tools and dashboards
 
 ### Frontend
-- **8 standalone HTML pages** with inline CSS/JS and shared navigation
+- Standalone HTML pages with inline CSS/JS and shared navigation
 - Client-side calculations for pace, distance, and SWOLF metrics
 - Chart.js for time-series dashboard visualizations
 - Leaflet + OpenStreetMap for interactive pool maps
@@ -101,6 +123,11 @@ Push to the main branch triggers automatic Netlify deployment. No build step is 
 
 ## Code Conventions
 
+### Path Conventions
+- All inter-page links use absolute paths (e.g. `/sports/calculator.html`, `/nav.css`)
+- Images referenced via `/images/` from any page
+- Netlify function URLs use `/.netlify/functions/<name>` (absolute, works from any path)
+
 ### HTML Pages
 - Each page is self-contained with embedded `<style>` and `<script>` blocks
 - Shared navigation via consistent HTML structure styled by `nav.css`
@@ -141,11 +168,18 @@ Spacing:     8px grid system
 
 ## Common Tasks
 
-### Adding a new HTML page
-1. Create the HTML file in the project root
-2. Include the shared nav structure and link `nav.css`
-3. Follow the Stripe design tokens for consistent styling
-4. Add the page link to the navigation menu in all existing pages
+### Adding a new sports page
+1. Create the HTML file in `sports/`
+2. Include the primary nav + sports sub-nav and link `/nav.css`
+3. Use `padding-top: 124px` on body to account for both navbars
+4. Follow the Stripe design tokens for consistent styling
+5. Add the page link to the sub-nav in all existing sports pages and `sports/index.html`
+
+### Adding a new work or music page
+1. Create the HTML file in `work/` or `music/`
+2. Include the primary nav and link `/nav.css`
+3. Use absolute paths for all assets (`/images/`, `/nav.css`)
+4. Follow the Stripe design tokens for consistent styling
 
 ### Adding a new serverless function
 1. Create a `.js` file in `netlify/functions/`
@@ -155,6 +189,6 @@ Spacing:     8px grid system
 5. The function is automatically available at `/.netlify/functions/<filename>`
 
 ### Modifying the dashboard
-- Chart configuration lives in `dashscript.js`
-- Dashboard page structure is in `dash.html`
+- Chart configuration lives in `sports/dashscript.js`
+- Dashboard page structure is in `sports/dash.html`
 - Data comes from the `get-swims` serverless function (Strava API)
