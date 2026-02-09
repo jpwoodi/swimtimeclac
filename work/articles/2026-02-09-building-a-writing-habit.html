@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Writing Habit as an Engineer - Work - Woodnott.com</title>
+    <link rel="icon" href="/images/swimming_favicon.ico">
+    <meta name="description" content="A practical writing workflow for publishing short engineering articles consistently.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/nav.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f6f9fc;
+            color: #1a1f36;
+            min-height: 100vh;
+            padding: 80px 0 60px;
+        }
+
+        .article-shell {
+            max-width: 780px;
+            margin: 40px auto 0;
+            padding: 0 24px;
+        }
+
+        .article-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 10px;
+            padding: 28px;
+        }
+
+        .article-meta {
+            font-size: 12px;
+            color: #8792a2;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 34px;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+        }
+
+        .deck {
+            color: #697386;
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .article-body {
+            font-size: 17px;
+            line-height: 1.75;
+            color: #2e3448;
+        }
+
+        .article-body h2 {
+            font-size: 24px;
+            margin: 30px 0 12px;
+            color: #1a1f36;
+        }
+
+        .article-body p + p {
+            margin-top: 16px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 28px;
+            text-decoration: none;
+            color: #635bff;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <script src="/auth.js"></script>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/work/index.html" class="active">Work</a></li>
+            <li><a href="/music/index.html">Music</a></li>
+            <li><a href="/sports/index.html">Sports</a></li>
+        </ul>
+    </nav>
+
+    <main class="article-shell">
+        <article class="article-card">
+            <div class="article-meta">Published 9 Feb 2026</div>
+            <h1>Building a Writing Habit as an Engineer</h1>
+            <p class="deck">A small weekly workflow that helps me publish technical writing without turning it into a second full-time project.</p>
+
+            <div class="article-body">
+                <p>I wanted to write more, but every article felt too big. I would start with a rough idea, open a blank page, and then lose momentum because I was trying to produce something perfect in one session.</p>
+                <p>The change that helped most was reducing scope. Instead of aiming for one long piece each month, I now publish one short article each week with one clear takeaway.</p>
+
+                <h2>My Current System</h2>
+                <p>On Monday, I capture three possible topics from work that week. On Wednesday, I choose one and sketch an outline with a problem, what I tried, and what I learned. On Friday, I publish the draft after one pass for clarity.</p>
+                <p>This structure keeps the barrier low. I can always improve older pieces later, but the habit only works if I keep shipping.</p>
+
+                <h2>Why It Works</h2>
+                <p>Short, frequent writing creates a feedback loop. Each article improves my thinking and gives me raw material for future, deeper posts. Over time, I am building a body of work rather than waiting for perfect conditions.</p>
+            </div>
+
+            <a class="back-link" href="/work/index.html">Back to Work</a>
+        </article>
+    </main>
+
+    <script>
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html>

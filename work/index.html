@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work — JP Wooding</title>
+    <title>Work - Woodnott.com</title>
     <link rel="icon" href="/images/swimming_favicon.ico">
     <meta name="description" content="Articles, projects and thoughts on software engineering.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -40,30 +40,116 @@
             line-height: 1.5;
         }
 
-        .coming-soon {
-            max-width: 500px;
-            margin: 48px auto 0;
+        .articles-section {
+            max-width: 900px;
+            margin: 40px auto 0;
             padding: 0 24px;
         }
 
-        .coming-soon .card {
+        .articles-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .articles-toolbar .count {
+            color: #697386;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .articles-toolbar .template-link {
+            color: #635bff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .articles-toolbar .template-link:hover {
+            text-decoration: underline;
+        }
+
+        .article-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .article-card {
+            display: block;
             background: #fff;
             border: 1px solid #e3e8ee;
             border-radius: 8px;
-            padding: 40px 32px;
-            text-align: center;
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .coming-soon .card p {
+        .article-card:hover {
+            border-color: #c4cad4;
+            box-shadow: 0 6px 16px rgba(26, 31, 54, 0.07);
+        }
+
+        .article-date {
+            color: #8792a2;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .article-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1f36;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .article-summary {
             color: #697386;
             font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .article-tag {
+            background: #f6f9fc;
+            border: 1px solid #e3e8ee;
+            border-radius: 999px;
+            color: #4f5b76;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+        }
+
+        .empty-state {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 24px;
+            color: #697386;
+            text-align: center;
             line-height: 1.6;
         }
 
         @media (max-width: 576px) {
             .page-header h1 { font-size: 24px; }
+            .articles-toolbar { flex-direction: column; align-items: flex-start; }
         }
     </style>
+    <script src="/work/articles.js"></script>
     <script src="/auth.js"></script>
 </head>
 <body>
@@ -79,20 +165,71 @@
 
     <div class="page-header">
         <h1>Work</h1>
-        <p>Articles, projects and thoughts on software engineering</p>
+        <p>Articles, projects and thoughts on software engineering.</p>
     </div>
 
-    <div class="coming-soon">
-        <div class="card">
-            <p>Content coming soon. Check back for articles and project write-ups.</p>
+    <div class="articles-section">
+        <div class="articles-toolbar">
+            <div id="article-count" class="count">0 articles</div>
+            <a class="template-link" href="/work/article-template.html">Use article template</a>
         </div>
+        <div id="article-list" class="article-list"></div>
     </div>
 
     <script>
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatPublishedDate(dateValue) {
+            const parsed = new Date(`${dateValue}T00:00:00`);
+            if (Number.isNaN(parsed.getTime())) return dateValue;
+            return parsed.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function renderArticles() {
+            const listEl = document.getElementById('article-list');
+            const countEl = document.getElementById('article-count');
+            const articles = Array.isArray(window.WORK_ARTICLES) ? [...window.WORK_ARTICLES] : [];
+
+            articles.sort((a, b) => new Date(`${b.date}T00:00:00`) - new Date(`${a.date}T00:00:00`));
+
+            countEl.textContent = `${articles.length} article${articles.length === 1 ? '' : 's'}`;
+
+            if (!articles.length) {
+                listEl.innerHTML = '<div class="empty-state">No articles yet. Add one in <code>work/articles.js</code> and publish.</div>';
+                return;
+            }
+
+            listEl.innerHTML = articles.map((article) => {
+                const tags = Array.isArray(article.tags) ? article.tags : [];
+                const tagsHtml = tags.map((tag) => `<span class="article-tag">${escapeHtml(tag)}</span>`).join('');
+                return `
+                    <a class="article-card" href="${escapeHtml(article.path)}">
+                        <div class="article-date">${escapeHtml(formatPublishedDate(article.date))}</div>
+                        <h2 class="article-title">${escapeHtml(article.title)}</h2>
+                        <p class="article-summary">${escapeHtml(article.summary || '')}</p>
+                        <div class="article-tags">${tagsHtml}</div>
+                    </a>
+                `;
+            }).join('');
+        }
+
         function toggleMenu() {
             const navMenu = document.querySelector('.top-nav ul');
             navMenu.classList.toggle('expanded');
         }
+
+        document.addEventListener('DOMContentLoaded', renderArticles);
     </script>
 </body>
 </html>
