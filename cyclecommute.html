@@ -174,7 +174,7 @@
         <canvas id="monthlyChart"></canvas>
       </div>
 
-      <h2 style="text-align:center;">Commute Times (Morning Start / Evening Finish)</h2>
+      <h2 style="text-align:center;">Weekly Commute Times (Median + Variability)</h2>
       <div class="chart-container">
         <canvas id="departureChart"></canvas>
       </div>
@@ -280,6 +280,37 @@
         year: includeYear ? 'numeric' : undefined,
         timeZone: 'UTC'
       });
+    }
+
+    function getWeekStartKey(dayKey) {
+      const [yearStr, monthStr, dayStr] = String(dayKey).split('-');
+      const dt = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)));
+      const daysFromMonday = (dt.getUTCDay() + 6) % 7;
+      dt.setUTCDate(dt.getUTCDate() - daysFromMonday);
+      return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+    }
+
+    function formatWeekKey(weekKey) {
+      return `w/c ${formatDayKey(weekKey)}`;
+    }
+
+    function formatMinutesOfDay(totalMinutes) {
+      if (!Number.isFinite(totalMinutes)) return '--:--';
+      const rounded = Math.round(totalMinutes);
+      const h = Math.floor(rounded / 60) % 24;
+      const m = rounded % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function percentile(values, p) {
+      if (!values.length) return null;
+      const sorted = [...values].sort((a, b) => a - b);
+      const index = (sorted.length - 1) * p;
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      if (lower === upper) return sorted[lower];
+      const weight = index - lower;
+      return sorted[lower] * (1 - weight) + sorted[upper] * weight;
     }
 
     function toggleMenu() {
@@ -413,9 +444,7 @@
       });
     }
 
-    // Process commute times into chronological events
-    // - Morning commute: start time (leave home)
-    // - Evening commute: end time (start + elapsed_time, including stops)
+    // Process commute times into chronological events with local date semantics.
     function processCommuteTimes(rides) {
       const events = [];
 
@@ -431,59 +460,102 @@
           : (r.moving_time || 0);
         const durationMinutes = elapsedSeconds / 60;
         const startMinutes = startHour * 60 + startMinute;
+        const startDayKey = getDayKey(startParts);
+        const startWeekKey = getWeekStartKey(startDayKey);
 
         if (startHour < 12) {
-          // Morning commute - use Strava local start clock time
           events.push({
             type: 'morning',
             timestampMs: startTimestamp,
-            xKey: getDayKey(startParts),
+            dayKey: startDayKey,
+            weekKey: startWeekKey,
             minutes: startMinutes,
             durationMinutes
           });
         } else {
-          // Evening commute - add elapsed seconds in local-clock space
           const endParts = addSecondsToLocalParts(startParts, elapsedSeconds);
           const endHour = endParts.hour;
           const endMinute = endParts.minute;
           const endMinutes = endHour * 60 + endMinute;
+          const endDayKey = getDayKey(endParts);
+          const endWeekKey = getWeekStartKey(endDayKey);
           events.push({
             type: 'evening',
             timestampMs: startTimestamp + elapsedSeconds * 1000,
-            xKey: getDayKey(endParts),
+            dayKey: endDayKey,
+            weekKey: endWeekKey,
             minutes: endMinutes,
             durationMinutes
           });
         }
       });
 
-      // Sort oldest -> newest by actual timestamp
       events.sort((a, b) => a.timestampMs - b.timestampMs);
+      return events;
+    }
 
-      const morningStartTimes = [];
-      const eveningEndTimes = [];
-      const dayCategories = [];
-      const seenDays = new Set();
+    function buildWeeklyCommuteSeries(events) {
+      const weeklyBuckets = new Map();
+      const morningDaily = [];
+      const eveningDaily = [];
 
       events.forEach(ev => {
-        if (!seenDays.has(ev.xKey)) {
-          seenDays.add(ev.xKey);
-          dayCategories.push(ev.xKey);
+        if (!weeklyBuckets.has(ev.weekKey)) {
+          weeklyBuckets.set(ev.weekKey, { morning: [], evening: [] });
         }
+        weeklyBuckets.get(ev.weekKey)[ev.type].push(ev.minutes);
 
         const point = {
-          x: ev.xKey,
+          x: ev.weekKey,
           y: ev.minutes,
+          dayLabel: formatDayKey(ev.dayKey, true),
           durationMinutes: ev.durationMinutes
         };
         if (ev.type === 'morning') {
-          morningStartTimes.push(point);
+          morningDaily.push(point);
         } else {
-          eveningEndTimes.push(point);
+          eveningDaily.push(point);
         }
       });
 
-      return { morningStartTimes, eveningEndTimes, dayCategories };
+      const weekKeys = Array.from(weeklyBuckets.keys()).sort();
+      const morningQ1Points = [];
+      const morningQ3Points = [];
+      const morningMedianPoints = [];
+      const eveningQ1Points = [];
+      const eveningQ3Points = [];
+      const eveningMedianPoints = [];
+
+      weekKeys.forEach(weekKey => {
+        const bucket = weeklyBuckets.get(weekKey);
+        const morningValues = bucket.morning;
+        const eveningValues = bucket.evening;
+        const morningQ1 = percentile(morningValues, 0.25);
+        const morningQ3 = percentile(morningValues, 0.75);
+        const morningMedian = percentile(morningValues, 0.5);
+        const eveningQ1 = percentile(eveningValues, 0.25);
+        const eveningQ3 = percentile(eveningValues, 0.75);
+        const eveningMedian = percentile(eveningValues, 0.5);
+
+        morningQ1Points.push({ x: weekKey, y: morningQ1 });
+        morningQ3Points.push({ x: weekKey, y: morningQ3 });
+        morningMedianPoints.push({ x: weekKey, y: morningMedian, sampleSize: morningValues.length });
+        eveningQ1Points.push({ x: weekKey, y: eveningQ1 });
+        eveningQ3Points.push({ x: weekKey, y: eveningQ3 });
+        eveningMedianPoints.push({ x: weekKey, y: eveningMedian, sampleSize: eveningValues.length });
+      });
+
+      return {
+        weekKeys,
+        morningQ1Points,
+        morningQ3Points,
+        morningMedianPoints,
+        eveningQ1Points,
+        eveningQ3Points,
+        eveningMedianPoints,
+        morningDaily,
+        eveningDaily
+      };
     }
 
     // Simple linear regression for morning start trend line
@@ -517,42 +589,154 @@
       }));
     }
 
-    // Departure / arrival time chart with trend line
+    // Weekly median + IQR bands with daily points and trend lines.
     function renderDepartureChart(rides) {
-      const { morningStartTimes, eveningEndTimes, dayCategories } = processCommuteTimes(rides);
-      const morningTrend = computeTrendLine(morningStartTimes);
+      const commuteEvents = processCommuteTimes(rides);
+      const {
+        weekKeys,
+        morningQ1Points,
+        morningQ3Points,
+        morningMedianPoints,
+        eveningQ1Points,
+        eveningQ3Points,
+        eveningMedianPoints,
+        morningDaily,
+        eveningDaily
+      } = buildWeeklyCommuteSeries(commuteEvents);
+      const morningTrend = computeTrendLine(morningMedianPoints.filter(point => Number.isFinite(point.y)));
+      const eveningTrend = computeTrendLine(eveningMedianPoints.filter(point => Number.isFinite(point.y)));
+      const allTimes = [...morningDaily, ...eveningDaily].map(point => point.y).filter(Number.isFinite);
+      let yMin = 240;
+      let yMax = 1440;
+      if (allTimes.length) {
+        yMin = Math.max(240, Math.floor((Math.min(...allTimes) - 30) / 30) * 30);
+        yMax = Math.min(1440, Math.ceil((Math.max(...allTimes) + 30) / 30) * 30);
+        if (yMax - yMin < 120) {
+          yMax = Math.min(1440, yMin + 120);
+        }
+      }
 
       const ctx = document.getElementById('departureChart').getContext('2d');
       if (departureChartInstance) departureChartInstance.destroy();
 
       departureChartInstance = new Chart(ctx, {
-        type: 'scatter',
+        type: 'line',
         data: {
-          labels: dayCategories,
+          labels: weekKeys,
           datasets: [
             {
-              label: 'Morning start (leave home)',
-              data: morningStartTimes,
-              borderColor: 'rgba(40,167,69,0.8)',
-              backgroundColor: 'rgba(40,167,69,0.6)',
-              pointRadius: 4
+              label: 'Morning band lower',
+              data: morningQ1Points,
+              borderColor: 'rgba(40,167,69,0)',
+              backgroundColor: 'rgba(40,167,69,0)',
+              pointRadius: 0,
+              borderWidth: 0,
+              fill: false,
+              spanGaps: true,
+              hideFromLegend: true,
+              hideFromTooltip: true
             },
             {
-              label: 'Evening finish (arrive)',
-              data: eveningEndTimes,
-              borderColor: 'rgba(54,162,235,0.8)',
-              backgroundColor: 'rgba(54,162,235,0.6)',
-              pointRadius: 4
+              label: 'Morning variability (IQR)',
+              data: morningQ3Points,
+              borderColor: 'rgba(40,167,69,0)',
+              backgroundColor: 'rgba(40,167,69,0.14)',
+              pointRadius: 0,
+              borderWidth: 0,
+              fill: '-1',
+              spanGaps: true,
+              hideFromTooltip: true
+            },
+            {
+              label: 'Evening band lower',
+              data: eveningQ1Points,
+              borderColor: 'rgba(54,162,235,0)',
+              backgroundColor: 'rgba(54,162,235,0)',
+              pointRadius: 0,
+              borderWidth: 0,
+              fill: false,
+              spanGaps: true,
+              hideFromLegend: true,
+              hideFromTooltip: true
+            },
+            {
+              label: 'Evening variability (IQR)',
+              data: eveningQ3Points,
+              borderColor: 'rgba(54,162,235,0)',
+              backgroundColor: 'rgba(54,162,235,0.14)',
+              pointRadius: 0,
+              borderWidth: 0,
+              fill: '-1',
+              spanGaps: true,
+              hideFromTooltip: true
+            },
+            {
+              label: 'Morning daily points',
+              data: morningDaily,
+              type: 'scatter',
+              borderColor: 'rgba(40,167,69,0.22)',
+              backgroundColor: 'rgba(40,167,69,0.22)',
+              pointRadius: 2,
+              pointHoverRadius: 3,
+              hideFromLegend: true,
+              seriesType: 'daily'
+            },
+            {
+              label: 'Evening daily points',
+              data: eveningDaily,
+              type: 'scatter',
+              borderColor: 'rgba(54,162,235,0.24)',
+              backgroundColor: 'rgba(54,162,235,0.24)',
+              pointRadius: 2,
+              pointHoverRadius: 3,
+              hideFromLegend: true,
+              seriesType: 'daily'
+            },
+            {
+              label: 'Morning median leave',
+              data: morningMedianPoints,
+              borderColor: 'rgba(40,167,69,0.95)',
+              backgroundColor: 'rgba(40,167,69,0.95)',
+              pointRadius: 3,
+              pointHoverRadius: 4,
+              tension: 0.25,
+              spanGaps: true,
+              seriesType: 'median'
+            },
+            {
+              label: 'Evening median arrive',
+              data: eveningMedianPoints,
+              borderColor: 'rgba(54,162,235,0.95)',
+              backgroundColor: 'rgba(54,162,235,0.95)',
+              pointRadius: 3,
+              pointHoverRadius: 4,
+              tension: 0.25,
+              spanGaps: true,
+              seriesType: 'median'
             },
             {
               label: 'Morning start trend',
               data: morningTrend,
               type: 'line',
-              borderColor: 'rgba(0,0,0,0.8)',
+              borderColor: 'rgba(40,167,69,0.8)',
               backgroundColor: 'rgba(0,0,0,0)',
               pointRadius: 0,
               borderWidth: 2,
-              tension: 0.2
+              borderDash: [6, 4],
+              tension: 0.2,
+              seriesType: 'trend'
+            },
+            {
+              label: 'Evening finish trend',
+              data: eveningTrend,
+              type: 'line',
+              borderColor: 'rgba(54,162,235,0.85)',
+              backgroundColor: 'rgba(0,0,0,0)',
+              pointRadius: 0,
+              borderWidth: 2,
+              borderDash: [6, 4],
+              tension: 0.2,
+              seriesType: 'trend'
             }
           ]
         },
@@ -568,43 +752,44 @@
                 autoSkip: true,
                 callback: function(value) {
                   const key = this.getLabelForValue(value);
-                  return formatDayKey(key);
+                  return formatWeekKey(key);
                 }
               }
             },
             y: {
               title: { display: true, text: 'Time of Day' },
-              min: 240,   // 04:00
-              max: 1440,  // 24:00
+              min: yMin,
+              max: yMax,
               ticks: {
                 stepSize: 60,
-                callback: v => {
-                  const h = Math.floor(v / 60);
-                  const m = v % 60;
-                  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                }
+                callback: v => formatMinutesOfDay(v)
               }
             }
           },
           plugins: {
-            legend: { position: 'top' },
+            legend: {
+              position: 'top',
+              labels: {
+                filter: (item, data) => !data.datasets[item.datasetIndex].hideFromLegend
+              }
+            },
             tooltip: {
+              filter: (ctx) => !ctx.dataset.hideFromTooltip,
               callbacks: {
+                title: (items) => {
+                  const weekKey = items[0]?.label || items[0]?.raw?.x;
+                  return weekKey ? `Week of ${formatDayKey(weekKey, true)}` : '';
+                },
                 label: ctx => {
-                  const minutes = ctx.parsed.y;
-                  const h = Math.floor(minutes / 60);
-                  const m = minutes % 60;
-                  const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-
+                  const timeStr = formatMinutesOfDay(ctx.parsed.y);
                   const raw = ctx.raw || {};
-                  if (typeof raw.durationMinutes === 'number') {
-                    const dur = raw.durationMinutes;
-                    const dh = Math.floor(dur / 60);
-                    const dm = Math.round(dur % 60);
-                    const durStr = dh ? `${dh}h ${dm}m` : `${dm}m`;
-                    return `${ctx.dataset.label}: ${timeStr} | Duration: ${durStr}`;
+                  if (ctx.dataset.seriesType === 'daily') {
+                    return `${ctx.dataset.label}: ${timeStr} (${raw.dayLabel})`;
                   }
-
+                  if (ctx.dataset.seriesType === 'median') {
+                    const sampleText = raw.sampleSize ? `, n=${raw.sampleSize}` : '';
+                    return `${ctx.dataset.label}: ${timeStr}${sampleText}`;
+                  }
                   return `${ctx.dataset.label}: ${timeStr}`;
                 }
               }
