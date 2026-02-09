@@ -214,24 +214,29 @@
       return Number.isFinite(timestamp) ? timestamp : 0;
     }
 
-    function parseStravaLocalDateParts(localDateString) {
-      const match = typeof localDateString === 'string'
+    function parseStravaLocalDateParts(localDateString, fallbackDateString) {
+      const localMatch = typeof localDateString === 'string'
         ? localDateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
         : null;
 
-      if (match) {
+      if (localMatch) {
         return {
-          year: Number(match[1]),
-          month: Number(match[2]),
-          day: Number(match[3]),
-          hour: Number(match[4]),
-          minute: Number(match[5]),
-          second: Number(match[6] || 0)
+          year: Number(localMatch[1]),
+          month: Number(localMatch[2]),
+          day: Number(localMatch[3]),
+          hour: Number(localMatch[4]),
+          minute: Number(localMatch[5]),
+          second: Number(localMatch[6] || 0)
         };
       }
 
       // Fallback: treat parsed UTC fields as local-clock components.
-      const fallback = new Date(localDateString);
+      const fallbackSource = fallbackDateString || localDateString;
+      const fallback = new Date(fallbackSource);
+      if (Number.isNaN(fallback.getTime())) {
+        return { year: 1970, month: 1, day: 1, hour: 0, minute: 0, second: 0 };
+      }
+
       return {
         year: fallback.getUTCFullYear(),
         month: fallback.getUTCMonth() + 1,
@@ -262,11 +267,17 @@
       };
     }
 
-    function formatDayMonthLabel(parts) {
-      const dt = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+    function getDayKey(parts) {
+      return `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
+    }
+
+    function formatDayKey(dayKey, includeYear = false) {
+      const [yearStr, monthStr, dayStr] = String(dayKey).split('-');
+      const dt = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)));
       return dt.toLocaleDateString('en-GB', {
-        month: 'short',
         day: 'numeric',
+        month: 'short',
+        year: includeYear ? 'numeric' : undefined,
         timeZone: 'UTC'
       });
     }
@@ -357,8 +368,8 @@
     function processMonthlyData(rides) {
       const monthly = {};
       rides.forEach(r => {
-        const d = new Date(r.start_date_local);
-        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        const parts = parseStravaLocalDateParts(r.start_date_local, r.start_date);
+        const key = `${parts.year}-${parts.month}`;
         monthly[key] = (monthly[key] || 0) + r.distance / 1000;
       });
 
@@ -409,7 +420,7 @@
       const events = [];
 
       rides.forEach(r => {
-        const startParts = parseStravaLocalDateParts(r.start_date_local);
+        const startParts = parseStravaLocalDateParts(r.start_date_local, r.start_date);
         const startHour = startParts.hour;
         const startMinute = startParts.minute;
         const startTimestamp = getRideStartTimestamp(r);
@@ -426,7 +437,7 @@
           events.push({
             type: 'morning',
             timestampMs: startTimestamp,
-            xLabel: formatDayMonthLabel(startParts),
+            xKey: getDayKey(startParts),
             minutes: startMinutes,
             durationMinutes
           });
@@ -439,7 +450,7 @@
           events.push({
             type: 'evening',
             timestampMs: startTimestamp + elapsedSeconds * 1000,
-            xLabel: formatDayMonthLabel(endParts),
+            xKey: getDayKey(endParts),
             minutes: endMinutes,
             durationMinutes
           });
@@ -451,10 +462,17 @@
 
       const morningStartTimes = [];
       const eveningEndTimes = [];
+      const dayCategories = [];
+      const seenDays = new Set();
 
       events.forEach(ev => {
+        if (!seenDays.has(ev.xKey)) {
+          seenDays.add(ev.xKey);
+          dayCategories.push(ev.xKey);
+        }
+
         const point = {
-          x: ev.xLabel,
+          x: ev.xKey,
           y: ev.minutes,
           durationMinutes: ev.durationMinutes
         };
@@ -465,7 +483,7 @@
         }
       });
 
-      return { morningStartTimes, eveningEndTimes };
+      return { morningStartTimes, eveningEndTimes, dayCategories };
     }
 
     // Simple linear regression for morning start trend line
@@ -501,7 +519,7 @@
 
     // Departure / arrival time chart with trend line
     function renderDepartureChart(rides) {
-      const { morningStartTimes, eveningEndTimes } = processCommuteTimes(rides);
+      const { morningStartTimes, eveningEndTimes, dayCategories } = processCommuteTimes(rides);
       const morningTrend = computeTrendLine(morningStartTimes);
 
       const ctx = document.getElementById('departureChart').getContext('2d');
@@ -510,6 +528,7 @@
       departureChartInstance = new Chart(ctx, {
         type: 'scatter',
         data: {
+          labels: dayCategories,
           datasets: [
             {
               label: 'Morning start (leave home)',
@@ -544,7 +563,14 @@
             x: {
               type: 'category',
               title: { display: true, text: 'Date' },
-              ticks: { maxRotation: 0, autoSkip: true }
+              ticks: {
+                maxRotation: 0,
+                autoSkip: true,
+                callback: function(value) {
+                  const key = this.getLabelForValue(value);
+                  return formatDayKey(key);
+                }
+              }
             },
             y: {
               title: { display: true, text: 'Time of Day' },
@@ -595,7 +621,8 @@
 
       rides.forEach(ride => {
         const row = document.createElement('tr');
-        const date = new Date(ride.start_date_local).toLocaleDateString();
+        const parts = parseStravaLocalDateParts(ride.start_date_local, ride.start_date);
+        const date = formatDayKey(getDayKey(parts), true);
         const distance = (ride.distance / 1000).toFixed(1);
 
         // Duration including stops: use elapsed_time if available
