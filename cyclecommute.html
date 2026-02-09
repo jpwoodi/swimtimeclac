@@ -209,6 +209,68 @@
     let chartInstance = null;
     let departureChartInstance = null;
 
+    function getRideStartTimestamp(ride) {
+      const timestamp = Date.parse(ride.start_date || ride.start_date_local);
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function parseStravaLocalDateParts(localDateString) {
+      const match = typeof localDateString === 'string'
+        ? localDateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
+        : null;
+
+      if (match) {
+        return {
+          year: Number(match[1]),
+          month: Number(match[2]),
+          day: Number(match[3]),
+          hour: Number(match[4]),
+          minute: Number(match[5]),
+          second: Number(match[6] || 0)
+        };
+      }
+
+      // Fallback: treat parsed UTC fields as local-clock components.
+      const fallback = new Date(localDateString);
+      return {
+        year: fallback.getUTCFullYear(),
+        month: fallback.getUTCMonth() + 1,
+        day: fallback.getUTCDate(),
+        hour: fallback.getUTCHours(),
+        minute: fallback.getUTCMinutes(),
+        second: fallback.getUTCSeconds()
+      };
+    }
+
+    function addSecondsToLocalParts(parts, secondsToAdd) {
+      const dt = new Date(Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day,
+        parts.hour,
+        parts.minute,
+        parts.second
+      ));
+      dt.setUTCSeconds(dt.getUTCSeconds() + secondsToAdd);
+      return {
+        year: dt.getUTCFullYear(),
+        month: dt.getUTCMonth() + 1,
+        day: dt.getUTCDate(),
+        hour: dt.getUTCHours(),
+        minute: dt.getUTCMinutes(),
+        second: dt.getUTCSeconds()
+      };
+    }
+
+    function formatDayMonthLabel(parts) {
+      const dt = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+      return dt.toLocaleDateString('en-GB', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC'
+      });
+    }
+
     function toggleMenu() {
       const toggleBtn = document.querySelector('.hamburger');
       const navMenu = document.querySelector('.top-nav ul');
@@ -238,7 +300,7 @@
           }
 
           // Keep main list newest -> oldest for the table
-          rides.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+          rides.sort((a, b) => getRideStartTimestamp(b) - getRideStartTimestamp(a));
 
           const { fares, splitRides } = tagSplitRides(rides);
           const monthlyData = processMonthlyData(rides);
@@ -272,14 +334,14 @@
 
     // Tag rides that fall within merge window
     function tagSplitRides(rides, mergeHours = 2) {
-      const sorted = [...rides].sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
+      const sorted = [...rides].sort((a, b) => getRideStartTimestamp(a) - getRideStartTimestamp(b));
       const windowMs = mergeHours * 60 * 60 * 1000;
       let fares = 0;
       let lastFareTime = null;
       const splitRides = new Set();
 
       sorted.forEach(ride => {
-        const rideTime = new Date(ride.start_date_local).getTime();
+        const rideTime = getRideStartTimestamp(ride);
         if (!lastFareTime || (rideTime - lastFareTime) > windowMs) {
           fares++;
           lastFareTime = rideTime;
@@ -347,44 +409,45 @@
       const events = [];
 
       rides.forEach(r => {
-        const start = new Date(r.start_date_local);
-        const startHour = start.getHours();
-        const startMinute = start.getMinutes();
+        const startParts = parseStravaLocalDateParts(r.start_date_local);
+        const startHour = startParts.hour;
+        const startMinute = startParts.minute;
+        const startTimestamp = getRideStartTimestamp(r);
 
         // duration including stops: prefer elapsed_time, fall back to moving_time
         const elapsedSeconds = (r.elapsed_time || r.elapsed_time === 0)
           ? r.elapsed_time
           : (r.moving_time || 0);
         const durationMinutes = elapsedSeconds / 60;
+        const startMinutes = startHour * 60 + startMinute;
 
         if (startHour < 12) {
-          // Morning commute - start time
-          const startMinutes = startHour * 60 + startMinute;
+          // Morning commute - use Strava local start clock time
           events.push({
             type: 'morning',
-            date: start,
-            xLabel: start.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }),
+            timestampMs: startTimestamp,
+            xLabel: formatDayMonthLabel(startParts),
             minutes: startMinutes,
             durationMinutes
           });
         } else {
-          // Evening commute - end time
-          const end = new Date(start.getTime() + elapsedSeconds * 1000);
-          const endHour = end.getHours();
-          const endMinute = end.getMinutes();
+          // Evening commute - add elapsed seconds in local-clock space
+          const endParts = addSecondsToLocalParts(startParts, elapsedSeconds);
+          const endHour = endParts.hour;
+          const endMinute = endParts.minute;
           const endMinutes = endHour * 60 + endMinute;
           events.push({
             type: 'evening',
-            date: end,
-            xLabel: end.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }),
+            timestampMs: startTimestamp + elapsedSeconds * 1000,
+            xLabel: formatDayMonthLabel(endParts),
             minutes: endMinutes,
             durationMinutes
           });
         }
       });
 
-      // Sort oldest -> newest by actual time
-      events.sort((a, b) => a.date - b.date);
+      // Sort oldest -> newest by actual timestamp
+      events.sort((a, b) => a.timestampMs - b.timestampMs);
 
       const morningStartTimes = [];
       const eveningEndTimes = [];
