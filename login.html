@@ -91,7 +91,7 @@
         <form id="login-form">
             <label for="password">Password</label>
             <input id="password" name="password" type="password" autocomplete="current-password" required>
-            <button type="submit">Unlock Site</button>
+            <button id="submit-btn" type="submit">Unlock Site</button>
             <div id="error"></div>
         </form>
     </main>
@@ -99,21 +99,35 @@
     <script>
         const form = document.getElementById('login-form');
         const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submit-btn');
         const errorEl = document.getElementById('error');
 
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const ok = window.WOODNOTT_AUTH && window.WOODNOTT_AUTH.login(passwordInput.value);
+
+            errorEl.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Checking...';
+
+            let ok = false;
+            try {
+                ok = !!(window.WOODNOTT_AUTH && await window.WOODNOTT_AUTH.login(passwordInput.value));
+            } catch {
+                ok = false;
+            }
+
             if (!ok) {
                 errorEl.textContent = 'Incorrect password.';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Unlock Site';
                 passwordInput.focus();
                 passwordInput.select();
                 return;
             }
 
-            const params = new URLSearchParams(window.location.search);
-            const redirect = params.get('redirect');
-            const target = redirect && redirect.startsWith('/') ? redirect : '/index.html';
+            const target = window.WOODNOTT_AUTH && window.WOODNOTT_AUTH.getRedirectTarget
+                ? window.WOODNOTT_AUTH.getRedirectTarget()
+                : '/index.html';
             window.location.replace(target);
         });
     </script>

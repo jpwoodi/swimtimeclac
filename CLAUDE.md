@@ -116,6 +116,8 @@ The following must be set in Netlify (or `.env` for local dev):
 | `AIRTABLE_TOKEN` | Airtable personal access token |
 | `CLIENT_ID_STRAVA` | Strava client ID (frontend OAuth) |
 | `REDIRECT_URI_STRAVA` | Strava OAuth redirect URI |
+| `SITE_PASSWORD` | Password required to unlock the site |
+| `AUTH_SESSION_SECRET` | Secret used to sign auth session cookies |
 
 ### Deployment
 
