@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports — JP Wooding</title>
+    <link rel="icon" href="/images/swimming_favicon.ico">
+    <meta name="description" content="Swimming training tools: calculators, dashboards, pool finder, and AI-powered swim plans.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/nav.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
+            min-height: 100vh;
+            padding: 124px 0 60px;
+        }
+
+        .hero {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 24px 0;
+        }
+
+        .hero img {
+            width: 72px;
+            height: auto;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1f36;
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            color: #697386;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding: 0 24px;
+        }
+
+        .tool-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 28px 24px;
+            text-decoration: none;
+            color: #1a1f36;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .tool-card:hover {
+            border-color: #c4cad4;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .tool-icon.purple { background: rgba(99, 91, 255, 0.1); color: #635bff; }
+        .tool-icon.blue { background: rgba(0, 123, 255, 0.1); color: #007bff; }
+        .tool-icon.green { background: rgba(46, 125, 50, 0.1); color: #2e7d32; }
+        .tool-icon.orange { background: rgba(239, 108, 0, 0.1); color: #ef6c00; }
+        .tool-icon.teal { background: rgba(0, 150, 136, 0.1); color: #009688; }
+
+        .tool-card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 6px;
+        }
+
+        .tool-card p {
+            font-size: 14px;
+            color: #697386;
+            line-height: 1.5;
+        }
+
+        .tool-card .arrow {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #635bff;
+        }
+
+        @media (max-width: 576px) {
+            .hero h1 { font-size: 24px; }
+            .tools-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/work/index.html">Work</a></li>
+            <li><a href="/music/index.html">Music</a></li>
+            <li><a href="/sports/index.html" class="active">Sports</a></li>
+        </ul>
+    </nav>
+    <nav class="sub-nav">
+        <ul>
+            <li><a href="/sports/index.html" class="active">Overview</a></li>
+            <li><a href="/sports/calculator.html">Swim Calculator</a></li>
+            <li><a href="/sports/css.html">CSS Calculator</a></li>
+            <li><a href="/sports/dash.html">Dashboard</a></li>
+            <li><a href="/sports/pools.html">Pool Finder</a></li>
+            <li><a href="/sports/stravafeed.html">Swim Feed</a></li>
+            <li><a href="/sports/swim-plan-generator.html">AI Swim Plan</a></li>
+            <li><a href="/sports/cyclecommute.html">Cycle Commute</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <img src="/images/swimmer_head_full_transparent_background.png" alt="Sports">
+        <h1>Sports</h1>
+        <p>Swimming and cycling tools and dashboards</p>
+    </div>
+
+    <div class="tools-grid">
+        <a href="/sports/calculator.html" class="tool-card">
+            <div class="tool-icon purple">&#9201;</div>
+            <h2>Swim Calculator</h2>
+            <p>Calculate your swim time from pace, or pace from time, for any distance.</p>
+            <span class="arrow">Open &rarr;</span>
+        </a>
+        <a href="/sports/css.html" class="tool-card">
+            <div class="tool-icon blue">&#9830;</div>
+            <h2>CSS Calculator</h2>
+            <p>Work out your Critical Swim Speed from 200m and 400m time trials.</p>
+            <span class="arrow">Open &rarr;</span>
+        </a>
+        <a href="/sports/dash.html" class="tool-card">
+            <div class="tool-icon orange">&#9636;</div>
+            <h2>Training Dashboard</h2>
+            <p>View your distance, time, pace, and SWOLF trends from Strava data.</p>
+            <span class="arrow">Open &rarr;</span>
+        </a>
+        <a href="/sports/pools.html" class="tool-card">
+            <div class="tool-icon teal">&#9906;</div>
+            <h2>Pool Finder</h2>
+            <p>Find swimming pools and open water locations across London.</p>
+            <span class="arrow">Open &rarr;</span>
+        </a>
+        <a href="/sports/stravafeed.html" class="tool-card">
+            <div class="tool-icon purple">&#9783;</div>
+            <h2>Swim Feed</h2>
+            <p>Browse your recent swim activities pulled from Strava.</p>
+            <span class="arrow">Open &rarr;</span>
+        </a>
+        <a href="/sports/swim-plan-generator.html" class="tool-card">
+            <div class="tool-icon blue">&#9733;</div>
+            <h2>AI Swim Plan</h2>
+            <p>Generate a personalised training plan powered by AI using your CSS.</p>
+            <span class="arrow">Open &rarr;</span>
+        </a>
+        <a href="/sports/cyclecommute.html" class="tool-card">
+            <div class="tool-icon green">&#9798;</div>
+            <h2>Cycle Commute</h2>
+            <p>Track your cycle commute rides, distances, and savings.</p>
+            <span class="arrow">Open &rarr;</span>
+        </a>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html>

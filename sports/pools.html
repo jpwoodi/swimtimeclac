@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swimming Pools in London</title>
-    <link rel="icon" href="images/swimming_favicon.ico">
+    <link rel="icon" href="/images/swimming_favicon.ico">
     <meta name="description" content="Find swimming pools and open water locations across London.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="nav.css">
+    <link rel="stylesheet" href="/nav.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,7 +17,7 @@
             background-color: #f6f9fc;
             color: #1a1f36;
             min-height: 100vh;
-            padding: 56px 0 0;
+            padding: 100px 0 0;
         }
 
         .page-header {
@@ -43,7 +43,7 @@
             display: flex;
             width: 100%;
             max-width: 1200px;
-            height: calc(100vh - 140px);
+            height: calc(100vh - 184px);
             margin: 16px auto 0;
             padding: 0 24px;
             gap: 16px;
@@ -227,14 +227,22 @@
     <nav class="top-nav">
         <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
         <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="calculator.html">Swim Calculator</a></li>
-            <li><a href="css.html">CSS Calculator</a></li>
-            <li><a href="dash.html">Dashboard</a></li>
-            <li><a href="pools.html">Pool Finder</a></li>
-            <li><a href="stravafeed.html">Swim Feed</a></li>
-            <li><a href="swim-plan-generator.html">AI Swim Plan</a></li>
-            <li><a href="cyclecommute.html">Cycle Commute</a></li>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/work/index.html">Work</a></li>
+            <li><a href="/music/index.html">Music</a></li>
+            <li><a href="/sports/index.html" class="active">Sports</a></li>
+        </ul>
+    </nav>
+    <nav class="sub-nav">
+        <ul>
+            <li><a href="/sports/index.html">Overview</a></li>
+            <li><a href="/sports/calculator.html">Swim Calculator</a></li>
+            <li><a href="/sports/css.html">CSS Calculator</a></li>
+            <li><a href="/sports/dash.html">Dashboard</a></li>
+            <li><a href="/sports/pools.html" class="active">Pool Finder</a></li>
+            <li><a href="/sports/stravafeed.html">Swim Feed</a></li>
+            <li><a href="/sports/swim-plan-generator.html">AI Swim Plan</a></li>
+            <li><a href="/sports/cyclecommute.html">Cycle Commute</a></li>
         </ul>
     </nav>
 
@@ -311,19 +319,19 @@
         }
 
         const poolIcon = L.icon({
-            iconUrl: 'images/map-marker-blue.png',
+            iconUrl: '/images/map-marker-blue.png',
             shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
             iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
 
         const openWaterIcon = L.icon({
-            iconUrl: 'images/map-marker-green.png',
+            iconUrl: '/images/map-marker-green.png',
             shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
             iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
 
         const privatePoolIcon = L.icon({
-            iconUrl: 'images/map-marker-gold.png',
+            iconUrl: '/images/map-marker-gold.png',
             shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png',
             iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
@@ -375,7 +383,7 @@
             const focusedMarker = markers.find(marker => marker.id === id);
             if (focusedMarker) {
                 focusedMarker.marker.setIcon(L.icon({
-                    iconUrl: 'images/map-marker-red.png',
+                    iconUrl: '/images/map-marker-red.png',
                     iconSize: [25, 41],
                     shadowUrl: 'https://unpkg.com/leaflet/dist/images/marker-shadow.png'
                 }));
