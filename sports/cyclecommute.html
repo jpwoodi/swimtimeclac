@@ -326,20 +326,35 @@
             gridLine: '#f0f3f7',
             tick: '#8792a2',
         };
+        const COMMUTES_ENDPOINT = '/.netlify/functions/get-rides';
 
         document.getElementById('refresh-btn').addEventListener('click', fetchCommutes);
+
+        async function parseJsonResponse(response) {
+            const raw = await response.text();
+            try {
+                return JSON.parse(raw);
+            } catch {
+                throw new Error(`Non-JSON response from server (${response.status}): ${raw.slice(0, 120)}`);
+            }
+        }
 
         async function fetchCommutes() {
             const loading = document.getElementById('loading-area');
             loading.style.display = 'block';
+            loading.innerHTML = '<div class="spinner"></div>Loading commute data...';
 
             try {
-                const response = await fetch('/.netlify/functions/get-cycle-commutes');
-                const data = await response.json();
+                const response = await fetch(COMMUTES_ENDPOINT);
+                const data = await parseJsonResponse(response);
 
-                if (data.error) {
-                    loading.innerHTML = '<p>Error loading commute data.</p>';
-                    return;
+                if (!response.ok || data.error) {
+                    const msg = data && data.error ? data.error : 'Error loading commute data.';
+                    throw new Error(msg);
+                }
+
+                if (!Array.isArray(data)) {
+                    throw new Error('Unexpected commute payload format.');
                 }
 
                 loading.style.display = 'none';
@@ -351,7 +366,7 @@
                 renderTable(data);
             } catch (err) {
                 console.error('Error:', err);
-                loading.innerHTML = '<p>Something went wrong. Please try again.</p>';
+                loading.innerHTML = `<p>Something went wrong: ${err.message}</p>`;
             }
         }
 
