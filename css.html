@@ -6,102 +6,123 @@
     <title>CSS Swim Speed Calculator</title>
     <link rel="icon" href="images/swimming_favicon.ico">
     <meta name="description" content="Calculate your Critical Swim Speed from 200m and 400m time trial results.">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="nav.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('people-2588747.jpg');
-            background-size: cover;
-            background-position: center;
-            color: #212529;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 80px 0 60px;
         }
 
-        .calculator-container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        .page-header {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 32px 24px 0;
             text-align: center;
-            width: 90%;
-            max-width: 400px;
         }
 
-        h1 {
-            color: #007BFF;
-            margin-bottom: 20px;
-            font-size: 1.8em;
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1f36;
+        }
+
+        .page-header p {
+            color: #697386;
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            max-width: 480px;
+            margin: 24px auto 0;
+            padding: 32px;
         }
 
         .form-group {
-            margin-bottom: 15px;
-            text-align: left;
+            margin-bottom: 20px;
         }
 
-        label {
-            font-weight: 600;
+        .form-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #343A40;
+            font-size: 13px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
         }
 
-        .time-inputs {
+        .input-row {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .time-inputs input {
-            flex: 1;
-        }
+        .input-row input { flex: 1; }
 
-        input {
+        input[type="number"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            font-size: 1em;
-            text-align: center;
+            padding: 10px 12px;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #1a1f36;
+            transition: border-color 0.15s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #635bff;
+            box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1);
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background-color: #007BFF;
-            color: white;
+            background-color: #635bff;
+            color: #fff;
             border: none;
-            border-radius: 50px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
-            font-size: 1em;
-            margin-top: 10px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.15s ease;
         }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+        button:hover { background-color: #5851ea; }
 
         .result {
             margin-top: 20px;
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #495057;
+            padding: 16px;
+            background: #f6f9fc;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1f36;
         }
 
         .error {
-            color: red;
-            font-size: 0.9em;
-            margin-top: 10px;
+            color: #cd3d64;
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        @media (max-width: 576px) {
+            .card { margin: 24px 16px 0; }
+            .page-header h1 { font-size: 22px; }
         }
     </style>
 </head>
@@ -120,24 +141,28 @@
         </ul>
     </nav>
 
-    <div class="calculator-container">
-        <h1>CSS Swim Speed Calculator</h1>
+    <div class="page-header">
+        <h1>CSS Calculator</h1>
+        <p>Find your Critical Swim Speed from 200m and 400m time trials</p>
+    </div>
+
+    <div class="card">
         <div class="form-group">
             <label>200m Time</label>
-            <div class="time-inputs">
-                <input type="number" id="time200-mins" min="0" placeholder="Minutes">
-                <input type="number" id="time200-secs" min="0" max="59" placeholder="Seconds">
+            <div class="input-row">
+                <input type="number" id="time200-mins" min="0" placeholder="Min">
+                <input type="number" id="time200-secs" min="0" max="59" placeholder="Sec">
             </div>
         </div>
         <div class="form-group">
             <label>400m Time</label>
-            <div class="time-inputs">
-                <input type="number" id="time400-mins" min="0" placeholder="Minutes">
-                <input type="number" id="time400-secs" min="0" max="59" placeholder="Seconds">
+            <div class="input-row">
+                <input type="number" id="time400-mins" min="0" placeholder="Min">
+                <input type="number" id="time400-secs" min="0" max="59" placeholder="Sec">
             </div>
         </div>
         <button onclick="calculateCSS()">Calculate CSS</button>
-        <div class="result" id="result"></div>
+        <div class="result" id="result" style="display:none;"></div>
         <div class="error" id="error"></div>
     </div>
 
@@ -159,7 +184,7 @@
             const errorEl = document.getElementById('error');
             const resultEl = document.getElementById('result');
             errorEl.textContent = '';
-            resultEl.textContent = '';
+            resultEl.style.display = 'none';
 
             if (!time200 || !time400) {
                 errorEl.textContent = 'Please enter both times.';
@@ -176,7 +201,8 @@
             const cssMins = Math.floor(cssPer100mTotal / 60);
             const cssSecs = Math.round(cssPer100mTotal % 60);
 
-            resultEl.textContent = `Critical Swim Speed: ${cssMins}:${cssSecs.toString().padStart(2, '0')} per 100m`;
+            resultEl.textContent = `${cssMins}:${cssSecs.toString().padStart(2, '0')} per 100m`;
+            resultEl.style.display = 'block';
         }
     </script>
 </body>

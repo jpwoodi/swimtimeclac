@@ -1,6 +1,46 @@
-// dashscript.js
+// dashscript.js — Stripe-inspired dashboard
 
-// Helper function to format pace in minutes and seconds per 100 meters
+// Stripe design tokens for charts
+const CHART_COLORS = {
+    purple: 'rgba(99, 91, 255, 0.75)',
+    purpleBorder: 'rgba(99, 91, 255, 1)',
+    orange: 'rgba(239, 108, 0, 0.75)',
+    green: 'rgba(46, 125, 50, 0.75)',
+    greenFill: 'rgba(46, 125, 50, 0.08)',
+    violet: 'rgba(142, 36, 170, 0.75)',
+    violetFill: 'rgba(142, 36, 170, 0.08)',
+    gridLine: '#f0f3f7',
+    tickColor: '#8792a2',
+};
+
+const CHART_DEFAULTS = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            backgroundColor: '#1a1f36',
+            titleFont: { family: 'Inter', weight: '600' },
+            bodyFont: { family: 'Inter' },
+            padding: 12,
+            cornerRadius: 8,
+        }
+    },
+    scales: {
+        x: {
+            grid: { display: false },
+            border: { display: false },
+            ticks: { font: { family: 'Inter', size: 12 }, color: CHART_COLORS.tickColor },
+        },
+        y: {
+            grid: { color: CHART_COLORS.gridLine },
+            border: { display: false },
+            ticks: { font: { family: 'Inter', size: 12 }, color: CHART_COLORS.tickColor },
+            beginAtZero: true,
+        }
+    }
+};
+
 function formatPace(paceInSecondsPerMeter) {
     const pacePer100m = paceInSecondsPerMeter * 100;
     const minutes = Math.floor(pacePer100m / 60);
@@ -8,194 +48,170 @@ function formatPace(paceInSecondsPerMeter) {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
-// Function to fetch swim data from the serverless function
 async function fetchSwimData() {
     try {
         const response = await fetch('/.netlify/functions/get-swims');
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
-        const data = await response.json();
-        return data;
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        return await response.json();
     } catch (error) {
         console.error('Error fetching swim data:', error);
         return [];
     }
 }
 
-// Group swim data by month
 function groupDataByMonth(swimData) {
     const monthlyData = {};
-    
     swimData.forEach(session => {
-        const month = moment(session.start_date).format('YYYY-MM'); // Group by year and month
-
+        const month = moment(session.start_date).format('YYYY-MM');
         if (!monthlyData[month]) {
-            monthlyData[month] = {
-                totalDistance: 0,
-                totalTime: 0,
-                sessions: 0,
-                totalPace: 0,
-                swolfSum: 0,
-                hasSwolf: false
-            };
+            monthlyData[month] = { totalDistance: 0, totalTime: 0, sessions: 0, totalPace: 0, swolfSum: 0, hasSwolf: false };
         }
-
         monthlyData[month].totalDistance += session.distance;
         monthlyData[month].totalTime += session.moving_time;
         monthlyData[month].totalPace += session.moving_time / session.distance;
         monthlyData[month].sessions += 1;
-
         if (session.swim_swolf) {
             monthlyData[month].swolfSum += session.swim_swolf;
             monthlyData[month].hasSwolf = true;
         }
     });
-
     return monthlyData;
 }
 
-// Process the fetched data to compute metrics
 function processData(swimData) {
-    const processedData = {};
-
-    // Total Distance
-    processedData.totalDistance = swimData.reduce((total, session) => total + session.distance, 0);
-
-    // Total Time
-    processedData.totalTime = swimData.reduce((total, session) => total + session.moving_time, 0);
-
-    // Average Pace
-    processedData.averagePace = processedData.totalTime / processedData.totalDistance;
-
-    // Total Calories
-    processedData.totalCalories = swimData.reduce((total, session) => total + (session.calories || 0), 0);
-
-    // Number of Sessions
-    processedData.numberOfSessions = swimData.length;
-
-    return processedData;
+    return {
+        totalDistance: swimData.reduce((t, s) => t + s.distance, 0),
+        totalTime: swimData.reduce((t, s) => t + s.moving_time, 0),
+        averagePace: swimData.reduce((t, s) => t + s.moving_time, 0) / swimData.reduce((t, s) => t + s.distance, 0),
+        totalCalories: swimData.reduce((t, s) => t + (s.calories || 0), 0),
+        numberOfSessions: swimData.length,
+    };
 }
 
-// Update the Overview Section
 function updateOverview(processedData) {
+    document.getElementById('stats-row').style.display = 'flex';
+
     document.getElementById('total-distance').innerHTML = `
-        <h3>Total Distance</h3>
-        <p>${(processedData.totalDistance / 1000).toFixed(2)} km</p>
+        <div class="stat-label">Total Distance</div>
+        <div class="stat-value">${(processedData.totalDistance / 1000).toFixed(1)} km</div>
     `;
-
     document.getElementById('total-time').innerHTML = `
-        <h3>Total Time</h3>
-        <p>${(processedData.totalTime / 3600).toFixed(2)} hours</p>
+        <div class="stat-label">Total Time</div>
+        <div class="stat-value">${(processedData.totalTime / 3600).toFixed(1)} hrs</div>
     `;
-
     document.getElementById('average-pace').innerHTML = `
-        <h3>Average Pace</h3>
-        <p>${formatPace(processedData.averagePace)} /100m</p>
+        <div class="stat-label">Avg Pace</div>
+        <div class="stat-value">${formatPace(processedData.averagePace)} /100m</div>
     `;
-
     document.getElementById('total-calories').innerHTML = `
-        <h3>Total Calories</h3>
-        <p>${Math.round(processedData.totalCalories)} kcal</p>
+        <div class="stat-label">Calories</div>
+        <div class="stat-value">${Math.round(processedData.totalCalories).toLocaleString()}</div>
     `;
-
     document.getElementById('number-of-sessions').innerHTML = `
-        <h3>Number of Sessions</h3>
-        <p>${processedData.numberOfSessions}</p>
+        <div class="stat-label">Sessions</div>
+        <div class="stat-value">${processedData.numberOfSessions}</div>
     `;
 }
 
-// Create the Distance Chart
 function createDistanceChart(swimData) {
     const monthlyData = groupDataByMonth(swimData);
-    const labels = Object.keys(monthlyData); 
-    const distances = Object.values(monthlyData).map(data => (data.totalDistance / 1000).toFixed(2)); 
+    const labels = Object.keys(monthlyData);
+    const distances = Object.values(monthlyData).map(d => (d.totalDistance / 1000).toFixed(2));
 
-    const ctx = document.getElementById('distanceChart').getContext('2d');
-    new Chart(ctx, {
+    new Chart(document.getElementById('distanceChart').getContext('2d'), {
         type: 'bar',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Distance (km)',
                 data: distances,
-                backgroundColor: '#0277bd',
+                backgroundColor: CHART_COLORS.purple,
+                borderRadius: 4,
+                borderWidth: 0,
+                borderSkipped: false,
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false, // This disables automatic aspect ratio calculation
-            scales: {
-                x: { display: true },
-                y: { display: true }
+            ...CHART_DEFAULTS,
+            plugins: {
+                ...CHART_DEFAULTS.plugins,
+                tooltip: {
+                    ...CHART_DEFAULTS.plugins.tooltip,
+                    callbacks: { label: (ctx) => `${ctx.parsed.y} km` }
+                }
             }
         }
     });
 }
 
-// Create the Time Chart
 function createTimeChart(swimData) {
     const monthlyData = groupDataByMonth(swimData);
     const labels = Object.keys(monthlyData);
-    const times = Object.values(monthlyData).map(data => (data.totalTime / 60).toFixed(2)); 
+    const times = Object.values(monthlyData).map(d => (d.totalTime / 60).toFixed(0));
 
-    const ctx = document.getElementById('timeChart').getContext('2d');
-    new Chart(ctx, {
+    new Chart(document.getElementById('timeChart').getContext('2d'), {
         type: 'bar',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Time (minutes)',
                 data: times,
-                backgroundColor: '#ef6c00',
+                backgroundColor: CHART_COLORS.orange,
+                borderRadius: 4,
+                borderWidth: 0,
+                borderSkipped: false,
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false, // Disable default aspect ratio to allow custom height
-            scales: {
-                x: { display: true },
-                y: { display: true }
+            ...CHART_DEFAULTS,
+            plugins: {
+                ...CHART_DEFAULTS.plugins,
+                tooltip: {
+                    ...CHART_DEFAULTS.plugins.tooltip,
+                    callbacks: { label: (ctx) => `${ctx.parsed.y} min` }
+                }
             }
         }
     });
 }
 
-// Create the Pace Chart (average pace per 100m by month)
 function createPaceChart(swimData) {
     const monthlyData = groupDataByMonth(swimData);
     const labels = Object.keys(monthlyData);
-    const paces = Object.values(monthlyData).map(data => {
-        const avgPaceSecsPerMeter = data.totalPace / data.sessions;
-        return (avgPaceSecsPerMeter * 100).toFixed(0); // seconds per 100m
+    const paces = Object.values(monthlyData).map(d => {
+        const avgPace = d.totalPace / d.sessions;
+        return (avgPace * 100).toFixed(0);
     });
 
-    const ctx = document.getElementById('paceChart').getContext('2d');
-    new Chart(ctx, {
+    new Chart(document.getElementById('paceChart').getContext('2d'), {
         type: 'line',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Avg Pace (sec/100m)',
                 data: paces,
-                borderColor: '#2e7d32',
-                backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                borderColor: CHART_COLORS.green,
+                backgroundColor: CHART_COLORS.greenFill,
                 fill: true,
                 tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: CHART_COLORS.green,
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            ...CHART_DEFAULTS,
             scales: {
-                x: { display: true },
-                y: { display: true, reverse: true }
+                ...CHART_DEFAULTS.scales,
+                y: { ...CHART_DEFAULTS.scales.y, reverse: true }
+            },
+            plugins: {
+                ...CHART_DEFAULTS.plugins,
+                tooltip: {
+                    ...CHART_DEFAULTS.plugins.tooltip,
+                    callbacks: { label: (ctx) => `${ctx.parsed.y} sec/100m` }
+                }
             }
         }
     });
 }
 
-// Create the SWOLF Chart (average SWOLF by month)
 function createSwolfChart(swimData) {
     const monthlyData = groupDataByMonth(swimData);
     const labels = [];
@@ -209,37 +225,42 @@ function createSwolfChart(swimData) {
     });
 
     if (swolfValues.length === 0) {
-        const canvas = document.getElementById('swolfChart');
-        canvas.parentElement.innerHTML = '<p style="text-align:center;color:#888;">No SWOLF data available</p>';
+        document.getElementById('swolfChart').parentElement.innerHTML =
+            '<p style="text-align:center;color:#8792a2;padding:40px 0;font-size:14px;">No SWOLF data available</p>';
         return;
     }
 
-    const ctx = document.getElementById('swolfChart').getContext('2d');
-    new Chart(ctx, {
+    new Chart(document.getElementById('swolfChart').getContext('2d'), {
         type: 'line',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: 'Avg SWOLF',
                 data: swolfValues,
-                borderColor: '#8e24aa',
-                backgroundColor: 'rgba(142, 36, 170, 0.1)',
+                borderColor: CHART_COLORS.violet,
+                backgroundColor: CHART_COLORS.violetFill,
                 fill: true,
                 tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: CHART_COLORS.violet,
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            ...CHART_DEFAULTS,
             scales: {
-                x: { display: true },
-                y: { display: true, reverse: true }
+                ...CHART_DEFAULTS.scales,
+                y: { ...CHART_DEFAULTS.scales.y, reverse: true }
+            },
+            plugins: {
+                ...CHART_DEFAULTS.plugins,
+                tooltip: {
+                    ...CHART_DEFAULTS.plugins.tooltip,
+                    callbacks: { label: (ctx) => `SWOLF: ${ctx.parsed.y}` }
+                }
             }
         }
     });
 }
 
-// Main function to initialize the dashboard
 async function initDashboard() {
     const spinner = document.getElementById('loading-spinner');
     const swimData = await fetchSwimData();
@@ -247,24 +268,20 @@ async function initDashboard() {
     if (spinner) spinner.style.display = 'none';
 
     if (!swimData || swimData.length === 0) {
-        document.getElementById('total-distance').innerHTML = '<h3>No swim data available</h3>';
+        document.getElementById('total-distance').innerHTML =
+            '<div class="stat-label">Status</div><div class="stat-value">No data</div>';
+        document.getElementById('stats-row').style.display = 'flex';
         return;
     }
 
-    // Sort swimData by date
     swimData.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
     const processedData = processData(swimData);
-
-    // Update Overview Section
     updateOverview(processedData);
-
-    // Create Charts using monthly data
     createDistanceChart(swimData);
     createTimeChart(swimData);
     createPaceChart(swimData);
     createSwolfChart(swimData);
 }
 
-// Call the main function on page load
 window.onload = initDashboard;

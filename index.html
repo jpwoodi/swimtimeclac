@@ -6,95 +6,111 @@
     <title>SwimTimeCalc - Swim Training Tools</title>
     <link rel="icon" href="images/swimming_favicon.ico">
     <meta name="description" content="Swimming training tools: calculators, dashboards, pool finder, and AI-powered swim plans.">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="nav.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('people-2588747.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: #212529;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
             min-height: 100vh;
-            padding: 20px;
+            padding: 80px 0 60px;
         }
 
         .hero {
             text-align: center;
-            padding: 80px 20px 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 24px 0;
         }
 
         .hero img {
-            width: 100px;
+            width: 72px;
             height: auto;
             margin-bottom: 16px;
         }
 
         .hero h1 {
-            color: #ffffff;
-            font-size: 2.5em;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1f36;
             margin-bottom: 8px;
         }
 
         .hero p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.1em;
+            color: #697386;
+            font-size: 16px;
+            line-height: 1.5;
         }
 
         .tools-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
             max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
+            margin: 40px auto 0;
+            padding: 0 24px;
         }
 
         .tool-card {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
-            padding: 30px 24px;
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 28px 24px;
             text-decoration: none;
-            color: #212529;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            color: #1a1f36;
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
         }
 
         .tool-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            border-color: #c4cad4;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         }
 
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .tool-icon.purple { background: rgba(99, 91, 255, 0.1); color: #635bff; }
+        .tool-icon.blue { background: rgba(0, 123, 255, 0.1); color: #007bff; }
+        .tool-icon.green { background: rgba(46, 125, 50, 0.1); color: #2e7d32; }
+        .tool-icon.orange { background: rgba(239, 108, 0, 0.1); color: #ef6c00; }
+        .tool-icon.teal { background: rgba(0, 150, 136, 0.1); color: #009688; }
+
         .tool-card h2 {
-            color: #007BFF;
-            font-size: 1.3em;
-            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 6px;
         }
 
         .tool-card p {
-            color: #555;
-            font-size: 0.95em;
+            font-size: 14px;
+            color: #697386;
             line-height: 1.5;
         }
 
-        .tool-card.cycling h2 {
-            color: #28a745;
+        .tool-card .arrow {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #635bff;
         }
 
         @media (max-width: 576px) {
-            .hero h1 {
-                font-size: 1.8em;
-            }
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
+            .hero h1 { font-size: 24px; }
+            .tools-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -121,32 +137,46 @@
 
     <div class="tools-grid">
         <a href="calculator.html" class="tool-card">
+            <div class="tool-icon purple">&#9201;</div>
             <h2>Swim Calculator</h2>
             <p>Calculate your swim time from pace, or pace from time, for any distance.</p>
+            <span class="arrow">Open &rarr;</span>
         </a>
         <a href="css.html" class="tool-card">
+            <div class="tool-icon blue">&#9830;</div>
             <h2>CSS Calculator</h2>
             <p>Work out your Critical Swim Speed from 200m and 400m time trials.</p>
+            <span class="arrow">Open &rarr;</span>
         </a>
         <a href="dash.html" class="tool-card">
+            <div class="tool-icon orange">&#9636;</div>
             <h2>Training Dashboard</h2>
             <p>View your distance, time, pace, and SWOLF trends from Strava data.</p>
+            <span class="arrow">Open &rarr;</span>
         </a>
         <a href="pools.html" class="tool-card">
+            <div class="tool-icon teal">&#9906;</div>
             <h2>Pool Finder</h2>
             <p>Find swimming pools and open water locations across London.</p>
+            <span class="arrow">Open &rarr;</span>
         </a>
         <a href="stravafeed.html" class="tool-card">
+            <div class="tool-icon purple">&#9783;</div>
             <h2>Swim Feed</h2>
             <p>Browse your recent swim activities pulled from Strava.</p>
+            <span class="arrow">Open &rarr;</span>
         </a>
         <a href="swim-plan-generator.html" class="tool-card">
+            <div class="tool-icon blue">&#9733;</div>
             <h2>AI Swim Plan</h2>
             <p>Generate a personalised training plan powered by AI using your CSS.</p>
+            <span class="arrow">Open &rarr;</span>
         </a>
-        <a href="cyclecommute.html" class="tool-card cycling">
+        <a href="cyclecommute.html" class="tool-card">
+            <div class="tool-icon green">&#9798;</div>
             <h2>Cycle Commute</h2>
             <p>Track your cycle commute rides, distances, and savings.</p>
+            <span class="arrow">Open &rarr;</span>
         </a>
     </div>
 
