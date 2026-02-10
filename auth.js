@@ -4,6 +4,7 @@
   const STATUS_URL = "/.netlify/functions/auth-status";
   const LOGIN_URL = "/.netlify/functions/auth-login";
   const LOGOUT_URL = "/.netlify/functions/auth-logout";
+  const DEFAULT_AUTH_STATE = { authenticated: false, authEnabled: true };
 
   function isSafeRedirect(target) {
     return typeof target === "string" && target.startsWith("/");
@@ -15,18 +16,21 @@
     return isSafeRedirect(target) ? target : INDEX_PATH;
   }
 
-  async function getAuthStatus() {
+  async function getAuthState() {
     try {
       const response = await fetch(STATUS_URL, {
         method: "GET",
         credentials: "include",
         cache: "no-store",
       });
-      if (!response.ok) return false;
+      if (!response.ok) return DEFAULT_AUTH_STATE;
       const data = await response.json();
-      return !!data.authenticated;
+      return {
+        authenticated: !!data.authenticated,
+        authEnabled: data.authEnabled !== false,
+      };
     } catch {
-      return false;
+      return DEFAULT_AUTH_STATE;
     }
   }
 
@@ -54,7 +58,9 @@
   window.WOODNOTT_AUTH = {
     login,
     logout,
-    status: getAuthStatus,
+    status: async () => (await getAuthState()).authenticated,
+    state: getAuthState,
+    isEnabled: async () => (await getAuthState()).authEnabled,
     getRedirectTarget,
   };
 
@@ -62,7 +68,15 @@
   const isLoginPage = path === LOGIN_PATH || path.endsWith("/login.html");
 
   window.WOODNOTT_AUTH.ready = (async () => {
-    const authenticated = await getAuthStatus();
+    const { authenticated, authEnabled } = await getAuthState();
+
+    if (!authEnabled) {
+      if (isLoginPage) {
+        window.location.replace(getRedirectTarget());
+      }
+      return;
+    }
+
     if (!isLoginPage && !authenticated) {
       const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
       window.location.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(current)}`);

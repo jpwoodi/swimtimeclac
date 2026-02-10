@@ -13,10 +13,15 @@ exports.handler = async (event) => {
     return jsonResponse(405, { error: "Method not allowed" });
   }
 
+  const authEnabled = process.env.AUTH_ENABLED !== "false";
+  if (!authEnabled) {
+    return jsonResponse(200, { ok: true, authEnabled: false, bypassed: true });
+  }
+
   const expectedPassword = process.env.SITE_PASSWORD;
   const sessionSecret = process.env.AUTH_SESSION_SECRET;
   if (!expectedPassword || !sessionSecret) {
-    return jsonResponse(500, { error: "Auth is not configured" });
+    return jsonResponse(500, { error: "Auth is not configured", authEnabled: true });
   }
 
   let body;
@@ -28,13 +33,13 @@ exports.handler = async (event) => {
 
   const password = typeof body.password === "string" ? body.password : "";
   if (!password || password !== expectedPassword) {
-    return jsonResponse(401, { error: "Invalid password" });
+    return jsonResponse(401, { error: "Invalid password", authEnabled: true });
   }
 
   const token = createSessionToken(sessionSecret);
   return jsonResponse(
     200,
-    { ok: true },
+    { ok: true, authEnabled: true },
     { "Set-Cookie": buildCookie(token, event) }
   );
 };

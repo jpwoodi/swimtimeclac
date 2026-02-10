@@ -6,6 +6,9 @@
 [functions]
   included_files = ["data/templates.v1.json", "data/templates.v2.json"]
 
+[context.production.environment]
+  AUTH_ENABLED = "false"
+
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
