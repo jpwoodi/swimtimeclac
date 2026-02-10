@@ -1,0 +1,30 @@
+{
+  "templates": [
+    {
+      "plan_type_key": "mileage",
+      "plan_type_label": "Mileage Mondays",
+      "source_file": "sample_mileage.docx",
+      "raw_text": "MILEAGE MONDAY SAMPLE\n\nWarm Up: 300 free + 100 pull\n\nBuild Set:\n6 x 100 free on 1:45 (descend 1-3, 4-6)\n\nMain Set:\n20 x 100 free on 1:40 (hold CSS pace)\n200 easy\n10 x 100 free on 1:35 (slightly faster than CSS)\n\nCool Down: 100 free\n\nTotal: 3500m\n\nNOTES: Focus on consistent pacing. Use pull buoy for pull sets."
+    },
+    {
+      "plan_type_key": "im",
+      "plan_type_label": "IM Sessions",
+      "source_file": "sample_im.docx",
+      "raw_text": "IM WEDNESDAY SAMPLE\n\nWarm Up: 300 free + 100 pull\n\nBuild Set:\n4 x 50 (25 drill/25 swim) each stroke\n4 x 75 IM order on 1:30\n\nMain Set:\n8 x 100 IM on 2:00\n200 easy\n4 x 200 IM on 3:45\n\nCool Down: 100 free\n\nTotal: 2800m\n\nNOTES: Focus on stroke technique. Use fins for fly if needed."
+    },
+    {
+      "plan_type_key": "fast",
+      "plan_type_label": "Fast Sessions",
+      "source_file": "sample_fast.docx",
+      "raw_text": "FAST FRIDAY SAMPLE\n\nWarm Up: 300 free + 100 pull\n\nBuild Set:\n8 x 50 free on 1:00 (build each 50)\n\nMain Set:\n10 x 100 free on 2:00 (FAST - race pace)\n200 easy\n20 x 50 free on 1:00 (FAST)\n\nCool Down: 100 free\n\nTotal: 2700m\n\nNOTES: Full recovery between fast efforts. Focus on technique at speed."
+    },
+    {
+      "plan_type_key": "kitchen_sink",
+      "plan_type_label": "Kitchen Sink Sessions",
+      "source_file": "sample_kitchen_sink.docx",
+      "raw_text": "KITCHEN SINK SATURDAY SAMPLE\n\nWarm Up: 300 free + 100 pull\n\nBuild Set:\n200 kick with board\n4 x 75 (25 back/25 breast/25 free) on 1:30\n\nMain Set:\n5 x 200 on 3:30 (50 kick/150 swim)\n300 pull with buoy\n10 x 100 on 1:50 (odds: IM, evens: free)\n\nCool Down: 100 free\n\nTotal: 3100m\n\nNOTES: Mixed session combining all elements. Use various equipment."
+    }
+  ],
+  "version": "1.0",
+  "generated_at": null
+}
