@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swim Plan Library</title>
+    <link rel="icon" href="/images/swimming_favicon.ico">
+    <meta name="description" content="Browse 1000+ real masters swim training plans. Filter by distance, difficulty, and session type.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/nav.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f6f9fc;
+            color: #1a1f36;
+            min-height: 100vh;
+            padding: 124px 0 60px;
+        }
+
+        .page-header {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px 24px;
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #1a1f36;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #697386;
+            font-size: 16px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            font-size: 14px;
+            color: #697386;
+        }
+
+        .stat strong {
+            color: #1a1f36;
+            font-weight: 600;
+        }
+
+        /* Main layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        /* Filters sidebar */
+        .filters-sidebar {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 24px;
+            position: sticky;
+            top: 140px;
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filters-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1f36;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .clear-filters {
+            font-size: 12px;
+            color: #635bff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .clear-filters:hover {
+            text-decoration: underline;
+        }
+
+        .filter-group {
+            margin-bottom: 24px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #1a1f36;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #635bff;
+            box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1);
+        }
+
+        .distance-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .distance-inputs input {
+            width: 100%;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* Plans grid */
+        .plans-section {
+            min-width: 0;
+        }
+
+        .plans-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .plans-count {
+            font-size: 14px;
+            color: #697386;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sort-controls label {
+            font-size: 13px;
+            color: #697386;
+        }
+
+        .sort-controls select {
+            padding: 6px 10px;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .plan-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .plan-card:hover {
+            border-color: #635bff;
+            box-shadow: 0 4px 12px rgba(99, 91, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .plan-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .plan-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .badge-mileage {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .badge-im {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-fast {
+            background: #ffe0b2;
+            color: #e65100;
+        }
+
+        .badge-kitchen_sink {
+            background: #e0f2f1;
+            color: #00695c;
+        }
+
+        .difficulty-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            background: #f6f9fc;
+            color: #697386;
+        }
+
+        .plan-distance {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1f36;
+            margin-bottom: 4px;
+        }
+
+        .plan-distance span {
+            font-size: 14px;
+            font-weight: 400;
+            color: #697386;
+        }
+
+        .plan-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+            color: #697386;
+            margin-bottom: 12px;
+        }
+
+        .plan-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .plan-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .tag {
+            padding: 3px 8px;
+            background: #f6f9fc;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #697386;
+        }
+
+        /* Loading spinner */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            border: 3px solid #e3e8ee;
+            border-top: 3px solid #635bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 32px;
+            padding: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #1a1f36;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: #635bff;
+            color: #635bff;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            font-size: 14px;
+            color: #697386;
+            margin: 0 8px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 31, 54, 0.6);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #e3e8ee;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 10;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 12px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f6f9fc;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            color: #697386;
+        }
+
+        .modal-close:hover {
+            background: #e3e8ee;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .plan-detail-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #f6f9fc;
+            border-radius: 8px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #697386;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .meta-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1f36;
+        }
+
+        .plan-content {
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1a1f36;
+            background: #f6f9fc;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #697386;
+            font-size: 14px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-sidebar {
+                position: static;
+            }
+
+            .plans-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 24px;
+            }
+
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .plans-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+    </style>
+    <script src="/auth.js"></script>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
+        <ul>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/work/index.html">Work</a></li>
+            <li><a href="/music/index.html">Music</a></li>
+            <li><a href="/sports/index.html" class="active">Sports</a></li>
+        </ul>
+    </nav>
+    <nav class="sub-nav">
+        <ul>
+            <li><a href="/sports/index.html">Overview</a></li>
+            <li><a href="/sports/calculator.html">Swim Calculator</a></li>
+            <li><a href="/sports/css.html">CSS Calculator</a></li>
+            <li><a href="/sports/dash.html">Dashboard</a></li>
+            <li><a href="/sports/pools.html">Pool Finder</a></li>
+            <li><a href="/sports/stravafeed.html">Swim Feed</a></li>
+            <li><a href="/sports/swim-plan-library.html" class="active">Swim Plans</a></li>
+            <li><a href="/sports/cyclecommute.html">Cycle Commute</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <h1>Swim Plan Library</h1>
+        <p>Browse 1000+ real masters swim training plans</p>
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat">Loading...</div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Filters Sidebar -->
+        <aside class="filters-sidebar">
+            <div class="filters-header">
+                <h3>Filters</h3>
+                <a href="#" class="clear-filters" onclick="clearFilters(event)">Clear</a>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Search plans..." onkeyup="handleSearchKeyup(event)">
+            </div>
+
+            <div class="filter-group">
+                <label for="type-filter">Session Type</label>
+                <select id="type-filter" onchange="applyFilters()">
+                    <option value="all">All Types</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="difficulty-filter">Difficulty</label>
+                <select id="difficulty-filter" onchange="applyFilters()">
+                    <option value="all">All Levels</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Distance Range (meters)</label>
+                <div class="distance-inputs">
+                    <input type="number" id="min-distance" placeholder="Min" onchange="applyFilters()">
+                    <input type="number" id="max-distance" placeholder="Max" onchange="applyFilters()">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="pool-type-filter">Pool Type</label>
+                <select id="pool-type-filter" onchange="applyFilters()">
+                    <option value="all">All Pools</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Plans Section -->
+        <main class="plans-section">
+            <div class="plans-header">
+                <div class="plans-count" id="plans-count">Loading plans...</div>
+                <div class="sort-controls">
+                    <label for="sort-by">Sort by:</label>
+                    <select id="sort-by" onchange="applyFilters()">
+                        <option value="date">Date</option>
+                        <option value="distance">Distance</option>
+                        <option value="difficulty">Difficulty</option>
+                        <option value="name">Name</option>
+                    </select>
+                    <select id="sort-order" onchange="applyFilters()">
+                        <option value="desc">↓ Desc</option>
+                        <option value="asc">↑ Asc</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loading-spinner" class="loading">
+                <div class="spinner"></div>
+                <p>Loading swim plans...</p>
+            </div>
+
+            <div id="plans-grid" class="plans-grid"></div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <h3>No plans found</h3>
+                <p>Try adjusting your filters</p>
+            </div>
+
+            <div id="pagination" class="pagination" style="display: none;"></div>
+        </main>
+    </div>
+
+    <!-- Plan Detail Modal -->
+    <div id="plan-modal" class="modal" onclick="closeModalOnBackdrop(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Plan Details</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <div id="modal-meta"></div>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content" class="plan-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const navMenu = document.querySelector('.top-nav ul');
+            navMenu.classList.toggle('expanded');
+        }
+
+        let allFilterOptions = {};
+        let currentFilters = {
+            type: 'all',
+            difficulty: 'all',
+            minDistance: null,
+            maxDistance: null,
+            poolType: 'all',
+            search: '',
+            sortBy: 'date',
+            sortOrder: 'desc',
+            page: 1,
+            pageSize: 20
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadFilterOptions();
+            await loadPlans();
+        });
+
+        // Load available filter options
+        async function loadFilterOptions() {
+            try {
+                const response = await fetch('/.netlify/functions/browseSwimPlans?action=getFilterOptions');
+                const data = await response.json();
+                allFilterOptions = data.filterOptions;
+
+                // Update stats
+                document.getElementById('stats-bar').innerHTML = `
+                    <div class="stat"><strong>${data.totalPlans}</strong> total plans</div>
+                    <div class="stat"><strong>${data.filterOptions.distanceRange.min}</strong> - <strong>${data.filterOptions.distanceRange.max}</strong>m range</div>
+                    <div class="stat"><strong>${data.filterOptions.types.length}</strong> session types</div>
+                `;
+
+                // Populate filter dropdowns
+                populateFilterDropdowns();
+            } catch (error) {
+                console.error('Error loading filter options:', error);
+            }
+        }
+
+        function populateFilterDropdowns() {
+            // Session types
+            const typeSelect = document.getElementById('type-filter');
+            allFilterOptions.types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = formatPlanType(type);
+                typeSelect.appendChild(option);
+            });
+
+            // Difficulties
+            const difficultySelect = document.getElementById('difficulty-filter');
+            allFilterOptions.difficulties.forEach(diff => {
+                const option = document.createElement('option');
+                option.value = diff;
+                option.textContent = capitalize(diff);
+                difficultySelect.appendChild(option);
+            });
+
+            // Pool types
+            const poolSelect = document.getElementById('pool-type-filter');
+            allFilterOptions.poolTypes.forEach(pool => {
+                const option = document.createElement('option');
+                option.value = pool;
+                option.textContent = pool;
+                poolSelect.appendChild(option);
+            });
+        }
+
+        // Load and display plans
+        async function loadPlans() {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const plansGrid = document.getElementById('plans-grid');
+            const emptyState = document.getElementById('empty-state');
+            const pagination = document.getElementById('pagination');
+
+            loadingSpinner.style.display = 'block';
+            plansGrid.innerHTML = '';
+            emptyState.style.display = 'none';
+            pagination.style.display = 'none';
+
+            try {
+                const queryParams = new URLSearchParams();
+                Object.keys(currentFilters).forEach(key => {
+                    if (currentFilters[key] && currentFilters[key] !== 'all') {
+                        queryParams.append(key, currentFilters[key]);
+                    }
+                });
+
+                const response = await fetch(`/.netlify/functions/browseSwimPlans?${queryParams}`);
+                const data = await response.json();
+
+                loadingSpinner.style.display = 'none';
+
+                if (data.plans && data.plans.length > 0) {
+                    renderPlans(data.plans);
+                    renderPagination(data.pagination);
+                    document.getElementById('plans-count').textContent =
+                        `Showing ${data.plans.length} of ${data.pagination.totalCount} plans`;
+                } else {
+                    emptyState.style.display = 'block';
+                    document.getElementById('plans-count').textContent = '0 plans found';
+                }
+            } catch (error) {
+                console.error('Error loading plans:', error);
+                loadingSpinner.style.display = 'none';
+                emptyState.style.display = 'block';
+            }
+        }
+
+        function renderPlans(plans) {
+            const plansGrid = document.getElementById('plans-grid');
+            plansGrid.innerHTML = plans.map(plan => createPlanCard(plan)).join('');
+        }
+
+        function createPlanCard(plan) {
+            const distance = plan.metadata.distance_meters || 'N/A';
+            const difficulty = plan.metadata.difficulty || 'intermediate';
+            const duration = plan.metadata.estimated_duration_minutes || 60;
+            const equipment = plan.metadata.equipment_required || [];
+            const focusAreas = plan.metadata.focus_areas || [];
+
+            return `
+                <div class="plan-card" onclick='showPlanDetails(${JSON.stringify(plan).replace(/'/g, "&apos;")})'>
+                    <div class="plan-card-header">
+                        <span class="plan-type-badge badge-${plan.plan_type_key}">
+                            ${formatPlanType(plan.plan_type_key)}
+                        </span>
+                        <span class="difficulty-badge">${capitalize(difficulty)}</span>
+                    </div>
+                    <div class="plan-distance">${distance !== 'N/A' ? distance.toLocaleString() : 'N/A'} <span>meters</span></div>
+                    <div class="plan-meta">
+                        <div class="plan-meta-item">⏱ ${duration}min</div>
+                        <div class="plan-meta-item">🏊 ${plan.metadata.pool_type || 'SCY'}</div>
+                    </div>
+                    ${focusAreas.length > 0 || equipment.length > 0 ? `
+                        <div class="plan-tags">
+                            ${focusAreas.slice(0, 3).map(f => `<span class="tag">${formatTag(f)}</span>`).join('')}
+                            ${equipment.slice(0, 2).map(e => `<span class="tag">${formatTag(e)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderPagination(pagination) {
+            const paginationDiv = document.getElementById('pagination');
+
+            if (pagination.totalPages <= 1) {
+                paginationDiv.style.display = 'none';
+                return;
+            }
+
+            paginationDiv.style.display = 'flex';
+            paginationDiv.innerHTML = `
+                <button onclick="goToPage(${pagination.currentPage - 1})" ${!pagination.hasPrevious ? 'disabled' : ''}>
+                    Previous
+                </button>
+                <span class="page-info">
+                    Page ${pagination.currentPage} of ${pagination.totalPages}
+                </span>
+                <button onclick="goToPage(${pagination.currentPage + 1})" ${!pagination.hasNext ? 'disabled' : ''}>
+                    Next
+                </button>
+            `;
+        }
+
+        function goToPage(page) {
+            currentFilters.page = page;
+            loadPlans();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showPlanDetails(plan) {
+            const modal = document.getElementById('plan-modal');
+            const title = document.getElementById('modal-title');
+            const meta = document.getElementById('modal-meta');
+            const content = document.getElementById('modal-content');
+
+            title.textContent = plan.source_file;
+
+            meta.innerHTML = `
+                <div class="plan-detail-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">Type</div>
+                        <div class="meta-value">${formatPlanType(plan.plan_type_key)}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Distance</div>
+                        <div class="meta-value">${(plan.metadata.distance_meters || 0).toLocaleString()}m</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Difficulty</div>
+                        <div class="meta-value">${capitalize(plan.metadata.difficulty)}</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Duration</div>
+                        <div class="meta-value">${plan.metadata.estimated_duration_minutes}min</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Pool Type</div>
+                        <div class="meta-value">${plan.metadata.pool_type || 'SCY'}</div>
+                    </div>
+                </div>
+            `;
+
+            content.textContent = plan.raw_text;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('plan-modal').classList.remove('active');
+        }
+
+        function closeModalOnBackdrop(event) {
+            if (event.target.id === 'plan-modal') {
+                closeModal();
+            }
+        }
+
+        function applyFilters() {
+            currentFilters.type = document.getElementById('type-filter').value;
+            currentFilters.difficulty = document.getElementById('difficulty-filter').value;
+            currentFilters.minDistance = document.getElementById('min-distance').value;
+            currentFilters.maxDistance = document.getElementById('max-distance').value;
+            currentFilters.poolType = document.getElementById('pool-type-filter').value;
+            currentFilters.search = document.getElementById('search').value;
+            currentFilters.sortBy = document.getElementById('sort-by').value;
+            currentFilters.sortOrder = document.getElementById('sort-order').value;
+            currentFilters.page = 1; // Reset to first page
+
+            loadPlans();
+        }
+
+        function clearFilters(event) {
+            event.preventDefault();
+            document.getElementById('type-filter').value = 'all';
+            document.getElementById('difficulty-filter').value = 'all';
+            document.getElementById('min-distance').value = '';
+            document.getElementById('max-distance').value = '';
+            document.getElementById('pool-type-filter').value = 'all';
+            document.getElementById('search').value = '';
+            document.getElementById('sort-by').value = 'date';
+            document.getElementById('sort-order').value = 'desc';
+            applyFilters();
+        }
+
+        function handleSearchKeyup(event) {
+            // Debounce search
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(() => {
+                applyFilters();
+            }, 500);
+        }
+
+        // Utility functions
+        function formatPlanType(type) {
+            const labels = {
+                'mileage': 'Mileage',
+                'im': 'IM (Strokes)',
+                'fast': 'Fast (Speed)',
+                'kitchen_sink': 'Kitchen Sink'
+            };
+            return labels[type] || type;
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function formatTag(tag) {
+            return tag.replace(/_/g, ' ');
+        }
+    </script>
+</body>
+</html>
