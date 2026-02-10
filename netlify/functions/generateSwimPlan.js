@@ -39,6 +39,16 @@ function buildTemplateBlock(templatesData) {
     return block;
 }
 
+function shouldIncludeDebugMeta(event, parsed) {
+    const headers = event && event.headers ? event.headers : {};
+    const headerDebug = headers['x-swim-plan-debug'] === '1' || headers['X-Swim-Plan-Debug'] === '1';
+    const bodyDebug = !!(parsed && parsed.debug === true);
+    const envDebug = process.env.SWIM_PLAN_DEBUG_META === 'true';
+    const nonProdContext = process.env.CONTEXT && process.env.CONTEXT !== 'production';
+
+    return headerDebug || bodyDebug || envDebug || nonProdContext;
+}
+
 exports.handler = async function(event, context) {
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
@@ -59,7 +69,8 @@ exports.handler = async function(event, context) {
         sessions,
         sessionDuration,
         comments,
-        conversationHistory
+        conversationHistory,
+        debug
     } = parsed;
 
     const apiKey = process.env.OPENAI_API_KEY;
@@ -145,12 +156,24 @@ ${templateBlock}`
             content: data.choices[0].message.content.trim()
         };
 
+        const responseBody = {
+            plan: assistantMessage.content,
+            conversationHistory: [...messages, assistantMessage]
+        };
+
+        if (shouldIncludeDebugMeta(event, { ...parsed, debug })) {
+            responseBody.meta = {
+                templates: {
+                    count: (templatesData.templates || []).length,
+                    version: templatesData.version || null,
+                    sources: (templatesData.templates || []).map((t) => t.source_file)
+                }
+            };
+        }
+
         return {
             statusCode: 200,
-            body: JSON.stringify({
-                plan: assistantMessage.content,
-                conversationHistory: [...messages, assistantMessage]
-            })
+            body: JSON.stringify(responseBody)
         };
     } else {
         console.error('OpenAI API error:', data.error);

@@ -42,6 +42,25 @@ TEMPLATE_TYPES = [
 ]
 
 OUTPUT_FILE = "data/templates.v1.json"
+MOJIBAKE_REPLACEMENTS = {
+    "â†’": "->",
+    "â€“": "-",
+    "â€”": "-",
+    "â€˜": "'",
+    "â€™": "'",
+    "â€œ": '"',
+    "â€": '"',
+    "Â ": " ",
+    "\u00a0": " "
+}
+
+
+def normalize_text(text):
+    """Normalize extracted text and repair common mojibake artifacts."""
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    for bad, good in MOJIBAKE_REPLACEMENTS.items():
+        normalized = normalized.replace(bad, good)
+    return normalized.strip()
 
 
 def extract_text_from_docx(docx_path):
@@ -74,7 +93,7 @@ def extract_text_from_docx(docx_path):
             if row_text:
                 extracted_text.append(" | ".join(row_text))
 
-    return "\n".join(extracted_text)
+    return normalize_text("\n".join(extracted_text))
 
 
 def find_first_docx(folder_path):
