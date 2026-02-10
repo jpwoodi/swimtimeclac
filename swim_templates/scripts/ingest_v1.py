@@ -103,7 +103,7 @@ def main():
     script_dir = Path(__file__).parent.parent.parent  # Go up to repo root
     os.chdir(script_dir)
 
-    print("🏊 Swim Template Ingestion v1")
+    print("Swim Template Ingestion v1")
     print("=" * 50)
 
     templates = []
@@ -114,12 +114,12 @@ def main():
         key = template_type["plan_type_key"]
         label = template_type["plan_type_label"]
 
-        print(f"\n📄 Processing {label} ({key})...")
+        print(f"\nProcessing {label} ({key})...")
 
         docx_file = find_first_docx(folder)
 
         if docx_file is None:
-            print(f"   ⚠️  No .docx file found in {folder}/")
+            print(f"   WARNING: No .docx file found in {folder}/")
             missing_templates.append(key)
             continue
 
@@ -130,7 +130,7 @@ def main():
             char_count = len(raw_text)
             line_count = len(raw_text.split('\n'))
 
-            print(f"   ✓ Extracted {char_count} characters, {line_count} lines")
+            print(f"   OK: Extracted {char_count} characters, {line_count} lines")
 
             templates.append({
                 "plan_type_key": key,
@@ -139,11 +139,11 @@ def main():
                 "raw_text": raw_text
             })
         except Exception as e:
-            print(f"   ✗ Error extracting text: {e}")
+            print(f"   ERROR: Error extracting text: {e}")
             missing_templates.append(key)
 
     # Write output
-    print(f"\n📝 Writing output to {OUTPUT_FILE}...")
+    print(f"\nWriting output to {OUTPUT_FILE}...")
 
     output_data = {
         "templates": templates,
@@ -157,13 +157,13 @@ def main():
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-    print(f"✓ Successfully wrote {len(templates)} templates to {OUTPUT_FILE}")
+    print(f"OK: Successfully wrote {len(templates)} templates to {OUTPUT_FILE}")
 
     if missing_templates:
-        print(f"\n⚠️  Warning: Missing templates for: {', '.join(missing_templates)}")
+        print(f"\nWARNING: Missing templates for: {', '.join(missing_templates)}")
         print("   The AI coach will work with partial templates.")
 
-    print("\n✅ Ingestion complete!")
+    print("\nIngestion complete.")
     print(f"   Total templates: {len(templates)}/4")
 
     return 0 if len(templates) > 0 else 1

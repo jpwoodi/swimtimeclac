@@ -2,7 +2,7 @@
   "name": "swimtimecalc",
   "version": "1.0.0",
   "scripts": {
-    "ingest-templates": "python3 swim_templates/scripts/ingest_v1.py"
+    "ingest-templates": "py -3 swim_templates/scripts/ingest_v1.py || python3 swim_templates/scripts/ingest_v1.py || python swim_templates/scripts/ingest_v1.py"
   },
   "dependencies": {
     "node-fetch": "^2.6.1"
