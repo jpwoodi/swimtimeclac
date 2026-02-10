@@ -383,27 +383,142 @@
         .status-tag.evening { background-color: #2e7d32; }
         .status-tag.other { background-color: #8792a2; }
 
-        /* Box Plot Styles */
-        #boxPlotContainer {
+        /* Time Summary Styles (replaces Box Plots) */
+        .time-summary {
+            padding: 16px 0;
+        }
+
+        .kpi-row {
             display: flex;
-            justify-content: space-around;
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-item {
+            flex: 1;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8792a2;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1f36;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .primary-stat {
+            display: flex;
             align-items: center;
-            height: 100%;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #697386;
+        }
+
+        .primary-stat strong {
+            color: #1a1f36;
+            font-size: 18px;
+        }
+
+        .streak-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: help;
+            transition: transform 0.1s ease;
+        }
+
+        .streak-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .streak-badge-green {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .streak-badge-amber {
+            background-color: #ffe0b2;
+            color: #ef6c00;
+        }
+
+        .streak-badge-grey {
+            background-color: #e3e8ee;
+            color: #697386;
+        }
+
+        .target-visual {
+            margin-bottom: 16px;
             padding: 20px 0;
         }
 
-        .box-plot {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .time-bar {
             position: relative;
+            height: 40px;
+            background: linear-gradient(to right, #f0f3f7 0%, #f0f3f7 100%);
+            border-radius: 8px;
+            padding: 0 20px;
         }
 
-        .box-plot-label {
-            font-size: 12px;
+        .time-tick {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .time-label {
+            position: absolute;
+            top: 45px;
+            font-size: 11px;
+            color: #8792a2;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .target-tick .target-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 40px;
+            background: #635bff;
+            border-left: 2px dashed #635bff;
+        }
+
+        .target-label {
+            color: #635bff;
             font-weight: 600;
+        }
+
+        .avg-dot {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .supporting-line {
+            font-size: 13px;
             color: #697386;
-            margin-bottom: 8px;
+            text-align: center;
         }
 
         /* Heatmap Styles */
@@ -844,29 +959,82 @@
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         }
 
-        // Utility: calculate quartiles
-        function calculateQuartiles(values) {
-            if (values.length === 0) return null;
-            const sorted = [...values].sort((a, b) => a - b);
-            const q1 = sorted[Math.floor(sorted.length * 0.25)];
-            const median = sorted[Math.floor(sorted.length * 0.5)];
-            const q3 = sorted[Math.floor(sorted.length * 0.75)];
-            const iqr = q3 - q1;
-            const lowerWhisker = Math.max(sorted[0], q1 - 1.5 * iqr);
-            const upperWhisker = Math.min(sorted[sorted.length - 1], q3 + 1.5 * iqr);
-            const outliers = sorted.filter(v => v < lowerWhisker || v > upperWhisker);
-            return { q1, median, q3, lowerWhisker, upperWhisker, outliers };
+        // Utility: calculate circular mean for times (handles wraparound at midnight)
+        function calculateCircularMean(minutesArray) {
+            if (minutesArray.length === 0) return null;
+
+            // Convert to angles (0-1440 minutes -> 0-2π radians)
+            const angles = minutesArray.map(m => (2 * Math.PI * m) / 1440);
+
+            // Calculate mean of sines and cosines
+            const meanSin = angles.reduce((sum, a) => sum + Math.sin(a), 0) / angles.length;
+            const meanCos = angles.reduce((sum, a) => sum + Math.cos(a), 0) / angles.length;
+
+            // Calculate mean angle
+            let meanAngle = Math.atan2(meanSin, meanCos);
+
+            // Convert back to minutes (0-1440)
+            let meanMinutes = (meanAngle * 1440) / (2 * Math.PI);
+            if (meanMinutes < 0) meanMinutes += 1440;
+
+            return meanMinutes;
         }
 
-        // CHART 1: Box Plot for Leave & Arrival Times
+        // Get rides for last N days
+        function getRidesLastNDays(rides, days) {
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - days);
+            return rides.filter(r => r.startLocal >= cutoff);
+        }
+
+        // Calculate streak for "Leave by 08:00" target
+        function calculateLeaveBy08Streak(rides) {
+            const TARGET_TIME = 480; // 08:00 in minutes
+
+            // Get morning rides only
+            const morningRides = rides.filter(r => r.commuteType === 'morning');
+            if (morningRides.length === 0) return { streak: null, last10: null };
+
+            // Group by date (YYYY-MM-DD) and find earliest leave time per day
+            const dayMap = {};
+            morningRides.forEach(r => {
+                const dateKey = r.startLocal.toISOString().split('T')[0];
+                if (!dayMap[dateKey] || r.leaveMinutes < dayMap[dateKey]) {
+                    dayMap[dateKey] = r.leaveMinutes;
+                }
+            });
+
+            // Get sorted array of morning commute-days (most recent first)
+            const sortedDays = Object.keys(dayMap).sort().reverse();
+
+            // Calculate streak from most recent day backwards
+            let streak = 0;
+            for (const day of sortedDays) {
+                if (dayMap[day] <= TARGET_TIME) {
+                    streak++;
+                } else {
+                    break; // Streak broken
+                }
+            }
+
+            // Calculate last 10 morning commute-days on-time count
+            const last10Days = sortedDays.slice(0, 10);
+            const last10OnTime = last10Days.filter(day => dayMap[day] <= TARGET_TIME).length;
+
+            return { streak, last10: { onTime: last10OnTime, total: last10Days.length } };
+        }
+
+        // CHART 1: Leave & Arrival Times - Last 30 Days Summary
         function renderBoxPlot(rides) {
             const container = document.getElementById('boxPlotContainer');
             const insightsDiv = document.getElementById('boxPlotInsights');
 
-            const typeRides = rides.filter(r => r.commuteType === currentBoxPlotTab);
+            // ALWAYS constrain to last 30 days for this component
+            const last30DaysRides = getRidesLastNDays(rides, 30);
+            const typeRides = last30DaysRides.filter(r => r.commuteType === currentBoxPlotTab);
 
             if (typeRides.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:40px;">No data available</p>';
+                container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:40px;">No rides in the last 30 days</p>';
                 insightsDiv.innerHTML = '';
                 return;
             }
@@ -874,82 +1042,111 @@
             const leaveTimes = typeRides.map(r => r.leaveMinutes);
             const arriveTimes = typeRides.map(r => r.arriveMinutes);
 
-            const leaveStats = calculateQuartiles(leaveTimes);
-            const arriveStats = calculateQuartiles(arriveTimes);
+            const avgLeave = calculateCircularMean(leaveTimes);
+            const avgArrive = calculateCircularMean(arriveTimes);
 
-            // Create SVG box plots
-            const svgWidth = 200;
-            const svgHeight = 280;
-            const padding = { top: 20, bottom: 40, left: 10, right: 10 };
-            const plotHeight = svgHeight - padding.top - padding.bottom;
-
-            const timeMin = currentBoxPlotTab === 'morning' ? 360 : 900; // 6:00 or 15:00
-            const timeMax = currentBoxPlotTab === 'morning' ? 540 : 1260; // 9:00 or 21:00
-            const timeRange = timeMax - timeMin;
-
-            function yScale(minutes) {
-                return padding.top + plotHeight - ((minutes - timeMin) / timeRange) * plotHeight;
-            }
-
-            function createBoxPlotSVG(stats, label, color) {
-                if (!stats) return '<p>No data</p>';
-
-                let svg = `<div class="box-plot">
-                    <div class="box-plot-label">${label}</div>
-                    <svg width="${svgWidth}" height="${svgHeight}" style="overflow: visible;">`;
-
-                const centerX = svgWidth / 2;
-                const boxWidth = 60;
-
-                // Whiskers
-                svg += `<line x1="${centerX}" y1="${yScale(stats.lowerWhisker)}" x2="${centerX}" y2="${yScale(stats.q1)}" stroke="${color}" stroke-width="2"/>`;
-                svg += `<line x1="${centerX}" y1="${yScale(stats.q3)}" x2="${centerX}" y2="${yScale(stats.upperWhisker)}" stroke="${color}" stroke-width="2"/>`;
-                svg += `<line x1="${centerX - 15}" y1="${yScale(stats.lowerWhisker)}" x2="${centerX + 15}" y2="${yScale(stats.lowerWhisker)}" stroke="${color}" stroke-width="2"/>`;
-                svg += `<line x1="${centerX - 15}" y1="${yScale(stats.upperWhisker)}" x2="${centerX + 15}" y2="${yScale(stats.upperWhisker)}" stroke="${color}" stroke-width="2"/>`;
-
-                // Box
-                const boxY = yScale(stats.q3);
-                const boxHeight = yScale(stats.q1) - yScale(stats.q3);
-                svg += `<rect x="${centerX - boxWidth/2}" y="${boxY}" width="${boxWidth}" height="${boxHeight}" fill="${color}" opacity="0.3" stroke="${color}" stroke-width="2"/>`;
-
-                // Median line
-                svg += `<line x1="${centerX - boxWidth/2}" y1="${yScale(stats.median)}" x2="${centerX + boxWidth/2}" y2="${yScale(stats.median)}" stroke="${color}" stroke-width="3"/>`;
-
-                // Outliers
-                stats.outliers.forEach(outlier => {
-                    svg += `<circle cx="${centerX}" cy="${yScale(outlier)}" r="3" fill="${color}"/>`;
-                });
-
-                // Y-axis labels
-                const tickTimes = currentBoxPlotTab === 'morning' ? [360, 420, 480, 540] : [900, 1020, 1140, 1260];
-                tickTimes.forEach(t => {
-                    svg += `<text x="10" y="${yScale(t) + 4}" font-size="11" fill="#8792a2">${formatTime(t)}</text>`;
-                });
-
-                svg += `</svg></div>`;
-                return svg;
-            }
-
-            const leaveColor = currentBoxPlotTab === 'morning' ? '#635bff' : '#2e7d32';
-            const arriveColor = currentBoxPlotTab === 'morning' ? '#009688' : '#ef6c00';
-
-            container.innerHTML = createBoxPlotSVG(leaveStats, 'Leave Time', leaveColor) +
-                                 createBoxPlotSVG(arriveStats, 'Arrive Time', arriveColor);
-
-            // Generate insights
-            let insights = '';
             if (currentBoxPlotTab === 'morning') {
-                const before715 = leaveTimes.filter(t => t < 435).length;
-                const pct = ((before715 / leaveTimes.length) * 100).toFixed(0);
-                insights += `<div class="insight-item"><span class="insight-bullet blue"></span><span>You leave before 7:15 on ${pct}% of mornings.</span></div>`;
-            } else {
-                const avgMorningDuration = rides.filter(r => r.commuteType === 'morning').reduce((sum, r) => sum + r.durationMin, 0) / Math.max(1, rides.filter(r => r.commuteType === 'morning').length);
-                const avgEveningDuration = typeRides.reduce((sum, r) => sum + r.durationMin, 0) / typeRides.length;
-                const diff = ((avgEveningDuration - avgMorningDuration) / avgMorningDuration * 100).toFixed(0);
-                insights += `<div class="insight-item"><span class="insight-bullet green"></span><span>Evening rides are ${diff}% ${diff < 0 ? 'faster' : 'slower'} on average.</span></div>`;
-            }
+                // Morning Tab: KPIs + Leave by 08:00 stat + Target visual + Streak badge
 
-            insightsDiv.innerHTML = insights;
+                // Calculate Leave by 08:00 percentage
+                const onTimeCount = leaveTimes.filter(t => t <= 480).length;
+                const onTimePct = Math.round((onTimeCount / leaveTimes.length) * 100);
+
+                // Calculate streak
+                const streakData = calculateLeaveBy08Streak(last30DaysRides);
+
+                // Determine color for target visual
+                let targetColor = '#2e7d32'; // green
+                if (avgLeave > 480 && avgLeave <= 490) {
+                    targetColor = '#ef6c00'; // amber
+                } else if (avgLeave > 490) {
+                    targetColor = '#d32f2f'; // red
+                }
+
+                // Determine streak badge color
+                let streakBadgeClass = 'streak-badge-grey';
+                if (streakData.streak && streakData.streak >= 5) {
+                    streakBadgeClass = 'streak-badge-green';
+                } else if (streakData.streak && streakData.streak >= 1) {
+                    streakBadgeClass = 'streak-badge-amber';
+                }
+
+                container.innerHTML = `
+                    <div class="time-summary">
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <div class="kpi-label">Average Leave Time</div>
+                                <div class="kpi-value">${avgLeave !== null ? formatTime(avgLeave) : '—'}</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Average Arrive Time</div>
+                                <div class="kpi-value">${avgArrive !== null ? formatTime(avgArrive) : '—'}</div>
+                            </div>
+                        </div>
+
+                        <div class="primary-stat">
+                            <span class="stat-text">Leave by 08:00: <strong>${onTimePct}%</strong></span>
+                            <span class="streak-badge ${streakBadgeClass}" title="Counts consecutive commute-days where your earliest morning ride left by 08:00. Days without a morning ride don't break the streak.">
+                                Streak: ${streakData.streak !== null ? streakData.streak : '—'} ${streakData.streak === 1 ? 'day' : 'days'}
+                            </span>
+                        </div>
+
+                        <div class="target-visual">
+                            <div class="time-bar">
+                                <div class="time-tick" style="left: 0%;">
+                                    <span class="time-label">06:00</span>
+                                </div>
+                                <div class="time-tick target-tick" style="left: 50%;">
+                                    <span class="target-line"></span>
+                                    <span class="time-label target-label">Target 08:00</span>
+                                </div>
+                                <div class="time-tick" style="left: 100%;">
+                                    <span class="time-label">10:00</span>
+                                </div>
+                                ${avgLeave !== null ? `<div class="avg-dot" style="left: ${((avgLeave - 360) / 240) * 100}%; background-color: ${targetColor};"></div>` : ''}
+                            </div>
+                        </div>
+
+                        ${streakData.last10 && streakData.last10.total > 0 ? `
+                            <div class="supporting-line">
+                                Last ${streakData.last10.total} morning commute-days: ${streakData.last10.onTime}/${streakData.last10.total} on time
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                insightsDiv.innerHTML = '';
+
+            } else {
+                // Evening Tab: KPIs + Optional insight
+
+                container.innerHTML = `
+                    <div class="time-summary">
+                        <div class="kpi-row">
+                            <div class="kpi-item">
+                                <div class="kpi-label">Average Leave Time</div>
+                                <div class="kpi-value">${avgLeave !== null ? formatTime(avgLeave) : '—'}</div>
+                            </div>
+                            <div class="kpi-item">
+                                <div class="kpi-label">Average Arrive Time</div>
+                                <div class="kpi-value">${avgArrive !== null ? formatTime(avgArrive) : '—'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Optional insight: compare evening vs morning speeds
+                const morningRides = last30DaysRides.filter(r => r.commuteType === 'morning');
+                if (morningRides.length > 0 && typeRides.length > 0) {
+                    const avgMorningDuration = morningRides.reduce((sum, r) => sum + r.durationMin, 0) / morningRides.length;
+                    const avgEveningDuration = typeRides.reduce((sum, r) => sum + r.durationMin, 0) / typeRides.length;
+                    const diff = Math.round(((avgEveningDuration - avgMorningDuration) / avgMorningDuration) * 100);
+                    const comparison = diff < 0 ? 'faster' : 'slower';
+                    insightsDiv.innerHTML = `<div class="insight-item"><span class="insight-bullet green"></span><span>Evening rides are ${Math.abs(diff)}% ${comparison} (last 30 days)</span></div>`;
+                } else {
+                    insightsDiv.innerHTML = '';
+                }
+            }
         }
 
         // CHART 2: Scatter Plot - Leave Time vs Duration
