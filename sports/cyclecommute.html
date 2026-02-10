@@ -98,6 +98,73 @@
             margin-top: 4px;
         }
 
+        /* Filter Bar */
+        .filter-bar {
+            max-width: 1200px;
+            margin: 16px auto 0;
+            padding: 16px 24px;
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-pill {
+            padding: 6px 16px;
+            background: #f6f9fc;
+            color: #697386;
+            border: 1px solid #e3e8ee;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .filter-pill:hover {
+            background: #e3e8ee;
+        }
+
+        .filter-pill.active {
+            background: #635bff;
+            color: #fff;
+            border-color: #635bff;
+        }
+
+        .filter-toggle {
+            padding: 6px 14px;
+            background: transparent;
+            color: #697386;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .filter-toggle:hover {
+            border-color: #635bff;
+            color: #635bff;
+        }
+
+        .filter-toggle.active {
+            background: #635bff;
+            color: #fff;
+            border-color: #635bff;
+        }
+
         /* Loading */
         .loading {
             text-align: center;
@@ -128,9 +195,16 @@
             padding: 0 24px;
         }
 
-        .chart-grid {
+        .chart-grid-row1 {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .chart-grid-row2 {
+            display: grid;
+            grid-template-columns: 1fr;
             gap: 16px;
         }
 
@@ -141,18 +215,98 @@
             padding: 24px;
         }
 
+        .chart-card-wide {
+            grid-column: span 1;
+        }
+
+        .chart-card-full {
+            grid-column: span 1;
+        }
+
         .chart-card h3 {
             font-size: 14px;
             font-weight: 600;
             color: #697386;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .chart-container {
             position: relative;
             height: 260px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #e3e8ee;
+            padding-bottom: 8px;
+        }
+
+        .tab-btn {
+            padding: 6px 12px;
+            background: transparent;
+            color: #697386;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tab-btn:hover {
+            color: #1a1f36;
+        }
+
+        .tab-btn.active {
+            color: #635bff;
+            border-bottom-color: #635bff;
+        }
+
+        /* Insights */
+        .insights {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f3f7;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #697386;
+            line-height: 1.5;
+        }
+
+        .insight-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .insight-bullet {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .insight-bullet.blue {
+            background-color: #635bff;
+        }
+
+        .insight-bullet.green {
+            background-color: #2e7d32;
+        }
+
+        .insight-bullet.teal {
+            background-color: #009688;
         }
 
         /* Commute table */
@@ -225,13 +379,109 @@
             color: white;
         }
 
-        .status-tag.normal { background-color: #2e7d32; }
-        .status-tag.split { background-color: #ef6c00; }
+        .status-tag.morning { background-color: #635bff; }
+        .status-tag.evening { background-color: #2e7d32; }
+        .status-tag.other { background-color: #8792a2; }
+
+        /* Box Plot Styles */
+        #boxPlotContainer {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100%;
+            padding: 20px 0;
+        }
+
+        .box-plot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .box-plot-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #697386;
+            margin-bottom: 8px;
+        }
+
+        /* Heatmap Styles */
+        #heatmapContainer {
+            padding: 8px 0;
+        }
+
+        .heatmap-header {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #8792a2;
+            text-align: center;
+        }
+
+        .heatmap-row {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 2px;
+        }
+
+        .heatmap-week-label {
+            font-size: 10px;
+            color: #8792a2;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            min-height: 16px;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .heatmap-cell.level-0 { background-color: #f0f3f7; }
+        .heatmap-cell.level-1 { background-color: #c8e6c9; }
+        .heatmap-cell.level-2 { background-color: #81c784; }
+        .heatmap-cell.level-3 { background-color: #4caf50; }
+        .heatmap-cell.level-4 { background-color: #2e7d32; }
+
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 12px;
+            font-size: 10px;
+            color: #8792a2;
+        }
+
+        .heatmap-legend-item {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 1024px) {
+            .chart-grid-row1 {
+                grid-template-columns: 1fr;
+            }
+        }
 
         @media (max-width: 768px) {
             .stats-row { flex-direction: column; }
-            .chart-grid { grid-template-columns: 1fr; }
+            .chart-grid-row1 { grid-template-columns: 1fr; }
+            .chart-grid-row2 { grid-template-columns: 1fr; }
             .chart-container { height: 200px; }
+            .filter-bar { flex-direction: column; align-items: flex-start; }
         }
     </style>
     <script src="/auth.js"></script>
@@ -275,19 +525,57 @@
 
     <div class="stats-row" id="stats-row" style="display:none;"></div>
 
+    <!-- Filter Bar -->
+    <div class="filter-bar" id="filter-bar" style="display:none;">
+        <div class="filter-group">
+            <button class="filter-pill active" data-filter="all">All</button>
+            <button class="filter-pill" data-filter="morning">Morning</button>
+            <button class="filter-pill" data-filter="evening">Evening</button>
+        </div>
+        <div class="filter-group">
+            <button class="filter-toggle" data-toggle="weekdays">Weekdays only</button>
+            <button class="filter-toggle" data-toggle="last90">Last 90 days</button>
+        </div>
+    </div>
+
     <div class="charts-section">
-        <div class="chart-grid">
-            <div class="chart-card">
-                <h3>Distance per Ride</h3>
-                <div class="chart-container">
-                    <canvas id="distanceChart"></canvas>
+        <!-- Row 1: Leave/Arrival Times, Scatter, Heatmap -->
+        <div class="chart-grid-row1">
+            <div class="chart-card chart-card-wide">
+                <h3>Leave & Arrival Times</h3>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="morning">Morning Rides</button>
+                    <button class="tab-btn" data-tab="evening">Evening Rides</button>
                 </div>
+                <div class="chart-container" style="height: 320px;">
+                    <div id="boxPlotContainer"></div>
+                </div>
+                <div class="insights" id="boxPlotInsights"></div>
             </div>
             <div class="chart-card">
-                <h3>Average Speed</h3>
-                <div class="chart-container">
-                    <canvas id="speedChart"></canvas>
+                <h3>Leave Time vs Duration</h3>
+                <div class="chart-container" style="height: 320px;">
+                    <canvas id="scatterChart"></canvas>
                 </div>
+                <div class="insights" id="scatterInsights"></div>
+            </div>
+            <div class="chart-card">
+                <h3>Weekly Commute Pattern</h3>
+                <div class="chart-container" style="height: 320px; overflow-y: auto;">
+                    <div id="heatmapContainer"></div>
+                </div>
+                <div class="insights" id="heatmapInsights"></div>
+            </div>
+        </div>
+
+        <!-- Row 2: Speed Over Time -->
+        <div class="chart-grid-row2">
+            <div class="chart-card chart-card-full">
+                <h3>Speed Over Time</h3>
+                <div class="chart-container" style="height: 280px;">
+                    <canvas id="speedTimeChart"></canvas>
+                </div>
+                <div class="insights" id="speedInsights"></div>
             </div>
         </div>
     </div>
@@ -323,12 +611,146 @@
         const CHART_COLORS = {
             green: 'rgba(46, 125, 50, 0.75)',
             purple: 'rgba(99, 91, 255, 0.75)',
+            teal: 'rgba(0, 150, 136, 0.75)',
+            orange: 'rgba(239, 108, 0, 0.75)',
             gridLine: '#f0f3f7',
             tick: '#8792a2',
         };
         const COMMUTES_ENDPOINT = '/.netlify/functions/get-rides';
 
+        // Global state
+        let allRides = [];
+        let normalizedRides = [];
+        let filters = {
+            type: 'all', // all, morning, evening
+            weekdaysOnly: false,
+            last90Days: false
+        };
+        let currentBoxPlotTab = 'morning';
+        let chartInstances = {};
+
         document.getElementById('refresh-btn').addEventListener('click', fetchCommutes);
+
+        // Setup filter event listeners
+        document.querySelectorAll('.filter-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filters.type = btn.dataset.filter;
+                applyFiltersAndRender();
+            });
+        });
+
+        document.querySelectorAll('.filter-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+                const toggle = btn.dataset.toggle;
+                if (toggle === 'weekdays') {
+                    filters.weekdaysOnly = btn.classList.contains('active');
+                } else if (toggle === 'last90') {
+                    filters.last90Days = btn.classList.contains('active');
+                }
+                applyFiltersAndRender();
+            });
+        });
+
+        // Tab switching for box plots
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentBoxPlotTab = btn.dataset.tab;
+                renderBoxPlot(getFilteredRides());
+            });
+        });
+
+        // Data normalization function
+        function normalizeRide(ride) {
+            // Parse date in Europe/London timezone
+            const startLocal = new Date(ride.start_date_local);
+            const durationSec = ride.moving_time || ride.elapsed_time;
+            const endLocal = new Date(startLocal.getTime() + durationSec * 1000);
+
+            // Extract time components
+            const leaveMinutes = startLocal.getHours() * 60 + startLocal.getMinutes();
+            const arriveMinutes = endLocal.getHours() * 60 + endLocal.getMinutes();
+
+            // Classify commute type
+            const hour = startLocal.getHours();
+            let commuteType = 'other';
+            if (hour >= 4 && hour < 12) {
+                commuteType = 'morning';
+            } else if (hour >= 15 && hour < 23) {
+                commuteType = 'evening';
+            }
+
+            // Day of week (0 = Monday, 6 = Sunday)
+            const dayOfWeek = (startLocal.getDay() + 6) % 7;
+
+            // ISO week calculation
+            const yearWeekKey = getISOWeek(startLocal);
+
+            return {
+                ...ride,
+                startLocal,
+                endLocal,
+                leaveMinutes,
+                arriveMinutes,
+                distanceKm: ride.distance / 1000,
+                durationSec,
+                durationMin: durationSec / 60,
+                avgSpeedKph: (ride.average_speed || (ride.distance / durationSec)) * 3.6,
+                commuteType,
+                dayOfWeek,
+                yearWeekKey
+            };
+        }
+
+        // Get ISO week number
+        function getISOWeek(date) {
+            const target = new Date(date.valueOf());
+            const dayNr = (date.getDay() + 6) % 7;
+            target.setDate(target.getDate() - dayNr + 3);
+            const firstThursday = target.valueOf();
+            target.setMonth(0, 1);
+            if (target.getDay() !== 4) {
+                target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+            }
+            const weekNumber = 1 + Math.ceil((firstThursday - target) / 604800000);
+            return `${target.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+        }
+
+        // Apply filters and re-render
+        function applyFiltersAndRender() {
+            const filtered = getFilteredRides();
+            renderStats(filtered);
+            renderAllCharts(filtered);
+            renderTable(filtered);
+        }
+
+        // Get filtered rides
+        function getFilteredRides() {
+            let filtered = [...normalizedRides];
+
+            // Filter by type
+            if (filters.type !== 'all') {
+                filtered = filtered.filter(r => r.commuteType === filters.type);
+            }
+
+            // Filter weekdays only
+            if (filters.weekdaysOnly) {
+                filtered = filtered.filter(r => r.dayOfWeek < 5);
+            }
+
+            // Filter last 90 days
+            if (filters.last90Days) {
+                const ninetyDaysAgo = new Date();
+                ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+                filtered = filtered.filter(r => r.startLocal >= ninetyDaysAgo);
+            }
+
+            return filtered;
+        }
 
         async function parseJsonResponse(response) {
             const raw = await response.text();
@@ -359,11 +781,15 @@
 
                 loading.style.display = 'none';
 
-                data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+                // Store and normalize data
+                allRides = data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+                normalizedRides = allRides.map(normalizeRide);
 
-                renderStats(data);
-                renderCharts(data);
-                renderTable(data);
+                // Show filter bar
+                document.getElementById('filter-bar').style.display = 'flex';
+
+                // Render everything
+                applyFiltersAndRender();
             } catch (err) {
                 console.error('Error:', err);
                 loading.innerHTML = `<p>Something went wrong: ${err.message}</p>`;
@@ -371,10 +797,14 @@
         }
 
         function renderStats(rides) {
-            const totalDist = rides.reduce((t, r) => t + r.distance, 0) / 1000;
+            const totalDist = rides.reduce((t, r) => t + r.distanceKm, 0);
             const totalRides = rides.length;
             const tubeCostPerTrip = 2.80;
             const savings = (totalRides * tubeCostPerTrip).toFixed(2);
+
+            // Calculate weeks cycling (unique weeks)
+            const uniqueWeeks = new Set(rides.map(r => r.yearWeekKey));
+            const weeksCycling = uniqueWeeks.size;
 
             const row = document.getElementById('stats-row');
             row.style.display = 'flex';
@@ -392,107 +822,435 @@
                     <div class="stat-value">&pound;${savings}</div>
                     <div class="stat-sub">vs. &pound;${tubeCostPerTrip}/trip</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-label">Weeks Cycling</div>
+                    <div class="stat-value">${weeksCycling}</div>
+                </div>
             `;
         }
 
-        function renderCharts(rides) {
-            const sorted = [...rides].sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
-            const labels = sorted.map(r => {
-                const d = new Date(r.start_date_local);
-                return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-            });
+        // Render all charts
+        function renderAllCharts(rides) {
+            renderBoxPlot(rides);
+            renderScatterChart(rides);
+            renderHeatmap(rides);
+            renderSpeedOverTime(rides);
+        }
 
-            const distances = sorted.map(r => (r.distance / 1000).toFixed(1));
-            const speeds = sorted.map(r => (r.average_speed * 3.6).toFixed(1));
+        // Utility: format time from minutes since midnight
+        function formatTime(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = Math.round(minutes % 60);
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
 
-            const defaults = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1a1f36',
-                        titleFont: { family: 'Inter', weight: '600' },
-                        bodyFont: { family: 'Inter' },
-                        padding: 12,
-                        cornerRadius: 8,
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        border: { display: false },
-                        ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick, maxRotation: 45 },
-                    },
-                    y: {
-                        grid: { color: CHART_COLORS.gridLine },
-                        border: { display: false },
-                        ticks: { font: { family: 'Inter', size: 12 }, color: CHART_COLORS.tick },
-                        beginAtZero: true,
-                    }
-                }
-            };
+        // Utility: calculate quartiles
+        function calculateQuartiles(values) {
+            if (values.length === 0) return null;
+            const sorted = [...values].sort((a, b) => a - b);
+            const q1 = sorted[Math.floor(sorted.length * 0.25)];
+            const median = sorted[Math.floor(sorted.length * 0.5)];
+            const q3 = sorted[Math.floor(sorted.length * 0.75)];
+            const iqr = q3 - q1;
+            const lowerWhisker = Math.max(sorted[0], q1 - 1.5 * iqr);
+            const upperWhisker = Math.min(sorted[sorted.length - 1], q3 + 1.5 * iqr);
+            const outliers = sorted.filter(v => v < lowerWhisker || v > upperWhisker);
+            return { q1, median, q3, lowerWhisker, upperWhisker, outliers };
+        }
 
-            new Chart(document.getElementById('distanceChart').getContext('2d'), {
-                type: 'bar',
+        // CHART 1: Box Plot for Leave & Arrival Times
+        function renderBoxPlot(rides) {
+            const container = document.getElementById('boxPlotContainer');
+            const insightsDiv = document.getElementById('boxPlotInsights');
+
+            const typeRides = rides.filter(r => r.commuteType === currentBoxPlotTab);
+
+            if (typeRides.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:40px;">No data available</p>';
+                insightsDiv.innerHTML = '';
+                return;
+            }
+
+            const leaveTimes = typeRides.map(r => r.leaveMinutes);
+            const arriveTimes = typeRides.map(r => r.arriveMinutes);
+
+            const leaveStats = calculateQuartiles(leaveTimes);
+            const arriveStats = calculateQuartiles(arriveTimes);
+
+            // Create SVG box plots
+            const svgWidth = 200;
+            const svgHeight = 280;
+            const padding = { top: 20, bottom: 40, left: 10, right: 10 };
+            const plotHeight = svgHeight - padding.top - padding.bottom;
+
+            const timeMin = currentBoxPlotTab === 'morning' ? 360 : 900; // 6:00 or 15:00
+            const timeMax = currentBoxPlotTab === 'morning' ? 540 : 1260; // 9:00 or 21:00
+            const timeRange = timeMax - timeMin;
+
+            function yScale(minutes) {
+                return padding.top + plotHeight - ((minutes - timeMin) / timeRange) * plotHeight;
+            }
+
+            function createBoxPlotSVG(stats, label, color) {
+                if (!stats) return '<p>No data</p>';
+
+                let svg = `<div class="box-plot">
+                    <div class="box-plot-label">${label}</div>
+                    <svg width="${svgWidth}" height="${svgHeight}" style="overflow: visible;">`;
+
+                const centerX = svgWidth / 2;
+                const boxWidth = 60;
+
+                // Whiskers
+                svg += `<line x1="${centerX}" y1="${yScale(stats.lowerWhisker)}" x2="${centerX}" y2="${yScale(stats.q1)}" stroke="${color}" stroke-width="2"/>`;
+                svg += `<line x1="${centerX}" y1="${yScale(stats.q3)}" x2="${centerX}" y2="${yScale(stats.upperWhisker)}" stroke="${color}" stroke-width="2"/>`;
+                svg += `<line x1="${centerX - 15}" y1="${yScale(stats.lowerWhisker)}" x2="${centerX + 15}" y2="${yScale(stats.lowerWhisker)}" stroke="${color}" stroke-width="2"/>`;
+                svg += `<line x1="${centerX - 15}" y1="${yScale(stats.upperWhisker)}" x2="${centerX + 15}" y2="${yScale(stats.upperWhisker)}" stroke="${color}" stroke-width="2"/>`;
+
+                // Box
+                const boxY = yScale(stats.q3);
+                const boxHeight = yScale(stats.q1) - yScale(stats.q3);
+                svg += `<rect x="${centerX - boxWidth/2}" y="${boxY}" width="${boxWidth}" height="${boxHeight}" fill="${color}" opacity="0.3" stroke="${color}" stroke-width="2"/>`;
+
+                // Median line
+                svg += `<line x1="${centerX - boxWidth/2}" y1="${yScale(stats.median)}" x2="${centerX + boxWidth/2}" y2="${yScale(stats.median)}" stroke="${color}" stroke-width="3"/>`;
+
+                // Outliers
+                stats.outliers.forEach(outlier => {
+                    svg += `<circle cx="${centerX}" cy="${yScale(outlier)}" r="3" fill="${color}"/>`;
+                });
+
+                // Y-axis labels
+                const tickTimes = currentBoxPlotTab === 'morning' ? [360, 420, 480, 540] : [900, 1020, 1140, 1260];
+                tickTimes.forEach(t => {
+                    svg += `<text x="10" y="${yScale(t) + 4}" font-size="11" fill="#8792a2">${formatTime(t)}</text>`;
+                });
+
+                svg += `</svg></div>`;
+                return svg;
+            }
+
+            const leaveColor = currentBoxPlotTab === 'morning' ? '#635bff' : '#2e7d32';
+            const arriveColor = currentBoxPlotTab === 'morning' ? '#009688' : '#ef6c00';
+
+            container.innerHTML = createBoxPlotSVG(leaveStats, 'Leave Time', leaveColor) +
+                                 createBoxPlotSVG(arriveStats, 'Arrive Time', arriveColor);
+
+            // Generate insights
+            let insights = '';
+            if (currentBoxPlotTab === 'morning') {
+                const before715 = leaveTimes.filter(t => t < 435).length;
+                const pct = ((before715 / leaveTimes.length) * 100).toFixed(0);
+                insights += `<div class="insight-item"><span class="insight-bullet blue"></span><span>You leave before 7:15 on ${pct}% of mornings.</span></div>`;
+            } else {
+                const avgMorningDuration = rides.filter(r => r.commuteType === 'morning').reduce((sum, r) => sum + r.durationMin, 0) / Math.max(1, rides.filter(r => r.commuteType === 'morning').length);
+                const avgEveningDuration = typeRides.reduce((sum, r) => sum + r.durationMin, 0) / typeRides.length;
+                const diff = ((avgEveningDuration - avgMorningDuration) / avgMorningDuration * 100).toFixed(0);
+                insights += `<div class="insight-item"><span class="insight-bullet green"></span><span>Evening rides are ${diff}% ${diff < 0 ? 'faster' : 'slower'} on average.</span></div>`;
+            }
+
+            insightsDiv.innerHTML = insights;
+        }
+
+        // CHART 2: Scatter Plot - Leave Time vs Duration
+        function renderScatterChart(rides) {
+            const insightsDiv = document.getElementById('scatterInsights');
+
+            if (chartInstances.scatter) {
+                chartInstances.scatter.destroy();
+            }
+
+            const morningRides = rides.filter(r => r.commuteType === 'morning');
+            const eveningRides = rides.filter(r => r.commuteType === 'evening');
+
+            const morningData = morningRides.map(r => ({
+                x: r.leaveMinutes,
+                y: r.durationMin,
+                date: r.startLocal.toLocaleDateString('en-GB'),
+                speed: r.avgSpeedKph.toFixed(1)
+            }));
+
+            const eveningData = eveningRides.map(r => ({
+                x: r.leaveMinutes,
+                y: r.durationMin,
+                date: r.startLocal.toLocaleDateString('en-GB'),
+                speed: r.avgSpeedKph.toFixed(1)
+            }));
+
+            chartInstances.scatter = new Chart(document.getElementById('scatterChart').getContext('2d'), {
+                type: 'scatter',
                 data: {
-                    labels,
-                    datasets: [{
-                        data: distances,
-                        backgroundColor: CHART_COLORS.green,
-                        borderRadius: 4,
-                        borderWidth: 0,
-                        borderSkipped: false,
-                    }]
+                    datasets: [
+                        {
+                            label: 'Morning rides',
+                            data: morningData,
+                            backgroundColor: 'rgba(99, 91, 255, 0.6)',
+                            borderColor: 'rgba(99, 91, 255, 1)',
+                            borderWidth: 1,
+                        },
+                        {
+                            label: 'Evening rides',
+                            data: eveningData,
+                            backgroundColor: 'rgba(46, 125, 50, 0.6)',
+                            borderColor: 'rgba(46, 125, 50, 1)',
+                            borderWidth: 1,
+                        }
+                    ]
                 },
                 options: {
-                    ...defaults,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        ...defaults.plugins,
-                        tooltip: { ...defaults.plugins.tooltip, callbacks: { label: ctx => `${ctx.parsed.y} km` } }
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { family: 'Inter', size: 11 }, color: '#697386', padding: 10, usePointStyle: true }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1f36',
+                            titleFont: { family: 'Inter', weight: '600' },
+                            bodyFont: { family: 'Inter' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                title: ctx => ctx[0].raw.date,
+                                label: ctx => [
+                                    `Leave: ${formatTime(ctx.parsed.x)}`,
+                                    `Duration: ${ctx.parsed.y.toFixed(1)} min`,
+                                    `Speed: ${ctx.raw.speed} km/h`
+                                ]
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Leave Time', font: { family: 'Inter', size: 12 }, color: '#697386' },
+                            grid: { color: CHART_COLORS.gridLine },
+                            border: { display: false },
+                            ticks: {
+                                font: { family: 'Inter', size: 11 },
+                                color: CHART_COLORS.tick,
+                                callback: value => formatTime(value)
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'Duration (min)', font: { family: 'Inter', size: 12 }, color: '#697386' },
+                            grid: { color: CHART_COLORS.gridLine },
+                            border: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick },
+                            beginAtZero: true
+                        }
                     }
                 }
             });
 
-            new Chart(document.getElementById('speedChart').getContext('2d'), {
+            // Generate insights
+            if (morningRides.length > 0) {
+                // Find optimal leave time bucket
+                const buckets = {};
+                morningRides.forEach(r => {
+                    const bucket = Math.floor(r.leaveMinutes / 15) * 15;
+                    if (!buckets[bucket]) buckets[bucket] = [];
+                    buckets[bucket].push(r.durationMin);
+                });
+
+                let bestBucket = null;
+                let bestMedian = Infinity;
+                Object.entries(buckets).forEach(([bucket, durations]) => {
+                    if (durations.length >= 2) {
+                        const median = durations.sort((a, b) => a - b)[Math.floor(durations.length / 2)];
+                        if (median < bestMedian) {
+                            bestMedian = median;
+                            bestBucket = parseInt(bucket);
+                        }
+                    }
+                });
+
+                const overallMedian = morningRides.map(r => r.durationMin).sort((a, b) => a - b)[Math.floor(morningRides.length / 2)];
+                const savings = (overallMedian - bestMedian).toFixed(0);
+
+                if (bestBucket !== null && savings > 0) {
+                    insightsDiv.innerHTML = `<div class="insight-item"><span class="insight-bullet teal"></span><span>Leaving around ${formatTime(bestBucket)} makes your commute ~${savings} mins quicker.</span></div>`;
+                } else {
+                    insightsDiv.innerHTML = '';
+                }
+            } else {
+                insightsDiv.innerHTML = '';
+            }
+        }
+
+        // CHART 3: Heatmap - Weekly Commute Pattern
+        function renderHeatmap(rides) {
+            const container = document.getElementById('heatmapContainer');
+            const insightsDiv = document.getElementById('heatmapInsights');
+
+            if (rides.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:20px;">No data available</p>';
+                insightsDiv.innerHTML = '';
+                return;
+            }
+
+            // Group by week and day
+            const weekMap = {};
+            rides.forEach(r => {
+                if (!weekMap[r.yearWeekKey]) {
+                    weekMap[r.yearWeekKey] = Array(7).fill(0);
+                }
+                weekMap[r.yearWeekKey][r.dayOfWeek]++;
+            });
+
+            // Get last 12 weeks
+            const weeks = Object.keys(weekMap).sort().slice(-12);
+
+            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+            let html = '<div class="heatmap-header"><div></div>';
+            dayNames.forEach(day => html += `<div>${day}</div>`);
+            html += '</div>';
+
+            weeks.forEach(week => {
+                const weekLabel = week.replace('W', ' W');
+                html += `<div class="heatmap-row"><div class="heatmap-week-label">${weekLabel}</div>`;
+
+                weekMap[week].forEach((count, dayIdx) => {
+                    const level = count === 0 ? 0 : count === 1 ? 1 : count <= 3 ? 2 : count <= 5 ? 3 : 4;
+                    html += `<div class="heatmap-cell level-${level}" title="${dayNames[dayIdx]}, ${weekLabel}: ${count} rides"></div>`;
+                });
+
+                html += '</div>';
+            });
+
+            html += '<div class="heatmap-legend">Less <div class="heatmap-legend-item" style="background:#f0f3f7;"></div>';
+            html += '<div class="heatmap-legend-item" style="background:#c8e6c9;"></div>';
+            html += '<div class="heatmap-legend-item" style="background:#81c784;"></div>';
+            html += '<div class="heatmap-legend-item" style="background:#4caf50;"></div>';
+            html += '<div class="heatmap-legend-item" style="background:#2e7d32;"></div> More</div>';
+
+            container.innerHTML = html;
+
+            // Generate insights
+            const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+            rides.forEach(r => dayCounts[r.dayOfWeek]++);
+            const topDays = dayCounts
+                .map((count, idx) => ({ day: dayNames[idx], count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 3)
+                .filter(d => d.count > 0)
+                .map(d => d.day);
+
+            if (topDays.length > 0) {
+                insightsDiv.innerHTML = `<div class="insight-item"><span class="insight-bullet green"></span><span>You mostly commute on ${topDays.join(', ')}.</span></div>`;
+            } else {
+                insightsDiv.innerHTML = '';
+            }
+        }
+
+        // CHART 4: Speed Over Time with Rolling Average
+        function renderSpeedOverTime(rides) {
+            const insightsDiv = document.getElementById('speedInsights');
+
+            if (chartInstances.speedTime) {
+                chartInstances.speedTime.destroy();
+            }
+
+            const sorted = [...rides].sort((a, b) => a.startLocal - b.startLocal);
+
+            const labels = sorted.map(r => r.startLocal.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+            const speeds = sorted.map(r => r.avgSpeedKph);
+
+            // Calculate rolling average (14 rides)
+            const rollingAvg = [];
+            for (let i = 0; i < speeds.length; i++) {
+                const start = Math.max(0, i - 13);
+                const slice = speeds.slice(start, i + 1);
+                const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length;
+                rollingAvg.push(avg);
+            }
+
+            chartInstances.speedTime = new Chart(document.getElementById('speedTimeChart').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels,
-                    datasets: [{
-                        data: speeds,
-                        borderColor: CHART_COLORS.purple,
-                        backgroundColor: 'rgba(99, 91, 255, 0.08)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 4,
-                        pointBackgroundColor: CHART_COLORS.purple,
-                    }]
+                    datasets: [
+                        {
+                            label: 'Speed',
+                            data: speeds,
+                            borderColor: 'rgba(99, 91, 255, 0.3)',
+                            backgroundColor: 'rgba(99, 91, 255, 0.05)',
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 2,
+                            pointBackgroundColor: 'rgba(99, 91, 255, 0.5)',
+                        },
+                        {
+                            label: '14-ride average',
+                            data: rollingAvg,
+                            borderColor: '#2e7d32',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0,
+                        }
+                    ]
                 },
                 options: {
-                    ...defaults,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        ...defaults.plugins,
-                        tooltip: { ...defaults.plugins.tooltip, callbacks: { label: ctx => `${ctx.parsed.y} km/h` } }
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { family: 'Inter', size: 11 }, color: '#697386', padding: 10, usePointStyle: true }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1f36',
+                            titleFont: { family: 'Inter', weight: '600' },
+                            bodyFont: { family: 'Inter' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} km/h`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick, maxRotation: 45 }
+                        },
+                        y: {
+                            title: { display: true, text: 'Speed (km/h)', font: { family: 'Inter', size: 12 }, color: '#697386' },
+                            grid: { color: CHART_COLORS.gridLine },
+                            border: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick },
+                            beginAtZero: false
+                        }
                     }
                 }
             });
+
+            // Generate insights
+            const latestAvg = rollingAvg[rollingAvg.length - 1];
+            if (latestAvg) {
+                insightsDiv.innerHTML = `<div class="insight-item"><span class="insight-bullet blue"></span><span>Your 14-ride average is holding steady at ${latestAvg.toFixed(1)} km/h.</span></div>`;
+            } else {
+                insightsDiv.innerHTML = '';
+            }
         }
 
         function renderTable(rides) {
             const tbody = document.getElementById('commute-body');
             tbody.innerHTML = rides.map(r => {
-                const date = new Date(r.start_date_local).toLocaleDateString('en-GB', {
+                const date = r.startLocal.toLocaleDateString('en-GB', {
                     day: 'numeric', month: 'short', year: 'numeric'
                 });
-                const dist = (r.distance / 1000).toFixed(1) + ' km';
-                const mins = Math.floor(r.moving_time / 60);
-                const secs = r.moving_time % 60;
+                const dist = r.distanceKm.toFixed(1) + ' km';
+                const mins = Math.floor(r.durationSec / 60);
+                const secs = r.durationSec % 60;
                 const time = `${mins}m ${secs}s`;
-                const speed = (r.average_speed * 3.6).toFixed(1) + ' km/h';
-                const isSplit = r.name && r.name.toLowerCase().includes('split');
-                const tag = isSplit
-                    ? '<span class="status-tag split">Split</span>'
-                    : '<span class="status-tag normal">Normal</span>';
+                const speed = r.avgSpeedKph.toFixed(1) + ' km/h';
+                const typeTag = `<span class="status-tag ${r.commuteType}">${r.commuteType.charAt(0).toUpperCase() + r.commuteType.slice(1)}</span>`;
 
                 return `<tr>
                     <td>${date}</td>
@@ -500,7 +1258,7 @@
                     <td>${dist}</td>
                     <td>${time}</td>
                     <td>${speed}</td>
-                    <td>${tag}</td>
+                    <td>${typeTag}</td>
                 </tr>`;
             }).join('');
         }
