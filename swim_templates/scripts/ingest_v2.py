@@ -9,7 +9,7 @@ import json
 import sys
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 try:
     from docx import Document
@@ -356,7 +356,7 @@ def main():
         type_count = 0
         for docx_file in docx_files:
             stats["total_files"] += 1
-            print(f"      • {docx_file.name}", end=" ... ")
+            print(f"      - {docx_file.name}", end=" ... ")
 
             template = process_template(docx_file, template_type)
 
@@ -383,7 +383,7 @@ def main():
     output_data = {
         "templates": all_templates,
         "version": "2.0",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "stats": stats
     }
 
@@ -393,7 +393,7 @@ def main():
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-    print(f"✓ Successfully wrote {len(all_templates)} templates")
+    print(f"SUCCESS: Successfully wrote {len(all_templates)} templates")
     print(f"\nStatistics:")
     print(f"   Total files processed: {stats['total_files']}")
     print(f"   Successful: {stats['successful']}")

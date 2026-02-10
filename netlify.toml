@@ -4,7 +4,7 @@
   functions = "netlify/functions"
 
 [functions]
-  included_files = ["data/templates.v1.json"]
+  included_files = ["data/templates.v1.json", "data/templates.v2.json"]
 
 [[headers]]
   for = "/.netlify/functions/*"
