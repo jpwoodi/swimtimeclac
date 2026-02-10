@@ -4,9 +4,15 @@ const path = require('path');
 
 // Load templates from JSON file
 function loadTemplates() {
-    const templatesPath = path.join(__dirname, '..', '..', 'data', 'templates.v1.json');
+    const candidatePaths = [
+        path.join(__dirname, '..', '..', 'data', 'templates.v1.json'),
+        path.join(process.cwd(), 'data', 'templates.v1.json'),
+        path.join(__dirname, 'data', 'templates.v1.json')
+    ];
 
-    if (!fs.existsSync(templatesPath)) {
+    const templatesPath = candidatePaths.find((candidate) => fs.existsSync(candidate));
+
+    if (!templatesPath) {
         throw new Error('Templates file not found. Please run the ingestion script: npm run ingest-templates');
     }
 

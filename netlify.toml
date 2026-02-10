@@ -3,6 +3,9 @@
 [build]
   functions = "netlify/functions"
 
+[functions]
+  included_files = ["data/templates.v1.json"]
+
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
