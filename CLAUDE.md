@@ -4,13 +4,13 @@ This file provides guidance for AI assistants working with the **swimtimecalc** 
 
 ## Project Overview
 
-A personal website covering work, music and sports. The sports section includes swim time/pace calculators, training dashboards, pool finders, and AI-powered workout plan generation. Built as a static site with Netlify serverless functions.
+A personal website covering work, music and sports. The sports section includes swim time/pace calculators, training dashboards, pool finders, and AI-powered workout plan generation. Built as a static site with Vercel serverless functions.
 
 ## Tech Stack
 
 - **Frontend:** Vanilla HTML5, CSS3, JavaScript (no framework)
-- **Backend:** Node.js serverless functions (Netlify Functions)
-- **Deployment:** Netlify (auto-deploys from git)
+- **Backend:** Node.js serverless functions (Vercel Functions)
+- **Deployment:** Vercel (auto-deploys from git)
 - **External APIs:** Strava (activity data), OpenAI GPT-4o-mini (swim plans), Airtable (pool data), Nominatim (geocoding)
 - **Libraries (CDN):** Chart.js, Leaflet (maps), Moment.js, Google Fonts (Inter)
 
@@ -40,16 +40,22 @@ A personal website covering work, music and sports. The sports section includes 
 │   ├── swim-plan-generator.html       # AI-powered swim plan generator
 │   └── cyclecommute.html              # Cycle commute tracker
 │
-├── netlify/
-│   └── functions/                     # Serverless API functions
-│       ├── client-config.js           # Strava OAuth config endpoint
-│       ├── generateSwimPlan.js        # OpenAI swim plan generation
-│       ├── geocode.js                 # Address geocoding via Nominatim
-│       ├── get-rides.js               # Fetch cycle rides from Strava
-│       ├── get-swim-plan2.js          # Legacy swim plan generator
-│       ├── get-swims.js               # Fetch swim activities from Strava
-│       └── getPools.js               # Fetch pool data from Airtable
-├── netlify.toml                       # Netlify deployment config
+├── api/
+│   ├── auth-login.js                  # Authentication login endpoint
+│   ├── auth-logout.js                 # Authentication logout endpoint
+│   ├── auth-status.js                 # Authentication status check
+│   ├── browseSwimPlans.js             # Browse swim plan library
+│   ├── client-config.js               # Strava OAuth config endpoint
+│   ├── generateSwimPlan.js            # OpenAI swim plan generation
+│   ├── geocode.js                     # Address geocoding via Nominatim
+│   ├── get-cycle-commutes.js          # Alias for get-rides
+│   ├── get-rides.js                   # Fetch cycle rides from Strava
+│   ├── get-swim-plan2.js              # Legacy swim plan generator
+│   ├── get-swims.js                   # Fetch swim activities from Strava
+│   ├── getPools.js                    # Fetch pool data from Airtable
+│   └── lib/
+│       └── auth-utils.js              # Shared auth utilities
+├── vercel.json                        # Vercel deployment config
 └── package.json                       # Node.js dependencies
 ```
 
@@ -74,11 +80,11 @@ A personal website covering work, music and sports. The sports section includes 
 - Leaflet + OpenStreetMap for interactive pool maps
 - Stripe-inspired design system (see Design Tokens below)
 
-### Backend (Netlify Functions)
-- Stateless serverless functions at `netlify/functions/`
+### Backend (Vercel Functions)
+- Stateless serverless functions at `api/`
 - Act as API proxies between frontend and external services
 - In-memory caching with 1-hour TTL and force-refresh support
-- CORS enabled for all function endpoints (configured in `netlify.toml`)
+- CORS enabled for all function endpoints (configured in `vercel.json`)
 
 ### Data Flow
 - **Strava integration:** OAuth token refresh -> fetch activities -> filter by type -> cache -> serve
@@ -95,16 +101,16 @@ Install dependencies:
 npm install
 ```
 
-For local development with Netlify Functions:
+For local development with Vercel Functions:
 ```bash
-npx netlify dev
+vercel dev
 ```
 
-This serves the static site and makes serverless functions available at `/.netlify/functions/*`.
+This serves the static site and makes serverless functions available at `/api/*`.
 
 ### Environment Variables Required
 
-The following must be set in Netlify (or `.env` for local dev):
+The following must be set in Vercel (or `.env` for local dev):
 
 | Variable | Purpose |
 |----------|---------|
@@ -121,14 +127,14 @@ The following must be set in Netlify (or `.env` for local dev):
 
 ### Deployment
 
-Push to the main branch triggers automatic Netlify deployment. No build step is needed -- the site is served as static files with serverless functions.
+Push to the main branch triggers automatic Vercel deployment. No build step is needed -- the site is served as static files with serverless functions.
 
 ## Code Conventions
 
 ### Path Conventions
 - All inter-page links use absolute paths (e.g. `/sports/calculator.html`, `/nav.css`)
 - Images referenced via `/images/` from any page
-- Netlify function URLs use `/.netlify/functions/<name>` (absolute, works from any path)
+- Vercel function URLs use `/api/<name>` (absolute, works from any path)
 
 ### HTML Pages
 - Each page is self-contained with embedded `<style>` and `<script>` blocks
@@ -143,10 +149,11 @@ Push to the main branch triggers automatic Netlify deployment. No build step is 
 - Client-side calculations (no server round-trips for math)
 
 ### Serverless Functions
-- CommonJS module format (`module.exports.handler`)
+- CommonJS module format (`module.exports = async (req, res) => {}`)
 - Use `node-fetch` v2 for outbound HTTP requests
-- Return JSON with appropriate status codes and CORS headers
+- Respond with `res.status(code).json(data)` or `res.status(code).send(string)`
 - Cache responses in module-scope variables with TTL logic
+- Request data: `req.method`, `req.body`, `req.query`, `req.headers`
 
 ### Design Tokens (Stripe-Inspired)
 ```
@@ -165,8 +172,8 @@ Spacing:     8px grid system
 
 - No test framework is currently configured
 - No linting or formatting tools installed
-- No CI/CD pipeline beyond Netlify auto-deploy
-- Manual testing via browser and Netlify Dev
+- No CI/CD pipeline beyond Vercel auto-deploy
+- Manual testing via browser and Vercel Dev
 
 ## Common Tasks
 
@@ -184,11 +191,12 @@ Spacing:     8px grid system
 4. Follow the Stripe design tokens for consistent styling
 
 ### Adding a new serverless function
-1. Create a `.js` file in `netlify/functions/`
-2. Export a `handler` async function: `module.exports.handler = async (event) => { ... }`
-3. Return `{ statusCode, body: JSON.stringify(data) }`
-4. Add any new API keys as environment variables in Netlify
-5. The function is automatically available at `/.netlify/functions/<filename>`
+1. Create a `.js` file in `api/`
+2. Export the handler: `module.exports = async (req, res) => { ... }`
+3. Respond with `res.status(code).json(data)` or `res.status(code).send(string)`
+4. Access request data via `req.method`, `req.body`, `req.query`, `req.headers`
+5. Add any new API keys as environment variables in Vercel
+6. The function is automatically available at `/api/<filename>`
 
 ### Modifying the dashboard
 - Chart configuration lives in `sports/dashscript.js`

@@ -336,7 +336,7 @@
             document.getElementById('loading-spinner').style.display = 'block';
 
             try {
-                const response = await fetch('/.netlify/functions/generateSwimPlan', {
+                const response = await fetch('/api/generateSwimPlan', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(details)

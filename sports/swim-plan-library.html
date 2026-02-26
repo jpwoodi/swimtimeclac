@@ -672,7 +672,7 @@
         // Load available filter options
         async function loadFilterOptions() {
             try {
-                const response = await fetch('/.netlify/functions/browseSwimPlans?action=getFilterOptions');
+                const response = await fetch('/api/browseSwimPlans?action=getFilterOptions');
                 const data = await response.json();
                 allFilterOptions = data.filterOptions;
 
@@ -739,7 +739,7 @@
                     }
                 });
 
-                const response = await fetch(`/.netlify/functions/browseSwimPlans?${queryParams}`);
+                const response = await fetch(`/api/browseSwimPlans?${queryParams}`);
                 const data = await response.json();
 
                 loadingSpinner.style.display = 'none';

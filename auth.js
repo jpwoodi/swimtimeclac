@@ -1,9 +1,9 @@
 (function () {
   const LOGIN_PATH = "/login.html";
   const INDEX_PATH = "/index.html";
-  const STATUS_URL = "/.netlify/functions/auth-status";
-  const LOGIN_URL = "/.netlify/functions/auth-login";
-  const LOGOUT_URL = "/.netlify/functions/auth-logout";
+  const STATUS_URL = "/api/auth-status";
+  const LOGIN_URL = "/api/auth-login";
+  const LOGOUT_URL = "/api/auth-logout";
   const DEFAULT_AUTH_STATE = { authenticated: false, authEnabled: true };
 
   function isSafeRedirect(target) {

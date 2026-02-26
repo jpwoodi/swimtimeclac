@@ -332,7 +332,7 @@
         }
 
         function fetchSwims() {
-            fetch('/.netlify/functions/get-swims')
+            fetch('/api/get-swims')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {

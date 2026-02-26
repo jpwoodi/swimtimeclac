@@ -50,7 +50,7 @@ function formatPace(paceInSecondsPerMeter) {
 
 async function fetchSwimData() {
     try {
-        const response = await fetch('/.netlify/functions/get-swims');
+        const response = await fetch('/api/get-swims');
         if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
         return await response.json();
     } catch (error) {
