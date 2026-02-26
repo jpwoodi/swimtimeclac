@@ -573,12 +573,187 @@
             }
         }
 
+        /* Section Tabs */
+        .section-tabs {
+            max-width: 1200px;
+            margin: 16px auto 0;
+            padding: 0 24px;
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #e3e8ee;
+        }
+
+        .section-tab {
+            padding: 10px 20px;
+            background: transparent;
+            color: #697386;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .section-tab:hover { color: #1a1f36; }
+
+        .section-tab.active {
+            color: #635bff;
+            border-bottom-color: #635bff;
+        }
+
+        /* Photo Grid */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .photo-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            aspect-ratio: 4/3;
+            background: #e3e8ee;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: #fff;
+        }
+
+        .photo-overlay-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .photo-overlay-date {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-content img {
+            max-width: 90vw;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 32px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .lightbox-prev, .lightbox-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .lightbox-prev:hover, .lightbox-next:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .lightbox-prev { left: -60px; }
+        .lightbox-next { right: -60px; }
+
+        .lightbox-caption {
+            position: absolute;
+            bottom: -36px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        /* Hill Tracker */
+        .hill-controls select {
+            max-width: 400px;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+        }
+
+        @media (max-width: 1024px) {
+            .chart-grid-row1 {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             .stats-row { flex-direction: column; }
             .chart-grid-row1 { grid-template-columns: 1fr; }
             .chart-grid-row2 { grid-template-columns: 1fr; }
             .chart-container { height: 200px; }
             .filter-bar { flex-direction: column; align-items: flex-start; }
+            .photo-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+            .lightbox-prev { left: 8px; }
+            .lightbox-next { right: 8px; }
         }
     </style>
     <script src="/auth.js"></script>
@@ -591,11 +766,18 @@
         <p>Your cycle commute data and savings</p>
     </div>
 
+    <div class="section-tabs" id="section-tabs" style="display:none;">
+        <button class="section-tab active" data-section="dashboard">Dashboard</button>
+        <button class="section-tab" data-section="photos">Photos</button>
+        <button class="section-tab" data-section="hills">Hill Tracker</button>
+    </div>
+
     <div id="loading-area" class="loading" style="display:none;">
         <div class="spinner"></div>
         Loading commute data...
     </div>
 
+    <div id="dashboard-section">
     <div class="stats-row" id="stats-row" style="display:none;"></div>
 
     <!-- Filter Bar -->
@@ -647,21 +829,99 @@
 
     <div class="table-section">
         <div class="table-card">
-            <h3>All Commutes</h3>
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Name</th>
-                            <th>Distance</th>
-                            <th>Time</th>
-                            <th>Avg Speed</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody id="commute-body"></tbody>
-                </table>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px 0;">
+                <h3 style="padding:0; margin:0;">All Commutes</h3>
+                <button class="filter-toggle" id="table-toggle-btn">Show Table</button>
+            </div>
+            <div id="commute-table-wrapper" style="display:none;">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Distance</th>
+                                <th>Time</th>
+                                <th>Avg Speed</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commute-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div><!-- /dashboard-section -->
+
+    <div id="photos-section" style="display:none;">
+        <div style="max-width:1200px; margin:24px auto 0; padding:0 24px;">
+            <div id="photos-loading" class="loading" style="display:none;">
+                <div class="spinner"></div>
+                Loading photos...
+            </div>
+            <div id="photos-empty" style="display:none; text-align:center; color:#8792a2; padding:60px 20px;">
+                No photos found on your commute rides.
+            </div>
+            <div id="photos-grid" class="photo-grid"></div>
+        </div>
+
+        <div id="lightbox" class="lightbox" style="display:none;">
+            <div class="lightbox-backdrop"></div>
+            <div class="lightbox-content">
+                <button class="lightbox-close" aria-label="Close">&times;</button>
+                <button class="lightbox-prev" aria-label="Previous">&lsaquo;</button>
+                <img id="lightbox-img" src="" alt="">
+                <button class="lightbox-next" aria-label="Next">&rsaquo;</button>
+                <div class="lightbox-caption" id="lightbox-caption"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hills-section" style="display:none;">
+        <div style="max-width:1200px; margin:24px auto 0; padding:0 24px;">
+            <div id="hills-loading" class="loading" style="display:none;">
+                <div class="spinner"></div>
+                Loading segment data (this may take a moment on first load)...
+            </div>
+
+            <div id="hills-content" style="display:none;">
+                <div class="hill-controls" style="margin-bottom:24px;">
+                    <label for="segment-select" style="font-size:13px; font-weight:600; color:#697386; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:8px;">
+                        Select Segment
+                    </label>
+                    <select id="segment-select">
+                        <option value="">Choose a segment...</option>
+                    </select>
+                </div>
+
+                <div class="stats-row" id="hill-stats" style="display:none;">
+                    <div class="stat-card">
+                        <div class="stat-label">Personal Best</div>
+                        <div class="stat-value" id="hill-pb">--</div>
+                        <div class="stat-sub" id="hill-pb-date"></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Average Time</div>
+                        <div class="stat-value" id="hill-avg">--</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Efforts</div>
+                        <div class="stat-value" id="hill-count">--</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Trend</div>
+                        <div class="stat-value" id="hill-trend">--</div>
+                        <div class="stat-sub" id="hill-trend-sub"></div>
+                    </div>
+                </div>
+
+                <div class="chart-card" id="hill-chart-card" style="display:none; margin-top:24px;">
+                    <h3>Segment Time Over Date</h3>
+                    <div class="chart-container" style="height:300px;">
+                        <canvas id="hillChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -687,6 +947,39 @@
         };
         let currentBoxPlotTab = 'morning';
         let chartInstances = {};
+
+        // Photo & Hill state
+        let photosLoaded = false;
+        let allPhotos = [];
+        let lightboxIndex = 0;
+        let hillsLoaded = false;
+        let hillData = null;
+        let hillChartInstance = null;
+        const HILL_STORAGE_KEY = 'cyclecommute_selected_segment';
+
+        // Section tab switching
+        document.querySelectorAll('.section-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const section = btn.dataset.section;
+                document.getElementById('dashboard-section').style.display = section === 'dashboard' ? '' : 'none';
+                document.getElementById('photos-section').style.display = section === 'photos' ? '' : 'none';
+                document.getElementById('hills-section').style.display = section === 'hills' ? '' : 'none';
+                if (section === 'photos' && !photosLoaded) loadPhotos();
+                if (section === 'hills' && !hillsLoaded) loadHillData();
+            });
+        });
+
+        // Collapsible table toggle
+        document.getElementById('table-toggle-btn').addEventListener('click', function() {
+            const wrapper = document.getElementById('commute-table-wrapper');
+            const isHidden = wrapper.style.display === 'none';
+            wrapper.style.display = isHidden ? '' : 'none';
+            this.textContent = isHidden ? 'Hide Table' : 'Show Table';
+            if (isHidden) this.classList.add('active');
+            else this.classList.remove('active');
+        });
 
         // Setup filter event listeners
         document.querySelectorAll('.filter-pill').forEach(btn => {
@@ -834,8 +1127,9 @@
                 allRides = data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
                 normalizedRides = allRides.map(normalizeRide);
 
-                // Show filter bar
+                // Show filter bar and section tabs
                 document.getElementById('filter-bar').style.display = 'flex';
+                document.getElementById('section-tabs').style.display = 'flex';
 
                 // Render everything
                 applyFiltersAndRender();
@@ -1264,6 +1558,305 @@
                     <td>${typeTag}</td>
                 </tr>`;
             }).join('');
+        }
+
+        // ============================
+        // Shared utility
+        // ============================
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ============================
+        // Photo Gallery
+        // ============================
+        async function loadPhotos() {
+            const loading = document.getElementById('photos-loading');
+            const grid = document.getElementById('photos-grid');
+            const empty = document.getElementById('photos-empty');
+            loading.style.display = 'block';
+
+            try {
+                const resp = await fetch('/api/get-ride-photos');
+                const data = await parseJsonResponse(resp);
+                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to load photos');
+
+                allPhotos = [];
+                data.forEach(activity => {
+                    activity.photos.forEach(photo => {
+                        const url = (photo.urls && (photo.urls['2048'] || photo.urls['600'])) || '';
+                        if (url) {
+                            allPhotos.push({
+                                url: url,
+                                caption: photo.caption || '',
+                                activityName: activity.activityName,
+                                activityDate: activity.activityDate
+                            });
+                        }
+                    });
+                });
+
+                loading.style.display = 'none';
+
+                if (allPhotos.length === 0) {
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                grid.innerHTML = allPhotos.map((p, idx) => {
+                    const dateStr = new Date(p.activityDate).toLocaleDateString('en-GB', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                    });
+                    const safeName = escapeHtml(p.activityName);
+                    return `
+                        <div class="photo-card" onclick="openLightbox(${idx})">
+                            <img src="${escapeHtml(p.url)}" alt="${safeName}" loading="lazy">
+                            <div class="photo-overlay">
+                                <div class="photo-overlay-name">${safeName}</div>
+                                <div class="photo-overlay-date">${dateStr}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                photosLoaded = true;
+            } catch (err) {
+                console.error('Photo load error:', err);
+                loading.innerHTML = '<p>Something went wrong: ' + escapeHtml(err.message) + '</p>';
+            }
+        }
+
+        function openLightbox(index) {
+            lightboxIndex = index;
+            updateLightboxContent();
+            document.getElementById('lightbox').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function updateLightboxContent() {
+            const photo = allPhotos[lightboxIndex];
+            document.getElementById('lightbox-img').src = photo.url;
+            const dateStr = new Date(photo.activityDate).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            });
+            document.getElementById('lightbox-caption').textContent =
+                photo.activityName + ' \u2014 ' + dateStr + (photo.caption ? ' \u2014 ' + photo.caption : '');
+        }
+
+        function lightboxNav(dir) {
+            lightboxIndex = (lightboxIndex + dir + allPhotos.length) % allPhotos.length;
+            updateLightboxContent();
+        }
+
+        // Lightbox event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.lightbox-backdrop').addEventListener('click', closeLightbox);
+            document.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+            document.querySelector('.lightbox-prev').addEventListener('click', () => lightboxNav(-1));
+            document.querySelector('.lightbox-next').addEventListener('click', () => lightboxNav(1));
+            document.addEventListener('keydown', (e) => {
+                if (document.getElementById('lightbox').style.display === 'none') return;
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowLeft') lightboxNav(-1);
+                if (e.key === 'ArrowRight') lightboxNav(1);
+            });
+        });
+
+        // ============================
+        // Hill Segment Tracker
+        // ============================
+        function formatDuration(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return m > 0 ? m + 'm ' + s + 's' : s + 's';
+        }
+
+        async function loadHillData() {
+            const loading = document.getElementById('hills-loading');
+            const content = document.getElementById('hills-content');
+            loading.style.display = 'block';
+
+            try {
+                const resp = await fetch('/api/get-segment-times');
+                const data = await parseJsonResponse(resp);
+                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to load segment data');
+
+                hillData = data;
+                loading.style.display = 'none';
+                content.style.display = '';
+
+                populateSegmentDropdown();
+
+                const saved = localStorage.getItem(HILL_STORAGE_KEY);
+                if (saved && hillData.segments[saved]) {
+                    document.getElementById('segment-select').value = saved;
+                    renderSegmentView(saved);
+                }
+
+                hillsLoaded = true;
+            } catch (err) {
+                console.error('Hill data error:', err);
+                loading.innerHTML = '<p>Something went wrong: ' + escapeHtml(err.message) + '</p>';
+            }
+        }
+
+        function populateSegmentDropdown() {
+            const select = document.getElementById('segment-select');
+
+            const effortCounts = {};
+            hillData.efforts.forEach(e => {
+                effortCounts[e.segmentId] = (effortCounts[e.segmentId] || 0) + 1;
+            });
+
+            const segmentEntries = Object.values(hillData.segments)
+                .filter(s => (effortCounts[s.id] || 0) >= 3)
+                .sort((a, b) => (effortCounts[b.id] || 0) - (effortCounts[a.id] || 0));
+
+            select.innerHTML = '<option value="">Choose a segment...</option>' +
+                segmentEntries.map(s =>
+                    '<option value="' + s.id + '">' + escapeHtml(s.name) + ' (' + effortCounts[s.id] + ' efforts)</option>'
+                ).join('');
+
+            select.addEventListener('change', () => {
+                const segId = select.value;
+                if (segId) {
+                    localStorage.setItem(HILL_STORAGE_KEY, segId);
+                    renderSegmentView(segId);
+                } else {
+                    document.getElementById('hill-stats').style.display = 'none';
+                    document.getElementById('hill-chart-card').style.display = 'none';
+                }
+            });
+        }
+
+        function renderSegmentView(segmentId) {
+            const efforts = hillData.efforts
+                .filter(e => String(e.segmentId) === String(segmentId))
+                .sort((a, b) => new Date(a.activityDate) - new Date(b.activityDate));
+
+            if (efforts.length === 0) return;
+
+            const times = efforts.map(e => e.elapsedTime);
+            const best = Math.min(...times);
+            const bestIdx = times.indexOf(best);
+            const avg = times.reduce((s, t) => s + t, 0) / times.length;
+
+            const last5 = times.slice(-5);
+            const last5Avg = last5.reduce((s, t) => s + t, 0) / last5.length;
+            const trendPct = ((last5Avg - avg) / avg * 100).toFixed(1);
+            const trendDir = trendPct < 0 ? 'Improving' : trendPct > 0 ? 'Slowing' : 'Stable';
+            const trendColor = trendPct < 0 ? '#2e7d32' : trendPct > 0 ? '#d32f2f' : '#697386';
+
+            document.getElementById('hill-pb').textContent = formatDuration(best);
+            document.getElementById('hill-pb-date').textContent = new Date(efforts[bestIdx].activityDate)
+                .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            document.getElementById('hill-avg').textContent = formatDuration(Math.round(avg));
+            document.getElementById('hill-count').textContent = efforts.length;
+            document.getElementById('hill-trend').textContent = trendDir;
+            document.getElementById('hill-trend').style.color = trendColor;
+            document.getElementById('hill-trend-sub').textContent =
+                'Last 5 avg: ' + formatDuration(Math.round(last5Avg)) + ' (' + (trendPct > 0 ? '+' : '') + trendPct + '%)';
+
+            document.getElementById('hill-stats').style.display = 'flex';
+
+            renderHillChart(efforts, best);
+        }
+
+        function renderHillChart(efforts, pbTime) {
+            if (hillChartInstance) hillChartInstance.destroy();
+            document.getElementById('hill-chart-card').style.display = '';
+
+            const labels = efforts.map(e =>
+                new Date(e.activityDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+            );
+            const times = efforts.map(e => e.elapsedTime);
+
+            const rollingAvg = times.map((_, i) => {
+                const start = Math.max(0, i - 4);
+                const slice = times.slice(start, i + 1);
+                return slice.reduce((s, v) => s + v, 0) / slice.length;
+            });
+
+            const pointColors = times.map(t => t === pbTime ? '#2e7d32' : 'rgba(99, 91, 255, 0.5)');
+            const pointRadii = times.map(t => t === pbTime ? 6 : 3);
+
+            hillChartInstance = new Chart(document.getElementById('hillChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Elapsed Time',
+                            data: times,
+                            borderColor: 'rgba(99, 91, 255, 0.3)',
+                            backgroundColor: 'rgba(99, 91, 255, 0.05)',
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: pointRadii,
+                            pointBackgroundColor: pointColors,
+                        },
+                        {
+                            label: '5-effort average',
+                            data: rollingAvg,
+                            borderColor: '#2e7d32',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { family: 'Inter', size: 11 }, color: '#697386', padding: 10, usePointStyle: true }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1a1f36',
+                            titleFont: { family: 'Inter', weight: '600' },
+                            bodyFont: { family: 'Inter' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: ctx => {
+                                    const secs = ctx.parsed.y;
+                                    const label = ctx.dataset.label + ': ' + formatDuration(Math.round(secs));
+                                    return secs === pbTime ? label + ' (PB!)' : label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#8792a2', maxRotation: 45 }
+                        },
+                        y: {
+                            title: { display: true, text: 'Time', font: { family: 'Inter', size: 12 }, color: '#697386' },
+                            grid: { color: '#f0f3f7' },
+                            border: { display: false },
+                            ticks: {
+                                font: { family: 'Inter', size: 11 },
+                                color: '#8792a2',
+                                callback: val => formatDuration(Math.round(val))
+                            },
+                            reverse: true
+                        }
+                    }
+                }
+            });
         }
 
         // Auto-load on page load

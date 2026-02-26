@@ -1,5 +1,9 @@
 {
   "functions": {
+    "api/get-segment-times.js": {
+      "maxDuration": 60,
+      "includeFiles": "data/**"
+    },
     "api/**/*.js": {
       "includeFiles": "data/**"
     }
