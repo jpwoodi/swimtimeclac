@@ -33,8 +33,6 @@ A personal website covering work, music and sports. The sports section includes 
 │   ├── index.html                     # Sports section landing page (tool grid)
 │   ├── calculator.html                # Swim time/pace calculator
 │   ├── css.html                       # Critical Swim Speed calculator
-│   ├── dash.html                      # Training dashboard (charts)
-│   ├── dashscript.js                  # Dashboard chart logic (Chart.js)
 │   ├── pools.html                     # Pool finder with interactive map
 │   ├── stravafeed.html                # Strava swim activity feed
 │   ├── swim-plan-generator.html       # AI-powered swim plan generator
@@ -63,7 +61,7 @@ A personal website covering work, music and sports. The sports section includes 
 
 ### Navigation
 - **Primary nav** (all pages): Home | Work | Music | Sports
-- **Sub-nav** (sports section only): Overview | Swim Calculator | CSS Calculator | Dashboard | Pool Finder | Swim Feed | AI Swim Plan | Cycle Commute
+- **Sub-nav** (sports section only): Overview | Swim Calculator | CSS Calculator | Pool Finder | Swim Feed | AI Swim Plan | Cycle Commute
 - Styled via `nav.css` (shared across all pages via absolute path `/nav.css`)
 - Pages with sub-nav use `padding-top: 124px` (56px primary + 44px sub-nav + 24px spacing)
 - Pages without sub-nav use `padding-top: 80px`
@@ -198,7 +196,3 @@ Spacing:     8px grid system
 5. Add any new API keys as environment variables in Vercel
 6. The function is automatically available at `/api/<filename>`
 
-### Modifying the dashboard
-- Chart configuration lives in `sports/dashscript.js`
-- Dashboard page structure is in `sports/dash.html`
-- Data comes from the `get-swims` serverless function (Strava API)
