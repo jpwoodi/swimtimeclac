@@ -114,6 +114,5 @@ module.exports = {
   clearCookie,
   createSessionToken,
   getAuthCookie,
-  jsonResponse,
   verifySessionToken,
 };
