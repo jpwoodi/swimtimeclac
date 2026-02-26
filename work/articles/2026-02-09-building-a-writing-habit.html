@@ -84,17 +84,9 @@
         }
     </style>
     <script src="/auth.js"></script>
+    <script src="/components/nav.js"></script>
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
-        <ul>
-            <li><a href="/index.html">Home</a></li>
-            <li><a href="/work/index.html" class="active">Work</a></li>
-            <li><a href="/music/index.html">Music</a></li>
-            <li><a href="/sports/index.html">Sports</a></li>
-        </ul>
-    </nav>
 
     <main class="article-shell">
         <article class="article-card">
@@ -118,11 +110,5 @@
         </article>
     </main>
 
-    <script>
-        function toggleMenu() {
-            const navMenu = document.querySelector('.top-nav ul');
-            navMenu.classList.toggle('expanded');
-        }
-    </script>
 </body>
 </html>

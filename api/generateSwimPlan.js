@@ -1,6 +1,5 @@
 const fetch = require("node-fetch");
-const fs = require("fs");
-const path = require("path");
+const { loadTemplates } = require("./lib/templates");
 
 const TEMPLATE_TYPES = ["mileage", "im", "fast", "kitchen_sink"];
 const STOP_WORDS = new Set([
@@ -22,36 +21,6 @@ const MAX_TEMPLATES_IN_PROMPT = 12;
 const MIN_PER_TYPE = 2;
 const MAX_TEMPLATE_LINES = 16;
 const MAX_TEMPLATE_CHARS = 950;
-
-let templatesCache = null;
-
-function loadTemplates() {
-  if (templatesCache) return templatesCache;
-
-  const candidatePaths = [
-    path.join(__dirname, "..", "..", "data", "templates.v2.json"),
-    path.join(process.cwd(), "data", "templates.v2.json"),
-    path.join(__dirname, "data", "templates.v2.json"),
-    path.join(__dirname, "..", "..", "data", "templates.v1.json"),
-    path.join(process.cwd(), "data", "templates.v1.json"),
-    path.join(__dirname, "data", "templates.v1.json"),
-  ];
-
-  const templatesPath = candidatePaths.find((candidate) => fs.existsSync(candidate));
-  if (!templatesPath) {
-    throw new Error("Templates file not found. Please run: npm run ingest-templates-v2");
-  }
-
-  const rawData = fs.readFileSync(templatesPath, "utf-8");
-  const parsed = JSON.parse(rawData);
-  if (!Array.isArray(parsed.templates)) {
-    parsed.templates = [];
-  }
-
-  parsed._sourcePath = templatesPath;
-  templatesCache = parsed;
-  return parsed;
-}
 
 function toNumber(value) {
   const n = Number(value);
@@ -314,7 +283,6 @@ module.exports = async function handler(req, res) {
     sessionDuration,
     comments,
     conversationHistory,
-    debug,
   } = parsed;
 
   const hasInitialInputs =
@@ -478,12 +446,11 @@ ${templateBlock}`,
     conversationHistory: conversationHistoryOut,
   };
 
-  if (shouldIncludeDebugMeta(req.headers, { ...parsed, debug })) {
+  if (shouldIncludeDebugMeta(req.headers, parsed)) {
     responseBody.meta = {
       templates: {
         count: (templatesData.templates || []).length,
         version: templatesData.version || null,
-        sourcePath: templatesData._sourcePath || null,
         selectedCount: selectionInfo.selected.length,
         selectedSources: selectionInfo.selected.map((entry) => entry.template.source_file),
       },

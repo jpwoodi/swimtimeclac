@@ -1,23 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-// Load templates from JSON file
-function loadTemplates() {
-    const candidatePaths = [
-        path.join(__dirname, '..', '..', 'data', 'templates.v2.json'),
-        path.join(process.cwd(), 'data', 'templates.v2.json'),
-        path.join(__dirname, 'data', 'templates.v2.json')
-    ];
-
-    const templatesPath = candidatePaths.find((candidate) => fs.existsSync(candidate));
-
-    if (!templatesPath) {
-        throw new Error('Templates file not found. Please run: npm run ingest-templates-v2');
-    }
-
-    const rawData = fs.readFileSync(templatesPath, 'utf-8');
-    return JSON.parse(rawData);
-}
+const { loadTemplates } = require('./lib/templates');
 
 // Filter templates based on query parameters
 function filterTemplates(templates, filters) {
@@ -221,8 +202,8 @@ module.exports = async (req, res) => {
         filtered = sortTemplates(filtered, sortBy, sortOrder);
 
         // Apply pagination
-        const page = parseInt(params.page) || 1;
-        const pageSize = parseInt(params.pageSize) || 20;
+        const page = Math.max(1, parseInt(params.page) || 1);
+        const pageSize = Math.max(1, Math.min(parseInt(params.pageSize) || 20, 100));
         const paginated = paginateResults(filtered, page, pageSize);
 
         // Return results

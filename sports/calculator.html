@@ -161,29 +161,9 @@
         }
     </style>
     <script src="/auth.js"></script>
+    <script src="/components/nav.js"></script>
 </head>
 <body>
-    <nav class="top-nav">
-        <div class="hamburger" onclick="toggleMenu()">&#9776;</div>
-        <ul>
-            <li><a href="/index.html">Home</a></li>
-            <li><a href="/work/index.html">Work</a></li>
-            <li><a href="/music/index.html">Music</a></li>
-            <li><a href="/sports/index.html" class="active">Sports</a></li>
-        </ul>
-    </nav>
-    <nav class="sub-nav">
-        <ul>
-            <li><a href="/sports/index.html">Overview</a></li>
-            <li><a href="/sports/calculator.html" class="active">Swim Calculator</a></li>
-            <li><a href="/sports/css.html">CSS Calculator</a></li>
-            
-            <li><a href="/sports/pools.html">Pool Finder</a></li>
-            <li><a href="/sports/stravafeed.html">Swim Feed</a></li>
-            <li><a href="/sports/swim-plan-generator.html">AI Swim Plan</a></li>
-            <li><a href="/sports/cyclecommute.html">Cycle Commute</a></li>
-        </ul>
-    </nav>
 
     <div class="page-header">
         <h1>Swim Calculator</h1>
@@ -233,11 +213,6 @@
     </div>
 
     <script>
-        function toggleMenu() {
-            const navMenu = document.querySelector('.top-nav ul');
-            navMenu.classList.toggle('expanded');
-        }
-
         function toggleMode() {
             const mode = document.querySelector('input[name="calculation-mode"]:checked').value;
             const timeGroup = document.getElementById('time-group');
@@ -273,6 +248,13 @@
             let distance = document.getElementById("distance").value;
             let errorMessage = document.getElementById("error-message");
             let resultEl = document.getElementById("result");
+
+            if (!distance || parseFloat(distance) <= 0) {
+                errorMessage.innerText = "Please enter a valid distance.";
+                errorMessage.classList.remove('hidden');
+                resultEl.style.display = 'none';
+                return;
+            }
 
             if ((mode === 'pace' && !validateInputs(timeHours, timeMins, timeSecs)) || (mode === 'time' && (!validateSeconds(paceMins) || !validateSeconds(paceSecs)))) {
                 errorMessage.innerText = "Please enter a valid pace or time.";
