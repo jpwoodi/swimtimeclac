@@ -1,4 +1,5 @@
 (function () {
+  document.addEventListener('DOMContentLoaded', function () {
   var path = window.location.pathname;
 
   var topLinks = [
@@ -90,4 +91,5 @@
     subNav.appendChild(subUl);
     topNav.insertAdjacentElement('afterend', subNav);
   }
+  });
 })();
