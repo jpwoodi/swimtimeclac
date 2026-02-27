@@ -2,6 +2,12 @@ const fetch = require("node-fetch");
 const { loadTemplates } = require("./lib/templates");
 
 const TEMPLATE_TYPES = ["mileage", "im", "fast", "kitchen_sink"];
+const FOCUS_TYPE_LABELS = {
+  mileage:      "Endurance / Mileage",
+  im:           "IM & Strokes",
+  fast:         "Speed & Threshold",
+  kitchen_sink: "Technique & Mixed",
+};
 const STOP_WORDS = new Set([
   "the", "and", "for", "with", "that", "this", "from", "into", "your", "you",
   "are", "per", "week", "weeks", "session", "sessions", "swim", "plan", "make",
@@ -83,6 +89,39 @@ function estimateTargetDistanceMeters(cssMinutes, cssSeconds, sessionDuration) {
   const metersPerMinute = (100 / secondsPer100m) * 60;
   const estimate = Math.round((metersPerMinute * sessionDurationMin) / 50) * 50;
   return Math.max(1200, Math.min(5000, estimate));
+}
+
+function buildCSSZones(cssMinutes, cssSeconds) {
+  const cssMin = toNumber(cssMinutes);
+  const cssSec = toNumber(cssSeconds);
+  if (cssMin === null || cssSec === null || cssMin < 0 || cssSec < 0 || cssSec > 59) return "";
+  const cssTotalSec = cssMin * 60 + cssSec;
+  if (cssTotalSec <= 0) return "";
+
+  function secsToTime(s) {
+    const t = Math.max(0, Math.round(s));
+    return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+  }
+
+  // Offsets in seconds per 100m relative to CSS pace (positive = slower, negative = faster)
+  const zones = [
+    { name: "Easy / Recovery (Z1)", low: 25,  high: 35  },
+    { name: "Aerobic (Z2)",         low: 10,  high: 18  },
+    { name: "Threshold / CSS (Z3)", low: -3,  high: 3   },
+    { name: "Hard / VO2max (Z4)",   low: -12, high: -5  },
+    { name: "Sprint (Z5)",          low: -20, high: -12 },
+  ];
+
+  const lines = [
+    `\n## CSS TRAINING ZONES (CSS = ${secsToTime(cssTotalSec)}/100m)`,
+    `Use these target paces for all set intervals. To calculate the interval time: take the target pace per 100m, scale to the rep distance, then add 10–20s rest and round to the nearest 0:05.`,
+    "",
+  ];
+  for (const zone of zones) {
+    lines.push(`- ${zone.name}: ${secsToTime(cssTotalSec + zone.low)}–${secsToTime(cssTotalSec + zone.high)}/100m`);
+  }
+  lines.push("");
+  return lines.join("\n");
 }
 
 function scoreTemplate(template, context) {
@@ -310,6 +349,7 @@ module.exports = async function handler(req, res) {
 
   const {
     goal,
+    focusTypes,
     cssMinutes,
     cssSeconds,
     duration,
@@ -319,8 +359,9 @@ module.exports = async function handler(req, res) {
     conversationHistory,
   } = parsed;
 
+  const hasFocus = (Array.isArray(focusTypes) && focusTypes.length > 0) || !!goal;
   const hasInitialInputs =
-    !!goal &&
+    hasFocus &&
     cssMinutes !== undefined &&
     cssSeconds !== undefined &&
     duration !== undefined &&
@@ -348,10 +389,21 @@ module.exports = async function handler(req, res) {
   try {
     templatesData = loadTemplates();
 
-    const goalTokens = tokenizeGoal(goal);
+    let goalTokens, preferredTypes, goalDescription;
+    if (Array.isArray(focusTypes) && focusTypes.length > 0) {
+      const validTypes = focusTypes.filter((t) => TEMPLATE_TYPES.includes(t));
+      preferredTypes = new Set(validTypes);
+      goalTokens = validTypes.flatMap((t) => TYPE_HINTS[t] || []);
+      goalDescription = "Their training focus is: " + validTypes.map((t) => FOCUS_TYPE_LABELS[t] || t).join(", ") + ".";
+    } else {
+      goalTokens = tokenizeGoal(goal);
+      preferredTypes = preferredTypesFromGoal(goalTokens);
+      goalDescription = goal ? `Their goal is to ${goal}.` : "";
+    }
+
     const context = {
       goalTokens,
-      preferredTypes: preferredTypesFromGoal(goalTokens),
+      preferredTypes,
       sessionDurationMin: toNumber(sessionDuration),
       targetDistanceMeters: estimateTargetDistanceMeters(cssMinutes, cssSeconds, sessionDuration),
     };
@@ -381,10 +433,11 @@ module.exports = async function handler(req, res) {
 
   if (!normalizedHistory.length && hasInitialInputs) {
     const cssTime = `${cssMinutes} minutes ${cssSeconds} seconds per 100m`;
+    const cssZones = buildCSSZones(cssMinutes, cssSeconds);
     const initialMessage = {
       role: "user",
-      content: `Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes.
-
+      content: `Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. ${goalDescription} The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes.
+${cssZones}
 IMPORTANT INSTRUCTIONS:
 - The session-to-template assignment is listed in the template block below — for each session, directly adapt the assigned template
 - Preserve the assigned template's set structure, rep counts, and rest intervals; adjust only the pace/interval times to match the swimmer's CSS
@@ -392,7 +445,7 @@ IMPORTANT INSTRUCTIONS:
 - Rotate session types in order: Mileage, IM, Fast, Kitchen Sink (cycling if sessions per week < 4)
 - Keep warm-up FIXED to "300 free + 100 pull" always
 - Keep cool-down FIXED to "100 free" always
-- Use the CSS to calculate appropriate interval times for all main set reps
+- Use the CSS training zones above to set all interval times — do not guess paces
 - Specify equipment (pull buoys, kickboards, fins) where the template uses them
 - Always use metres for all distances — templates marked SCY are in yards, convert distances (×0.914) and recalculate interval times accordingly; LCM templates are already in metres
 - Respond with valid JSON only — no markdown, no prose, no explanation outside the JSON

@@ -89,6 +89,39 @@
 
         .input-row input { flex: 1; }
 
+        /* Focus type chips */
+        .focus-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .focus-chip input[type="checkbox"] { display: none; }
+
+        .focus-chip span {
+            display: block;
+            padding: 7px 14px;
+            border: 1px solid #e3e8ee;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #697386;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .focus-chip span:hover { border-color: #635bff; color: #635bff; }
+
+        .focus-chip input:checked + span {
+            background: #635bff;
+            border-color: #635bff;
+            color: #fff;
+        }
+
+        .focus-chip input:checked + span:hover { background: #5851ea; border-color: #5851ea; }
+
         button {
             width: 100%;
             padding: 12px;
@@ -137,11 +170,10 @@
             background: #fff;
             border: 1px solid #e3e8ee;
             border-radius: 8px;
-            max-width: 1200px;
+            max-width: 960px;
             margin: 24px auto 0;
             padding: 24px;
             display: none;
-            overflow-x: auto;
         }
 
         .results-card h2 {
@@ -151,34 +183,123 @@
             margin-bottom: 16px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        /* Session cards */
+        .sessions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        th, td {
-            padding: 10px 12px;
-            text-align: left;
-            font-size: 13px;
-        }
-
-        th {
-            background-color: #f6f9fc;
-            color: #697386;
-            font-weight: 600;
+        .week-heading {
             font-size: 11px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.06em;
+            color: #8792a2;
+            padding: 12px 0 6px;
+            border-bottom: 1px solid #e3e8ee;
+            margin-top: 4px;
+        }
+
+        .week-heading:first-child { margin-top: 0; }
+
+        .session-card {
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: #f6f9fc;
             border-bottom: 1px solid #e3e8ee;
         }
 
-        td {
+        .session-title {
+            font-size: 13px;
+            font-weight: 600;
             color: #1a1f36;
-            border-bottom: 1px solid #f0f3f7;
         }
 
-        tr:hover td {
-            background-color: #f6f9fc;
+        .type-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 100px;
+            text-transform: capitalize;
+        }
+
+        .type-mileage   { background: #e8f5e9; color: #2e7d32; }
+        .type-speed,
+        .type-fast      { background: #fff3e0; color: #ef6c00; }
+        .type-im        { background: #f3e5f5; color: #6a1b9a; }
+        .type-threshold { background: #e3f2fd; color: #1565c0; }
+        .type-drill,
+        .type-technique { background: #e0f7fa; color: #00695c; }
+        .type-default   { background: #ede7f6; color: #4527a0; }
+
+        .session-distance {
+            margin-left: auto;
+            font-size: 13px;
+            font-weight: 600;
+            color: #635bff;
+        }
+
+        .session-body {
+            display: grid;
+            grid-template-columns: minmax(120px, 1fr) 2fr 3fr minmax(100px, 1fr);
+        }
+
+        .set-section {
+            padding: 14px 16px;
+            border-right: 1px solid #f0f3f7;
+        }
+
+        .set-section:last-child { border-right: none; }
+
+        .set-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #8792a2;
+            margin-bottom: 8px;
+        }
+
+        .set-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .set-items li {
+            font-size: 13px;
+            color: #1a1f36;
+            line-height: 1.45;
+            padding: 2px 0 2px 14px;
+            position: relative;
+        }
+
+        .set-items li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #c3c9d4;
+        }
+
+        .set-text {
+            font-size: 13px;
+            color: #1a1f36;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 700px) {
+            .session-body { grid-template-columns: 1fr; }
+            .set-section { border-right: none; border-bottom: 1px solid #f0f3f7; }
+            .set-section:last-child { border-bottom: none; }
         }
 
         .template-sources {
@@ -237,8 +358,25 @@
     <div class="form-card">
         <form id="swim-plan-form">
             <div class="form-group">
-                <label for="goal">Swim Goal</label>
-                <input type="text" id="goal" name="goal" placeholder="e.g. Improve endurance, build speed">
+                <label>Training Focus</label>
+                <div class="focus-chips">
+                    <label class="focus-chip">
+                        <input type="checkbox" value="mileage" checked>
+                        <span>Endurance</span>
+                    </label>
+                    <label class="focus-chip">
+                        <input type="checkbox" value="fast">
+                        <span>Speed &amp; Threshold</span>
+                    </label>
+                    <label class="focus-chip">
+                        <input type="checkbox" value="im">
+                        <span>IM &amp; Strokes</span>
+                    </label>
+                    <label class="focus-chip">
+                        <input type="checkbox" value="kitchen_sink">
+                        <span>Technique &amp; Mixed</span>
+                    </label>
+                </div>
             </div>
             <div class="form-group">
                 <label>Critical Swim Speed (per 100m)</label>
@@ -270,7 +408,7 @@
 
     <div class="results-card" id="results-container">
         <h2>Your Swim Plan</h2>
-        <table id="swim-plan-table"></table>
+        <div id="swim-plan-sessions"></div>
 
         <details class="template-sources" id="template-sources" style="display:none">
             <summary>Referenced plans</summary>
@@ -299,19 +437,23 @@
         }
 
         async function generateSwimPlan() {
-            const goal = document.getElementById('goal').value;
+            const focusTypes = Array.from(document.querySelectorAll('.focus-chip input:checked')).map(cb => cb.value);
             const cssMinutes = document.getElementById('cssMinutes').value;
             const cssSeconds = document.getElementById('cssSeconds').value;
             const duration = document.getElementById('duration').value;
             const sessions = document.getElementById('sessions').value;
             const sessionDuration = document.getElementById('session-duration').value;
 
-            if (!goal || !cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
+            if (focusTypes.length === 0) {
+                alert("Please select at least one training focus.");
+                return;
+            }
+            if (!cssMinutes || !cssSeconds || !duration || !sessions || !sessionDuration) {
                 alert("Please fill out all fields.");
                 return;
             }
 
-            storedDetails = { goal, cssMinutes, cssSeconds, duration, sessions, sessionDuration };
+            storedDetails = { focusTypes, cssMinutes, cssSeconds, duration, sessions, sessionDuration };
 
             await fetchAndDisplayPlan({
                 ...storedDetails,
@@ -383,28 +525,76 @@
             el.style.display = '';
         }
 
-        function displaySessions(sessions) {
-            const table = document.getElementById('swim-plan-table');
-            let html = `<thead><tr>
-                <th>Week</th><th>Session</th><th>Type</th><th>Warm Up</th>
-                <th>Build Set</th><th>Main Set</th><th>Cool Down</th><th>Total</th>
-            </tr></thead><tbody>`;
+        // Split set text into bullet items on "N ×" boundaries (e.g. "4 × 50 Free...")
+        function formatSet(text) {
+            if (!text) return '';
+            // Split before patterns like "4 × 75" or "2 × 100" (digit + × + digit)
+            const parts = text.split(/(?=\b\d+\s*[\u00d7x]\s+\d)/);
+            const items = parts.map(p => p.trim()).filter(p => p);
+            if (items.length <= 1) {
+                return `<span class="set-text">${escapeHtml(text)}</span>`;
+            }
+            return `<ul class="set-items">${items.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`;
+        }
 
+        function getTypeBadgeClass(type) {
+            if (!type) return 'type-default';
+            const t = type.toLowerCase();
+            if (t.includes('mileage') || t.includes('endurance')) return 'type-mileage';
+            if (t.includes('speed') || t.includes('fast'))        return 'type-speed';
+            if (t === 'im' || t.includes(' im'))                   return 'type-im';
+            if (t.includes('threshold') || t.includes('css'))      return 'type-threshold';
+            if (t.includes('technique') || t.includes('drill'))    return 'type-technique';
+            return 'type-default';
+        }
+
+        function displaySessions(sessions) {
+            const container = document.getElementById('swim-plan-sessions');
+
+            // Group by week, preserving order
+            const weekMap = {};
+            const weekOrder = [];
             sessions.forEach(s => {
-                html += `<tr>
-                    <td>Week ${escapeHtml(s.week)}</td>
-                    <td>${escapeHtml(s.session)}</td>
-                    <td>${escapeHtml(s.session_type || '')}</td>
-                    <td>${escapeHtml(s.warm_up || '')}</td>
-                    <td>${escapeHtml(s.build_set || '')}</td>
-                    <td>${escapeHtml(s.main_set || '')}</td>
-                    <td>${escapeHtml(s.cool_down || '')}</td>
-                    <td>${s.total_distance_m ? escapeHtml(s.total_distance_m) + 'm' : ''}</td>
-                </tr>`;
+                const w = String(s.week);
+                if (!weekMap[w]) { weekMap[w] = []; weekOrder.push(w); }
+                weekMap[w].push(s);
             });
 
-            html += '</tbody>';
-            table.innerHTML = html;
+            let html = '<div class="sessions-list">';
+            weekOrder.forEach(week => {
+                html += `<div class="week-heading">Week ${escapeHtml(week)}</div>`;
+                weekMap[week].forEach(s => {
+                    const badgeClass = getTypeBadgeClass(s.session_type);
+                    html += `
+                        <div class="session-card">
+                            <div class="session-header">
+                                <span class="session-title">Session ${escapeHtml(String(s.session))}</span>
+                                ${s.session_type ? `<span class="type-badge ${badgeClass}">${escapeHtml(s.session_type)}</span>` : ''}
+                                ${s.total_distance_m ? `<span class="session-distance">${escapeHtml(String(s.total_distance_m))}m</span>` : ''}
+                            </div>
+                            <div class="session-body">
+                                <div class="set-section">
+                                    <div class="set-label">Warm Up</div>
+                                    ${formatSet(s.warm_up)}
+                                </div>
+                                <div class="set-section">
+                                    <div class="set-label">Build Set</div>
+                                    ${formatSet(s.build_set)}
+                                </div>
+                                <div class="set-section">
+                                    <div class="set-label">Main Set</div>
+                                    ${formatSet(s.main_set)}
+                                </div>
+                                <div class="set-section">
+                                    <div class="set-label">Cool Down</div>
+                                    ${formatSet(s.cool_down)}
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            });
+            html += '</div>';
+            container.innerHTML = html;
         }
     </script>
 </body>
