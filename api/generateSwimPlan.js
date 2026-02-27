@@ -103,23 +103,55 @@ function buildCSSZones(cssMinutes, cssSeconds) {
     return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
   }
 
-  // Offsets in seconds per 100m relative to CSS pace (positive = slower, negative = faster)
+  // Round up to nearest 5 seconds
+  function roundUp5(s) {
+    return Math.ceil(s / 5) * 5;
+  }
+
+  // Zone pace offsets in seconds per 100m (positive = slower, negative = faster)
   const zones = [
-    { name: "Easy / Recovery (Z1)", low: 25,  high: 35  },
-    { name: "Aerobic (Z2)",         low: 10,  high: 18  },
-    { name: "Threshold / CSS (Z3)", low: -3,  high: 3   },
-    { name: "Hard / VO2max (Z4)",   low: -12, high: -5  },
-    { name: "Sprint (Z5)",          low: -20, high: -12 },
+    { key: "Z1", name: "Easy / Recovery", low: 25,  high: 35, mid: 30  },
+    { key: "Z2", name: "Aerobic",         low: 10,  high: 18, mid: 14  },
+    { key: "Z3", name: "Threshold / CSS", low: -3,  high: 3,  mid: 0   },
+    { key: "Z4", name: "Hard / VO2max",   low: -12, high: -5, mid: -8  },
+    { key: "Z5", name: "Sprint",          low: -20, high: -12, mid: -16 },
   ];
 
   const lines = [
     `\n## CSS TRAINING ZONES (CSS = ${secsToTime(cssTotalSec)}/100m)`,
-    `Use these target paces for all set intervals. To calculate the interval time: take the target pace per 100m, scale to the rep distance, then add 10–20s rest and round to the nearest 0:05.`,
     "",
   ];
   for (const zone of zones) {
-    lines.push(`- ${zone.name}: ${secsToTime(cssTotalSec + zone.low)}–${secsToTime(cssTotalSec + zone.high)}/100m`);
+    lines.push(`- ${zone.key} ${zone.name}: ${secsToTime(cssTotalSec + zone.low)}–${secsToTime(cssTotalSec + zone.high)}/100m`);
   }
+
+  // Pre-calculated interval reference table (swim time + 15s rest, rounded up to nearest 0:05)
+  // This prevents GPT from reusing template intervals designed for faster swimmers.
+  lines.push("");
+  lines.push("## PRE-CALCULATED INTERVAL REFERENCE — use these directly, ignore template interval times");
+  lines.push("(swim time at zone midpoint + 15s rest, rounded up to nearest 0:05)");
+  lines.push("");
+
+  const distances = [25, 50, 75, 100, 150, 200, 400];
+  for (const dist of distances) {
+    const factor = dist / 100;
+    const cols = zones.slice(0, 4).map(z => {
+      const swimSec = (cssTotalSec + z.mid) * factor;
+      return `${z.key}=${secsToTime(roundUp5(swimSec + 15))}`;
+    });
+    lines.push(`${dist}m: ${cols.join(" | ")}`);
+  }
+
+  lines.push("");
+  lines.push(
+    `HARD RULE: An interval shorter than the CSS swim time for that distance is physically impossible ` +
+    `and must never appear in the plan. ` +
+    `CSS swim times: 25m=${secsToTime(Math.round(cssTotalSec * 0.25))} | ` +
+    `50m=${secsToTime(Math.round(cssTotalSec * 0.5))} | ` +
+    `100m=${secsToTime(cssTotalSec)} | ` +
+    `200m=${secsToTime(cssTotalSec * 2)} | ` +
+    `400m=${secsToTime(cssTotalSec * 4)}`
+  );
   lines.push("");
   return lines.join("\n");
 }
@@ -441,12 +473,12 @@ module.exports = async function handler(req, res) {
 ${cssZones}
 IMPORTANT INSTRUCTIONS:
 - The session-to-template assignment is listed in the template block below — for each session, directly adapt the assigned template
-- Preserve the assigned template's set structure, rep counts, and rest intervals; adjust only the pace/interval times to match the swimmer's CSS
+- Use the assigned template for set structure and rep counts ONLY. The templates come from faster swimmers — their interval times WILL be wrong for this swimmer. Discard all interval times from the templates and replace them entirely using the PRE-CALCULATED INTERVAL REFERENCE above.
 - Do NOT invent new set structures; if a session has no assignment, use the closest template from the same type
 - Rotate session types in order: Mileage, IM, Fast, Kitchen Sink (cycling if sessions per week < 4)
 - Keep warm-up FIXED to "300 free + 100 pull" always
 - Keep cool-down FIXED to "100 free" always
-- Use the CSS training zones above to set all interval times — do not guess paces
+- Set ALL interval times using the PRE-CALCULATED INTERVAL REFERENCE above — copy those values directly
 - Do not use '+' as a separator between set items; write each item as a complete standalone description
 - Specify equipment (pull buoys, kickboards, fins) where the template uses them
 - Always use metres for all distances — templates marked SCY are in yards, convert distances (×0.914) and recalculate interval times accordingly; LCM templates are already in metres
