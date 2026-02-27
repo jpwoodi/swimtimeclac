@@ -234,6 +234,9 @@ function buildTemplateBlock(templatesData, selectionInfo, context, sessionRotati
   lines.push(
     `Dataset mix: mileage=${selectionInfo.byType.mileage || 0}, im=${selectionInfo.byType.im || 0}, fast=${selectionInfo.byType.fast || 0}, kitchen_sink=${selectionInfo.byType.kitchen_sink || 0}.`
   );
+  lines.push(
+    "UNIT NOTE: Templates marked Pool=SCY are in Short Course Yards. Convert all distances to metres (×0.914) and adjust interval times to suit the swimmer's CSS in metres. Templates marked Pool=LCM are already in metres."
+  );
   if (context.targetDistanceMeters !== null) {
     lines.push(`Target distance per session estimate: ~${context.targetDistanceMeters}m.`);
   }
@@ -391,7 +394,7 @@ IMPORTANT INSTRUCTIONS:
 - Keep cool-down FIXED to "100 free" always
 - Use the CSS to calculate appropriate interval times for all main set reps
 - Specify equipment (pull buoys, kickboards, fins) where the template uses them
-- Always use metres for all distances
+- Always use metres for all distances — templates marked SCY are in yards, convert distances (×0.914) and recalculate interval times accordingly; LCM templates are already in metres
 - Respond with valid JSON only — no markdown, no prose, no explanation outside the JSON
 - The JSON must have a top-level "sessions" array. Each element must have exactly these keys:
   "week" (integer), "session" (integer), "session_type" (string: mileage/im/fast/kitchen_sink),
