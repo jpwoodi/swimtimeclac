@@ -491,9 +491,14 @@ ${templateBlock}`,
     -MAX_HISTORY_MESSAGES
   );
 
+  const templateSources = selectionInfo
+    ? selectionInfo.selected.map((e) => e.template.source_file)
+    : [];
+
   const responseBody = {
     plan: assistantMessage.content,
     sessions: planSessions,
+    templateSources,
     conversationHistory: conversationHistoryOut,
   };
 
