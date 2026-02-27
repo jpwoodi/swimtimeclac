@@ -17,14 +17,21 @@ const TYPE_HINTS = {
 };
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARS = 3000;
-const MAX_TEMPLATES_IN_PROMPT = 12;
 const MIN_PER_TYPE = 2;
-const MAX_TEMPLATE_LINES = 16;
-const MAX_TEMPLATE_CHARS = 950;
+const MAX_PER_TYPE = 6;
+const MAX_TEMPLATE_LINES = 40;
+const MAX_TEMPLATE_CHARS = 2500;
 
 function toNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function calcTemplatesPerType(weeks, sessionsPerWeek) {
+  const w = toNumber(weeks);
+  const s = toNumber(sessionsPerWeek);
+  if (!w || !s || w <= 0 || s <= 0) return MIN_PER_TYPE;
+  return Math.max(MIN_PER_TYPE, Math.min(MAX_PER_TYPE, Math.ceil((w * s) / 4)));
 }
 
 function toLowerSet(values) {
@@ -148,7 +155,7 @@ function cleanTemplateText(rawText) {
   return kept.join("\n");
 }
 
-function selectTemplatesFromFullDataset(templatesData, context) {
+function selectTemplatesFromFullDataset(templatesData, context, perType) {
   const allTemplates = Array.isArray(templatesData.templates) ? templatesData.templates : [];
   const scored = allTemplates
     .map((template) => ({
@@ -157,31 +164,24 @@ function selectTemplatesFromFullDataset(templatesData, context) {
     }))
     .sort((a, b) => b.score - a.score);
 
-  const selected = [];
-  const seenPlanIds = new Set();
-
+  const selectedByType = {};
   for (const type of TEMPLATE_TYPES) {
-    const perType = scored.filter((entry) => entry.template.plan_type_key === type).slice(0, MIN_PER_TYPE);
-    for (const entry of perType) {
-      const planId = entry.template.plan_id || `${entry.template.plan_type_key}:${entry.template.source_file}`;
-      if (!seenPlanIds.has(planId)) {
-        selected.push(entry);
-        seenPlanIds.add(planId);
-      }
-    }
+    selectedByType[type] = scored
+      .filter((entry) => entry.template.plan_type_key === type)
+      .slice(0, perType)
+      .map((entry) => entry.template);
   }
 
-  for (const entry of scored) {
-    if (selected.length >= MAX_TEMPLATES_IN_PROMPT) break;
-    const planId = entry.template.plan_id || `${entry.template.plan_type_key}:${entry.template.source_file}`;
-    if (!seenPlanIds.has(planId)) {
-      selected.push(entry);
-      seenPlanIds.add(planId);
-    }
-  }
+  const selected = TEMPLATE_TYPES.flatMap((type) =>
+    selectedByType[type].map((template) => ({
+      template,
+      score: scored.find((e) => e.template === template)?.score ?? 0,
+    }))
+  );
 
   return {
     selected,
+    selectedByType,
     totalTemplates: allTemplates.length,
     byType: TEMPLATE_TYPES.reduce((acc, type) => {
       acc[type] = allTemplates.filter((template) => template.plan_type_key === type).length;
@@ -190,15 +190,46 @@ function selectTemplatesFromFullDataset(templatesData, context) {
   };
 }
 
-function buildTemplateBlock(templatesData, selectionInfo, context) {
+function buildSessionRotation(weeks, sessionsPerWeek, selectedByType) {
+  const w = toNumber(weeks);
+  const s = toNumber(sessionsPerWeek);
+  if (!w || !s || w <= 0 || s <= 0) return "";
+
+  const typeOrder = TEMPLATE_TYPES; // ["mileage", "im", "fast", "kitchen_sink"]
+  const typeCounters = Object.fromEntries(TEMPLATE_TYPES.map((t) => [t, 0]));
+  const lines = ["## SESSION-TO-TEMPLATE ASSIGNMENT", ""];
+
+  let typeRollingIndex = 0;
+  for (let week = 1; week <= w; week++) {
+    for (let session = 1; session <= s; session++) {
+      const type = typeOrder[typeRollingIndex % 4];
+      typeRollingIndex++;
+      const pool = selectedByType[type] || [];
+      if (!pool.length) continue;
+      const template = pool[typeCounters[type] % pool.length];
+      typeCounters[type]++;
+      lines.push(`Week ${week}, Session ${session} (${type}): Adapt "${template.source_file}"`);
+    }
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
+function buildTemplateBlock(templatesData, selectionInfo, context, sessionRotation) {
   if (!selectionInfo.selected.length) return "";
 
   const lines = [];
   lines.push("");
   lines.push("## REAL SWIM PLAN TEMPLATES (FULL DATASET RETRIEVAL)");
   lines.push("");
+
+  if (sessionRotation) {
+    lines.push(sessionRotation);
+  }
+
   lines.push(
-    `Use these reference templates selected from the full dataset (${selectionInfo.totalTemplates} total plans, version ${templatesData.version || "unknown"}). Reuse and adapt their set structures.`
+    `The templates below are the source workouts referenced in the assignment above (${selectionInfo.totalTemplates} total plans in dataset, version ${templatesData.version || "unknown"}).`
   );
   lines.push(
     `Dataset mix: mileage=${selectionInfo.byType.mileage || 0}, im=${selectionInfo.byType.im || 0}, fast=${selectionInfo.byType.fast || 0}, kitchen_sink=${selectionInfo.byType.kitchen_sink || 0}.`
@@ -322,8 +353,10 @@ module.exports = async function handler(req, res) {
       targetDistanceMeters: estimateTargetDistanceMeters(cssMinutes, cssSeconds, sessionDuration),
     };
 
-    selectionInfo = selectTemplatesFromFullDataset(templatesData, context);
-    templateBlock = buildTemplateBlock(templatesData, selectionInfo, context);
+    const perType = calcTemplatesPerType(duration, sessions);
+    selectionInfo = selectTemplatesFromFullDataset(templatesData, context, perType);
+    const sessionRotation = buildSessionRotation(duration, sessions, selectionInfo.selectedByType);
+    templateBlock = buildTemplateBlock(templatesData, selectionInfo, context, sessionRotation);
   } catch (error) {
     console.error("Template loading/selection error:", error.message);
     return res.status(500).json({
@@ -350,13 +383,15 @@ module.exports = async function handler(req, res) {
       content: `Create a swim plan for a swimmer with a Critical Swim Speed (CSS) of ${cssTime}. Their goal is to ${goal}. The plan should last ${duration} weeks, with ${sessions} sessions per week. Each session should last ${sessionDuration} minutes.
 
 IMPORTANT INSTRUCTIONS:
-- Use the 4 session types each week: Mileage (distance), IM (strokes), Fast (speed), Kitchen Sink (mixed)
-- Reuse and adapt structures from the templates below - do NOT invent wholly new set structures unless absolutely necessary
+- The session-to-template assignment is listed in the template block below — for each session, directly adapt the assigned template
+- Preserve the assigned template's set structure, rep counts, and rest intervals; adjust only the pace/interval times to match the swimmer's CSS
+- Do NOT invent new set structures; if a session has no assignment, use the closest template from the same type
+- Rotate session types in order: Mileage, IM, Fast, Kitchen Sink (cycling if sessions per week < 4)
 - Keep warm-up FIXED to "300 free + 100 pull" always
 - Keep cool-down FIXED to "100 free" always
-- Use the CSS to inform pacing for intervals
-- Specify equipment (pull buoys, kickboards, fins) where applicable
-- Always use metres
+- Use the CSS to calculate appropriate interval times for all main set reps
+- Specify equipment (pull buoys, kickboards, fins) where the template uses them
+- Always use metres for all distances
 - Format output as a Markdown table ONLY with columns: Week | Session Number | Warm Up | Build Set | Main Set | Cool Down | Total Distance
 - Do NOT include any additional text outside the table
 
