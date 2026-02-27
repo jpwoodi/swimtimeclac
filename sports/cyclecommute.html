@@ -1826,42 +1826,47 @@
 
             const coords = decodePolyline(segment.polyline);
 
-            if (!segmentMapInstance) {
-                segmentMapInstance = L.map('segment-map', { zoomControl: true, scrollWheelZoom: false });
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                    subdomains: 'abcd',
-                    maxZoom: 19
+            // Defer all Leaflet work until the card has been laid out by the browser
+            setTimeout(() => {
+                if (!segmentMapInstance) {
+                    segmentMapInstance = L.map('segment-map', { zoomControl: true, scrollWheelZoom: false });
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                        subdomains: 'abcd',
+                        maxZoom: 19
+                    }).addTo(segmentMapInstance);
+                } else {
+                    // Collect layers to remove first, then remove (safe iteration)
+                    const toRemove = [];
+                    segmentMapInstance.eachLayer(layer => {
+                        if (layer instanceof L.Polyline || layer instanceof L.CircleMarker) {
+                            toRemove.push(layer);
+                        }
+                    });
+                    toRemove.forEach(l => segmentMapInstance.removeLayer(l));
+                    segmentMapInstance.invalidateSize();
+                }
+
+                // Draw segment route
+                segmentPolylineLayer = L.polyline(coords, {
+                    color: '#635bff',
+                    weight: 5,
+                    opacity: 0.85
                 }).addTo(segmentMapInstance);
-            } else {
-                // Clear previous segment layers
-                segmentMapInstance.eachLayer(layer => {
-                    if (layer instanceof L.Polyline || layer instanceof L.CircleMarker) {
-                        segmentMapInstance.removeLayer(layer);
-                    }
-                });
-            }
 
-            // Draw segment route
-            segmentPolylineLayer = L.polyline(coords, {
-                color: '#635bff',
-                weight: 5,
-                opacity: 0.85
-            }).addTo(segmentMapInstance);
+                // Start marker (green)
+                L.circleMarker(coords[0], {
+                    radius: 7, fillColor: '#2e7d32', color: '#fff', weight: 2, fillOpacity: 1
+                }).addTo(segmentMapInstance);
 
-            // Start marker (green)
-            L.circleMarker(coords[0], {
-                radius: 7, fillColor: '#2e7d32', color: '#fff', weight: 2, fillOpacity: 1
-            }).addTo(segmentMapInstance);
+                // End marker (orange)
+                L.circleMarker(coords[coords.length - 1], {
+                    radius: 7, fillColor: '#ef6c00', color: '#fff', weight: 2, fillOpacity: 1
+                }).addTo(segmentMapInstance);
 
-            // End marker (orange)
-            L.circleMarker(coords[coords.length - 1], {
-                radius: 7, fillColor: '#ef6c00', color: '#fff', weight: 2, fillOpacity: 1
-            }).addTo(segmentMapInstance);
-
-            segmentMapInstance.fitBounds(segmentPolylineLayer.getBounds(), { padding: [30, 30] });
-            // Leaflet needs a moment after the card becomes visible
-            setTimeout(() => segmentMapInstance.invalidateSize(), 100);
+                segmentMapInstance.invalidateSize();
+                segmentMapInstance.fitBounds(segmentPolylineLayer.getBounds(), { padding: [30, 30] });
+            }, 50);
         }
 
         function renderHillChart(efforts, pbTime) {
