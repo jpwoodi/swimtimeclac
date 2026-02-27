@@ -385,11 +385,12 @@ module.exports = async function handler(req, res) {
   let templatesData;
   let selectionInfo;
   let templateBlock = "";
+  let goalDescription = "";
 
   try {
     templatesData = loadTemplates();
 
-    let goalTokens, preferredTypes, goalDescription;
+    let goalTokens, preferredTypes;
     if (Array.isArray(focusTypes) && focusTypes.length > 0) {
       const validTypes = focusTypes.filter((t) => TEMPLATE_TYPES.includes(t));
       preferredTypes = new Set(validTypes);
