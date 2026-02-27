@@ -219,35 +219,74 @@ function calculateIntervalSendoffSeconds(cssSecondsPer100, distanceM, zoneKey) {
   return roundUpToNearest5(swimSeconds + 15);
 }
 
+function cleanSetLine(line) {
+  if (typeof line !== "string") return line;
+
+  let cleaned = line.trim();
+  cleaned = cleaned.replace(/\s*[,;]\s*(?=(?:\d+\s*[x\u00D7]\s+\d))/gi, " ");
+  cleaned = cleaned.replace(/\b(each|rest)\s*,\s*$/gi, "$1");
+  cleaned = cleaned.replace(/\s*[,+;]\s*$/g, "");
+  cleaned = cleaned.replace(/\s{2,}/g, " ");
+  return cleaned;
+}
+
+function cleanSetText(setText) {
+  if (typeof setText !== "string") return setText;
+  return setText
+    .split(/\r?\n/)
+    .map((line) => cleanSetLine(line))
+    .join("\n")
+    .trim();
+}
+
 function normalizeSetIntervals(setText, sectionKey, cssSecondsPer100) {
   if (typeof setText !== "string" || !setText.trim()) {
     return { text: setText, changed: false };
   }
 
   let changed = false;
-  const intervalPattern =
-    /(\b(?:(\d+)\s*[x\u00D7]\s*)?(\d+)\s*(?:m|meters?)?[^\n]{0,120}?)(\bon|@)\s*(\d{1,2}:\d{2}|\d{1,3})/gi;
-
-  const normalizedText = setText.replace(
-    intervalPattern,
-    (fullMatch, prefix, _repsStr, distanceStr, separator, currentTime) => {
-      const distanceM = Number(distanceStr);
-      const currentSeconds = parseTimeToSeconds(currentTime);
-      if (!Number.isFinite(distanceM) || distanceM <= 0 || currentSeconds === null) {
-        return fullMatch;
-      }
-
-      const zone = inferIntervalZone(prefix, sectionKey);
-      const minimumSendoffSeconds = calculateIntervalSendoffSeconds(cssSecondsPer100, distanceM, zone);
-      if (currentSeconds >= minimumSendoffSeconds) return fullMatch;
-
-      const sendoffText = formatSecondsToTime(minimumSendoffSeconds);
-      changed = true;
-      return `${prefix}${separator} ${sendoffText}`;
+  const segmentBoundary = /(?=\b\d+\s*[x\u00D7]\s*\d{2,4}\b)/i;
+  const segments = setText.split(segmentBoundary);
+  const normalizedSegments = segments.map((segment) => {
+    const anchor = segment.match(/\b\d+\s*[x\u00D7]\s*(\d{2,4})\b/i);
+    if (anchor) {
+      const distanceM = Number(anchor[1]);
+      const zone = inferIntervalZone(segment, sectionKey);
+      const targetSendoffSeconds = calculateIntervalSendoffSeconds(cssSecondsPer100, distanceM, zone);
+      const sendoffText = formatSecondsToTime(targetSendoffSeconds);
+      return segment.replace(/(\bon|@)\s*(\d{1,2}:\d{2}|\d{1,3})/gi, (fullMatch, separator, currentTime) => {
+        if (sendoffText === currentTime) return fullMatch;
+        changed = true;
+        return `${separator} ${sendoffText}`;
+      });
     }
-  );
 
-  return { text: normalizedText, changed };
+    return segment.replace(
+      /(\b(\d{2,4})(?=\s|m\b|meters?\b)\s*(?:m|meters?)?[^\n]{0,120}?)(\bon|@)\s*(\d{1,2}:\d{2}|\d{1,3})/gi,
+      (fullMatch, prefix, distanceStr, separator, currentTime) => {
+        const distanceM = Number(distanceStr);
+        const currentSeconds = parseTimeToSeconds(currentTime);
+        if (!Number.isFinite(distanceM) || distanceM < 25 || currentSeconds === null) {
+          return fullMatch;
+        }
+
+        const zone = inferIntervalZone(prefix, sectionKey);
+        const targetSendoffSeconds = calculateIntervalSendoffSeconds(cssSecondsPer100, distanceM, zone);
+        const sendoffText = formatSecondsToTime(targetSendoffSeconds);
+        if (sendoffText === currentTime) return fullMatch;
+
+        changed = true;
+        return `${prefix}${separator} ${sendoffText}`;
+      }
+    );
+  });
+
+  const normalizedText = normalizedSegments.join("");
+
+  const cleanedText = cleanSetText(normalizedText);
+  if (cleanedText !== normalizedText) changed = true;
+
+  return { text: cleanedText, changed };
 }
 
 function normalizePlanSessionsIntervals(sessions, cssMinutes, cssSeconds) {
