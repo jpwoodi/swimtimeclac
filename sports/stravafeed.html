@@ -298,7 +298,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        document.getElementById('swim-feed').innerHTML = '<div class="loading">Error loading swims.</div>';
+                        document.getElementById('swim-feed').innerHTML =
+                            '<div class="loading">Error loading swims: ' + data.error + '</div>';
                         return;
                     }
 
@@ -375,7 +376,7 @@
                 .catch(error => {
                     console.error('Error fetching swims:', error);
                     document.getElementById('swim-feed').innerHTML =
-                        '<div class="loading">Something went wrong. Please try again later.</div>';
+                        '<div class="loading">Something went wrong: ' + error.message + '</div>';
                 });
         }
 
