@@ -392,8 +392,11 @@ IMPORTANT INSTRUCTIONS:
 - Use the CSS to calculate appropriate interval times for all main set reps
 - Specify equipment (pull buoys, kickboards, fins) where the template uses them
 - Always use metres for all distances
-- Format output as a Markdown table ONLY with columns: Week | Session Number | Warm Up | Build Set | Main Set | Cool Down | Total Distance
-- Do NOT include any additional text outside the table
+- Respond with valid JSON only — no markdown, no prose, no explanation outside the JSON
+- The JSON must have a top-level "sessions" array. Each element must have exactly these keys:
+  "week" (integer), "session" (integer), "session_type" (string: mileage/im/fast/kitchen_sink),
+  "warm_up" (string), "build_set" (string), "main_set" (string), "cool_down" (string),
+  "total_distance_m" (integer)
 
 ${templateBlock}`,
     };
@@ -415,7 +418,7 @@ ${templateBlock}`,
     const refreshMessage = {
       role: "user",
       content:
-        "Regenerate the plan as a clean Markdown table only, preserving the same constraints and using relevant templates.",
+        "Regenerate the plan as valid JSON only, preserving the same constraints and using relevant templates. Use the same sessions array schema as before.",
     };
     messages.push(refreshMessage);
     historyDelta.push(refreshMessage);
@@ -434,6 +437,7 @@ ${templateBlock}`,
         messages,
         max_tokens: 4096,
         temperature: 0.7,
+        response_format: { type: "json_object" },
       }),
     });
   } catch (error) {
@@ -467,6 +471,14 @@ ${templateBlock}`,
     return res.status(502).json({ error: "OpenAI returned an empty response." });
   }
 
+  let planSessions = [];
+  try {
+    const parsedPlan = JSON.parse(assistantContent);
+    planSessions = Array.isArray(parsedPlan.sessions) ? parsedPlan.sessions : [];
+  } catch (e) {
+    console.error("Failed to parse plan JSON:", e.message);
+  }
+
   const assistantMessage = {
     role: "assistant",
     content: assistantContent,
@@ -478,6 +490,7 @@ ${templateBlock}`,
 
   const responseBody = {
     plan: assistantMessage.content,
+    sessions: planSessions,
     conversationHistory: conversationHistoryOut,
   };
 

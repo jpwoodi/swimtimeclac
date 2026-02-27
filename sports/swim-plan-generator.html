@@ -261,9 +261,16 @@
     </div>
 
     <script>
-        let swimPlans = [];
         let conversationHistory = [];
         let storedDetails = {};
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
         async function generateSwimPlan() {
             const goal = document.getElementById('goal').value;
@@ -320,9 +327,12 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    swimPlans = parseSwimPlan(data.plan);
+                    if (!data.sessions || data.sessions.length === 0) {
+                        alert("Plan was generated but could not be parsed. Please try again.");
+                        return;
+                    }
                     document.getElementById('loading-spinner').style.display = 'none';
-                    displayAllWeeks();
+                    displaySessions(data.sessions);
                     document.getElementById('results-container').style.display = 'block';
                     document.getElementById('comment-section').style.display = 'block';
                     conversationHistory = data.conversationHistory;
@@ -337,61 +347,27 @@
             }
         }
 
-        function parseSwimPlan(planText) {
-            const weeklyPlans = [];
-            const lines = planText.split('\n').filter(line => line.trim() !== '');
-            let currentWeekNumber = null;
-            let currentWeekSessions = [];
-
-            lines.forEach((line, index) => {
-                if (index < 2) return;
-                const parts = line.split('|').map(part => part.trim()).filter(part => part !== '');
-
-                if (parts.length === 7) {
-                    const [weekStr, sessionStr, ...sessionData] = parts;
-                    const weekNumber = parseInt(weekStr);
-                    const sessionNumber = parseInt(sessionStr);
-
-                    if (currentWeekNumber !== weekNumber) {
-                        if (currentWeekNumber !== null) {
-                            weeklyPlans.push({ weekNumber: currentWeekNumber, sessions: currentWeekSessions });
-                        }
-                        currentWeekNumber = weekNumber;
-                        currentWeekSessions = [];
-                    }
-                    currentWeekSessions.push({ sessionNumber, sessionData });
-                }
-            });
-
-            if (currentWeekNumber !== null) {
-                weeklyPlans.push({ weekNumber: currentWeekNumber, sessions: currentWeekSessions });
-            }
-            return weeklyPlans;
-        }
-
-        function displayAllWeeks() {
+        function displaySessions(sessions) {
             const table = document.getElementById('swim-plan-table');
-            let html = `
-                <thead><tr>
-                    <th>Week</th><th>Session</th><th>Warm Up</th>
-                    <th>Build Set</th><th>Main Set</th><th>Cool Down</th><th>Total</th>
-                </tr></thead><tbody>`;
+            let html = `<thead><tr>
+                <th>Week</th><th>Session</th><th>Type</th><th>Warm Up</th>
+                <th>Build Set</th><th>Main Set</th><th>Cool Down</th><th>Total</th>
+            </tr></thead><tbody>`;
 
-            swimPlans.forEach(week => {
-                week.sessions.forEach(session => {
-                    const d = session.sessionData;
-                    if (d.length === 5) {
-                        html += `<tr>
-                            <td>Week ${week.weekNumber}</td>
-                            <td>${session.sessionNumber}</td>
-                            <td>${d[0]}</td><td>${d[1]}</td><td>${d[2]}</td>
-                            <td>${d[3]}</td><td>${d[4]}</td>
-                        </tr>`;
-                    }
-                });
+            sessions.forEach(s => {
+                html += `<tr>
+                    <td>Week ${escapeHtml(s.week)}</td>
+                    <td>${escapeHtml(s.session)}</td>
+                    <td>${escapeHtml(s.session_type || '')}</td>
+                    <td>${escapeHtml(s.warm_up || '')}</td>
+                    <td>${escapeHtml(s.build_set || '')}</td>
+                    <td>${escapeHtml(s.main_set || '')}</td>
+                    <td>${escapeHtml(s.cool_down || '')}</td>
+                    <td>${s.total_distance_m ? escapeHtml(s.total_distance_m) + 'm' : ''}</td>
+                </tr>`;
             });
 
-            html += `</tbody>`;
+            html += '</tbody>';
             table.innerHTML = html;
         }
     </script>
