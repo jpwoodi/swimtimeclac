@@ -27,6 +27,13 @@ const MIN_PER_TYPE = 2;
 const MAX_PER_TYPE = 6;
 const MAX_TEMPLATE_LINES = 40;
 const MAX_TEMPLATE_CHARS = 2500;
+const SECTION_INTERVAL_KEYS = ["warm_up", "build_set", "main_set", "cool_down"];
+const INTERVAL_ZONE_OFFSETS = {
+  z1: 30,
+  z2: 14,
+  z3: 0,
+  z4: -8,
+};
 
 function toNumber(value) {
   const n = Number(value);
@@ -154,6 +161,115 @@ function buildCSSZones(cssMinutes, cssSeconds) {
   );
   lines.push("");
   return lines.join("\n");
+}
+
+function parseTimeToSeconds(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  if (/^\d+$/.test(raw)) {
+    const seconds = Number(raw);
+    return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+  }
+
+  const match = raw.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+
+  const mins = Number(match[1]);
+  const secs = Number(match[2]);
+  if (!Number.isFinite(mins) || !Number.isFinite(secs) || secs > 59) return null;
+  return mins * 60 + secs;
+}
+
+function formatSecondsToTime(totalSeconds) {
+  const t = Math.max(0, Math.round(totalSeconds));
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+}
+
+function roundUpToNearest5(value) {
+  return Math.ceil(value / 5) * 5;
+}
+
+function inferIntervalZone(lineText, sectionKey) {
+  const text = String(lineText || "").toLowerCase();
+
+  if (
+    /\b(sprint|fast|race|all out|max|vo2|anaerobic)\b/.test(text)
+  ) {
+    return "z4";
+  }
+  if (/\b(threshold|css|pace|descend)\b/.test(text)) {
+    return "z3";
+  }
+  if (/\b(easy|recovery|warm|cool)\b/.test(text)) {
+    return "z1";
+  }
+  if (/\b(aerobic|pull|dps|moderate|build|choice|drill|technique)\b/.test(text)) {
+    return "z2";
+  }
+
+  if (sectionKey === "warm_up" || sectionKey === "cool_down") return "z1";
+  if (sectionKey === "build_set") return "z2";
+  return "z3";
+}
+
+function calculateIntervalSendoffSeconds(cssSecondsPer100, distanceM, zoneKey) {
+  const offset = INTERVAL_ZONE_OFFSETS[zoneKey] ?? INTERVAL_ZONE_OFFSETS.z3;
+  const swimSeconds = (cssSecondsPer100 + offset) * (distanceM / 100);
+  return roundUpToNearest5(swimSeconds + 15);
+}
+
+function normalizeSetIntervals(setText, sectionKey, cssSecondsPer100) {
+  if (typeof setText !== "string" || !setText.trim()) {
+    return { text: setText, changed: false };
+  }
+
+  let changed = false;
+  const intervalPattern =
+    /(\b(?:(\d+)\s*[x\u00D7]\s*)?(\d+)\s*(?:m|meters?)?[^\n]{0,120}?)(\bon|@)\s*(\d{1,2}:\d{2}|\d{1,3})/gi;
+
+  const normalizedText = setText.replace(
+    intervalPattern,
+    (fullMatch, prefix, _repsStr, distanceStr, separator, currentTime) => {
+      const distanceM = Number(distanceStr);
+      const currentSeconds = parseTimeToSeconds(currentTime);
+      if (!Number.isFinite(distanceM) || distanceM <= 0 || currentSeconds === null) {
+        return fullMatch;
+      }
+
+      const zone = inferIntervalZone(prefix, sectionKey);
+      const minimumSendoffSeconds = calculateIntervalSendoffSeconds(cssSecondsPer100, distanceM, zone);
+      if (currentSeconds >= minimumSendoffSeconds) return fullMatch;
+
+      const sendoffText = formatSecondsToTime(minimumSendoffSeconds);
+      changed = true;
+      return `${prefix}${separator} ${sendoffText}`;
+    }
+  );
+
+  return { text: normalizedText, changed };
+}
+
+function normalizePlanSessionsIntervals(sessions, cssMinutes, cssSeconds) {
+  const cssSecondsPer100 = parseTimeToSeconds(`${cssMinutes}:${String(cssSeconds).padStart(2, "0")}`);
+  if (!Array.isArray(sessions) || !sessions.length || cssSecondsPer100 === null || cssSecondsPer100 <= 0) {
+    return { sessions, changed: false };
+  }
+
+  let changed = false;
+  const normalizedSessions = sessions.map((session) => {
+    if (!session || typeof session !== "object") return session;
+
+    const nextSession = { ...session };
+    for (const key of SECTION_INTERVAL_KEYS) {
+      const result = normalizeSetIntervals(nextSession[key], key, cssSecondsPer100);
+      nextSession[key] = result.text;
+      if (result.changed) changed = true;
+    }
+    return nextSession;
+  });
+
+  return { sessions: normalizedSessions, changed };
 }
 
 function scoreTemplate(template, context) {
@@ -562,16 +678,26 @@ ${templateBlock}`,
   }
 
   let planSessions = [];
+  let parsedPlanObject = null;
   try {
-    const parsedPlan = JSON.parse(assistantContent);
-    planSessions = Array.isArray(parsedPlan.sessions) ? parsedPlan.sessions : [];
+    parsedPlanObject = JSON.parse(assistantContent);
+    planSessions = Array.isArray(parsedPlanObject.sessions) ? parsedPlanObject.sessions : [];
   } catch (e) {
     console.error("Failed to parse plan JSON:", e.message);
   }
 
+  const normalizedPlan = normalizePlanSessionsIntervals(planSessions, cssMinutes, cssSeconds);
+  planSessions = normalizedPlan.sessions;
+  if (parsedPlanObject && Array.isArray(parsedPlanObject.sessions) && normalizedPlan.changed) {
+    parsedPlanObject.sessions = planSessions;
+  }
+
+  const assistantContentOut =
+    parsedPlanObject && normalizedPlan.changed ? JSON.stringify(parsedPlanObject) : assistantContent;
+
   const assistantMessage = {
     role: "assistant",
-    content: assistantContent,
+    content: assistantContentOut,
   };
 
   const conversationHistoryOut = [...normalizedHistory, ...historyDelta, assistantMessage].slice(
