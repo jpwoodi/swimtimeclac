@@ -447,6 +447,7 @@ IMPORTANT INSTRUCTIONS:
 - Keep warm-up FIXED to "300 free + 100 pull" always
 - Keep cool-down FIXED to "100 free" always
 - Use the CSS training zones above to set all interval times — do not guess paces
+- Do not use '+' as a separator between set items; write each item as a complete standalone description
 - Specify equipment (pull buoys, kickboards, fins) where the template uses them
 - Always use metres for all distances — templates marked SCY are in yards, convert distances (×0.914) and recalculate interval times accordingly; LCM templates are already in metres
 - Respond with valid JSON only — no markdown, no prose, no explanation outside the JSON

@@ -290,6 +290,18 @@
             color: #c3c9d4;
         }
 
+        .set-items--nested {
+            margin-top: 4px;
+            padding-left: 8px;
+        }
+
+        .set-items--nested li {
+            font-size: 12px;
+            color: #697386;
+        }
+
+        .set-items--nested li::before { content: '–'; }
+
         .set-text {
             font-size: 13px;
             color: #1a1f36;
@@ -525,16 +537,39 @@
             el.style.display = '';
         }
 
+        // Format a single set item, expanding parenthesised sub-instructions into nested bullets
+        function renderSetItem(raw) {
+            const item = raw.replace(/\s*\+\s*$/, '').trim(); // strip trailing ' +'
+            const parenMatch = item.match(/^(.*?)\(([^)]+)\)\s*$/);
+            if (parenMatch) {
+                const mainPart = parenMatch[1].trim();
+                const innerParts = parenMatch[2].split(',').map(p => p.trim()).filter(p => p);
+                if (innerParts.length >= 2) {
+                    const nested = innerParts.map(p => `<li>${escapeHtml(p)}</li>`).join('');
+                    return `<li>${escapeHtml(mainPart)}<ul class="set-items set-items--nested">${nested}</ul></li>`;
+                }
+            }
+            return `<li>${escapeHtml(item)}</li>`;
+        }
+
         // Split set text into bullet items on "N ×" boundaries (e.g. "4 × 50 Free...")
         function formatSet(text) {
             if (!text) return '';
-            // Split before patterns like "4 × 75" or "2 × 100" (digit + × + digit)
             const parts = text.split(/(?=\b\d+\s*[\u00d7x]\s+\d)/);
             const items = parts.map(p => p.trim()).filter(p => p);
             if (items.length <= 1) {
-                return `<span class="set-text">${escapeHtml(text)}</span>`;
+                // Still check for parenthesised sub-instructions in a single-item set
+                const cleaned = text.replace(/\s*\+\s*$/, '').trim();
+                const parenMatch = cleaned.match(/^(.*?)\(([^)]+)\)\s*$/);
+                if (parenMatch) {
+                    const innerParts = parenMatch[2].split(',').map(p => p.trim()).filter(p => p);
+                    if (innerParts.length >= 2) {
+                        return `<ul class="set-items">${renderSetItem(cleaned)}</ul>`;
+                    }
+                }
+                return `<span class="set-text">${escapeHtml(cleaned)}</span>`;
             }
-            return `<ul class="set-items">${items.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`;
+            return `<ul class="set-items">${items.map(renderSetItem).join('')}</ul>`;
         }
 
         function getTypeBadgeClass(type) {
@@ -570,7 +605,7 @@
                             <div class="session-header">
                                 <span class="session-title">Session ${escapeHtml(String(s.session))}</span>
                                 ${s.session_type ? `<span class="type-badge ${badgeClass}">${escapeHtml(s.session_type)}</span>` : ''}
-                                ${s.total_distance_m ? `<span class="session-distance">${escapeHtml(String(s.total_distance_m))}m</span>` : ''}
+                                ${s.total_distance_m ? `<span class="session-distance">${Number(s.total_distance_m).toLocaleString()}m</span>` : ''}
                             </div>
                             <div class="session-body">
                                 <div class="set-section">

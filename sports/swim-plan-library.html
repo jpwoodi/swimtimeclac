@@ -654,8 +654,8 @@
 
                 // Update stats
                 document.getElementById('stats-bar').innerHTML = `
-                    <div class="stat"><strong>${data.totalPlans}</strong> total plans</div>
-                    <div class="stat"><strong>${data.filterOptions.distanceRange.min}</strong> - <strong>${data.filterOptions.distanceRange.max}</strong>m range</div>
+                    <div class="stat"><strong>${Number(data.totalPlans).toLocaleString()}</strong> total plans</div>
+                    <div class="stat"><strong>${Number(data.filterOptions.distanceRange.min).toLocaleString()}</strong> – <strong>${Number(data.filterOptions.distanceRange.max).toLocaleString()}</strong>m range</div>
                     <div class="stat"><strong>${data.filterOptions.types.length}</strong> session types</div>
                 `;
 
@@ -724,7 +724,7 @@
                     renderPlans(data.plans);
                     renderPagination(data.pagination);
                     document.getElementById('plans-count').textContent =
-                        `Showing ${data.plans.length} of ${data.pagination.totalCount} plans`;
+                        `Showing ${Number(data.plans.length).toLocaleString()} of ${Number(data.pagination.totalCount).toLocaleString()} plans`;
                 } else {
                     emptyState.style.display = 'block';
                     document.getElementById('plans-count').textContent = '0 plans found';

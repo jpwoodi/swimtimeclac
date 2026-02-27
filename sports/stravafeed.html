@@ -317,17 +317,17 @@
                     statsRow.innerHTML = `
                         <div class="stat-card">
                             <div class="stat-label">Total Distance</div>
-                            <div class="stat-value">${totalDistance.toFixed(1)} km</div>
-                            <div class="stat-sub">${timesAroundM25}x around the M25</div>
+                            <div class="stat-value">${Number(totalDistance).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})} km</div>
+                            <div class="stat-sub">${Number(timesAroundM25).toLocaleString()}x around the M25</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Sessions</div>
-                            <div class="stat-value">${totalSessions}</div>
+                            <div class="stat-value">${Number(totalSessions).toLocaleString()}</div>
                             <div class="stat-sub">Last 12 months</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Avg per Session</div>
-                            <div class="stat-value">${avgDistance} km</div>
+                            <div class="stat-value">${Number(avgDistance).toLocaleString()} km</div>
                         </div>
                     `;
 
@@ -469,7 +469,7 @@
                             ticks: {
                                 font: { family: 'Inter', size: 12 },
                                 color: '#8792a2',
-                                callback: (v) => v + ' km'
+                                callback: (v) => Number(v).toLocaleString() + ' km'
                             },
                             border: { display: false },
                             beginAtZero: true
