@@ -953,6 +953,17 @@
             tick: '#8792a2',
         };
         const COMMUTES_ENDPOINT = '/api/get-rides';
+        const TUBE_ROUTE_LABEL = 'Blackhorse Road <-> Moorgate';
+        const TUBE_FARE_TABLE = [
+            // TfL PAYG zone 1-3 fares from March 1, 2026.
+            { effectiveFrom: new Date('2026-03-01T00:00:00'), peak: 3.90, offPeak: 3.30, dailyCap: 10.50 },
+            // TfL PAYG zone 1-3 fares before March 1, 2026.
+            { effectiveFrom: new Date('2000-01-01T00:00:00'), peak: 3.80, offPeak: 3.10, dailyCap: 10.50 }
+        ];
+        const TUBE_PEAK_WINDOWS = [
+            { startMinutes: 6 * 60 + 30, endMinutes: 9 * 60 + 30 },   // 06:30-09:30
+            { startMinutes: 16 * 60, endMinutes: 19 * 60 }             // 16:00-19:00
+        ];
 
         // Global state
         let allRides = [];
@@ -1085,6 +1096,57 @@
             return `${target.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
         }
 
+        function getFareBandForDate(date) {
+            const timestamp = date.getTime();
+            for (const fareBand of TUBE_FARE_TABLE) {
+                if (timestamp >= fareBand.effectiveFrom.getTime()) {
+                    return fareBand;
+                }
+            }
+            return TUBE_FARE_TABLE[TUBE_FARE_TABLE.length - 1];
+        }
+
+        function isWeekday(date) {
+            const day = date.getDay();
+            return day >= 1 && day <= 5;
+        }
+
+        function isPeakTubeTime(date) {
+            if (!isWeekday(date)) return false;
+            const minutes = date.getHours() * 60 + date.getMinutes();
+            return TUBE_PEAK_WINDOWS.some(window =>
+                minutes >= window.startMinutes && minutes < window.endMinutes
+            );
+        }
+
+        function calculateTubeSavings(rides) {
+            let peakTrips = 0;
+            let offPeakTrips = 0;
+            let uncappedSavings = 0;
+            const dayTotals = new Map();
+
+            for (const ride of rides) {
+                const isPeak = isPeakTubeTime(ride.startLocal);
+                const fareBand = getFareBandForDate(ride.startLocal);
+                const tripFare = isPeak ? fareBand.peak : fareBand.offPeak;
+                uncappedSavings += tripFare;
+                if (isPeak) peakTrips++;
+                else offPeakTrips++;
+
+                const dayKey = `${ride.startLocal.getFullYear()}-${String(ride.startLocal.getMonth() + 1).padStart(2, '0')}-${String(ride.startLocal.getDate()).padStart(2, '0')}`;
+                const current = dayTotals.get(dayKey) || { fareTotal: 0, dailyCap: fareBand.dailyCap };
+                current.fareTotal += tripFare;
+                dayTotals.set(dayKey, current);
+            }
+
+            let cappedSavings = 0;
+            for (const day of dayTotals.values()) {
+                cappedSavings += Math.min(day.fareTotal, day.dailyCap);
+            }
+
+            return { peakTrips, offPeakTrips, totalSavings: cappedSavings, uncappedSavings };
+        }
+
         // Apply filters and re-render
         function applyFiltersAndRender() {
             const filtered = getFilteredRides();
@@ -1160,8 +1222,9 @@
         function renderStats(rides) {
             const totalDist = rides.reduce((t, r) => t + r.distanceKm, 0);
             const totalRides = rides.length;
-            const tubeCostPerTrip = 2.80;
-            const savings = (totalRides * tubeCostPerTrip).toFixed(2);
+            const tubeSavings = calculateTubeSavings(rides);
+            const savings = tubeSavings.totalSavings.toFixed(2);
+            const capAdjusted = tubeSavings.uncappedSavings > tubeSavings.totalSavings;
 
             // Calculate weeks cycling (unique weeks)
             const uniqueWeeks = new Set(rides.map(r => r.yearWeekKey));
@@ -1181,7 +1244,7 @@
                 <div class="stat-card">
                     <div class="stat-label">Tube Savings</div>
                     <div class="stat-value">&pound;${savings}</div>
-                    <div class="stat-sub">vs. &pound;${tubeCostPerTrip}/trip</div>
+                    <div class="stat-sub">${TUBE_ROUTE_LABEL} (Peak ${tubeSavings.peakTrips}, Off-peak ${tubeSavings.offPeakTrips}${capAdjusted ? ', cap-adjusted' : ''})</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Weeks Cycling</div>
