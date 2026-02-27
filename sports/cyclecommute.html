@@ -1785,8 +1785,38 @@
 
             document.getElementById('hill-stats').style.display = 'flex';
 
-            renderSegmentMap(hillData.segments[segmentId]);
+            fetchAndRenderSegmentMap(segmentId);
             renderHillChart(efforts, best);
+        }
+
+        // Client-side cache for segment detail (polyline etc.) – persists across selections
+        const segmentDetailCache = {};
+
+        async function fetchAndRenderSegmentMap(segmentId) {
+            if (segmentDetailCache[segmentId]) {
+                renderSegmentMap(segmentDetailCache[segmentId]);
+                return;
+            }
+            // Show the card with just the name while the detail loads
+            const base = hillData.segments[segmentId];
+            const card = document.getElementById('segment-map-card');
+            document.getElementById('segment-map-title').textContent = base.name;
+            document.getElementById('segment-map-meta').textContent = 'Loading map…';
+            document.getElementById('segment-strava-link').href = 'https://www.strava.com/segments/' + segmentId;
+            card.style.display = '';
+
+            try {
+                const resp = await fetch('/api/get-segment-detail?id=' + segmentId);
+                const detail = await parseJsonResponse(resp);
+                if (resp.ok && !detail.error) {
+                    segmentDetailCache[segmentId] = detail;
+                    renderSegmentMap(detail);
+                } else {
+                    document.getElementById('segment-map-meta').textContent = 'Map unavailable';
+                }
+            } catch (e) {
+                document.getElementById('segment-map-meta').textContent = 'Map unavailable';
+            }
         }
 
         function decodePolyline(encoded) {
