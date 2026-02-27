@@ -1,9 +1,9 @@
 (function () {
   const LOGIN_PATH = "/login.html";
   const INDEX_PATH = "/index.html";
-  const STATUS_URL = "/api/auth-status";
-  const LOGIN_URL = "/api/auth-login";
-  const LOGOUT_URL = "/api/auth-logout";
+  const STATUS_URL = "/api/auth?action=status";
+  const LOGIN_URL = "/api/auth?action=login";
+  const LOGOUT_URL = "/api/auth?action=logout";
   const DEFAULT_AUTH_STATE = { authenticated: false, authEnabled: true };
 
   function isSafeRedirect(target) {
