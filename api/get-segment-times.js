@@ -17,7 +17,11 @@ module.exports = async (req, res) => {
 
     const accessToken = await getAccessToken();
     const allActivities = await fetchRecentActivities(accessToken);
-    const rides = allActivities.filter(a => a.type === 'Ride' && a.commute === true);
+    // Cap at the 75 most recent commute rides to stay within Strava's rate limits
+    const rides = allActivities
+      .filter(a => a.type === 'Ride' && a.commute === true)
+      .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+      .slice(0, 75);
 
     const segments = {};
     const efforts = [];
@@ -88,6 +92,9 @@ module.exports = async (req, res) => {
     res.status(200).json(cached);
   } catch (error) {
     console.error('Error fetching segment times:', error);
+    if (cacheTimestamp !== null) {
+      return res.status(200).json(cached);
+    }
     res.status(500).json({ error: 'Failed to fetch segment times' });
   }
 };

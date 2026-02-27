@@ -79,6 +79,10 @@ function createStravaHandler(filterFn, errorLabel) {
       res.status(200).json(cached);
     } catch (error) {
       console.error(`Error fetching ${errorLabel}:`, error);
+      // Return stale cache rather than an error if we have previously fetched data
+      if (cacheTimestamp !== null) {
+        return res.status(200).json(cached);
+      }
       res.status(500).json({ error: `Failed to fetch ${errorLabel}` });
     }
   };
