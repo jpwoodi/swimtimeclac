@@ -1765,9 +1765,6 @@
 
             const labels = sorted.map(r => r.startLocal.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
             const speeds = sorted.map(r => r.avgSpeedKph);
-            const hrValues = sorted.map(r => Number.isFinite(r.avgHeartrate) ? r.avgHeartrate : null);
-            const hasHrData = hrValues.some(value => value !== null);
-
             // Calculate rolling average (14 rides)
             const rollingAvg = [];
             for (let i = 0; i < speeds.length; i++) {
@@ -1801,20 +1798,6 @@
                 }
             ];
 
-            if (hasHrData) {
-                datasets.push({
-                    label: 'Average HR',
-                    data: hrValues,
-                    borderColor: '#ef6c00',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.25,
-                    pointRadius: 0,
-                    spanGaps: true,
-                    yAxisID: 'y1'
-                });
-            }
-
             chartInstances.speedTime = new Chart(document.getElementById('speedTimeChart').getContext('2d'), {
                 type: 'line',
                 data: {
@@ -1837,12 +1820,7 @@
                             padding: 12,
                             cornerRadius: 8,
                             callbacks: {
-                                label: ctx => {
-                                    if (ctx.dataset.yAxisID === 'y1') {
-                                        return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(0)} bpm`;
-                                    }
-                                    return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} km/h`;
-                                }
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} km/h`
                             }
                         }
                     },
@@ -1858,20 +1836,6 @@
                             border: { display: false },
                             ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick },
                             beginAtZero: false
-                        },
-                        y1: {
-                            display: hasHrData,
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            border: { display: false },
-                            ticks: { font: { family: 'Inter', size: 11 }, color: '#ef6c00' },
-                            title: {
-                                display: hasHrData,
-                                text: 'Heart Rate (bpm)',
-                                font: { family: 'Inter', size: 12 },
-                                color: '#ef6c00'
-                            },
-                            beginAtZero: false
                         }
                     }
                 }
@@ -1879,14 +1843,7 @@
 
             // Generate insights
             const latestAvg = rollingAvg[rollingAvg.length - 1];
-            if (latestAvg && hasHrData) {
-                const hrSamples = hrValues.filter(value => value !== null);
-                const avgHr = hrSamples.reduce((sum, value) => sum + value, 0) / hrSamples.length;
-                insightsDiv.innerHTML = `
-                    <div class="insight-item"><span class="insight-bullet blue"></span><span>Your 14-ride average is holding steady at ${latestAvg.toFixed(1)} km/h.</span></div>
-                    <div class="insight-item"><span class="insight-bullet teal"></span><span>Average HR is overlaid on the right axis, with a recent mean of ${avgHr.toFixed(0)} bpm.</span></div>
-                `;
-            } else if (latestAvg) {
+            if (latestAvg) {
                 insightsDiv.innerHTML = `<div class="insight-item"><span class="insight-bullet blue"></span><span>Your 14-ride average is holding steady at ${latestAvg.toFixed(1)} km/h.</span></div>`;
             } else {
                 insightsDiv.innerHTML = '';
