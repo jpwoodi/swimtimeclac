@@ -3,7 +3,17 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ls c:/Users/j.woodnott/.vscode/Coding/swimtimeclac/api/*.js)",
+      "Bash(node -e \"const d = require\\(''./data/templates.v2.json''\\); console.log\\(''Total templates:'', d.templates.length\\); console.log\\(''Version:'', d.version\\); const types = {}; d.templates.forEach\\(t => { types[t.plan_type_key] = \\(types[t.plan_type_key]||0\\)+1 }\\); console.log\\(''By type:'', types\\); const pools = {}; d.templates.forEach\\(t => { pools[t.metadata.pool_type] = \\(pools[t.metadata.pool_type]||0\\)+1 }\\); console.log\\(''By pool:'', pools\\); const diffs = {}; d.templates.forEach\\(t => { diffs[t.metadata.difficulty] = \\(diffs[t.metadata.difficulty]||0\\)+1 }\\); console.log\\(''By difficulty:'', diffs\\);\")",
+      "Bash(python3:*)",
+      "Bash(node -e \":*)",
+      "Bash(node -e \"const d = require\\(''./data/templates.v2.json''\\); console.log\\(''Top-level keys:'', Object.keys\\(d\\)\\); console.log\\(''Version:'', d.version\\); console.log\\(''Templates count:'', d.templates?.length\\); console.log\\(''Sample metadata fields:'', d.templates?.[0]?.metadata ? Object.keys\\(d.templates[0].metadata\\) : ''N/A''\\);\")",
+      "Bash(node -e \"const d = require\\(''./data/templates.v2.json''\\); console.log\\(JSON.stringify\\({version: d.version, generated_at: d.generated_at, stats: d.stats}, null, 2\\)\\);\")",
+      "Bash(node -e \"require\\(''./api/generateSwimPlan.js''\\); console.log\\(''Module loaded OK''\\)\")",
+      "Bash(node -e \"require\\(''./api/generateSwimPlan.js''\\); console.log\\(''OK''\\)\")",
+      "Bash(git rm --cached package-lock.json)",
+      "Bash(git rm -r --cached node_modules/)"
     ]
   }
 }
