@@ -513,11 +513,10 @@
         }
 
         .heatmap-cell {
-            aspect-ratio: 1;
+            height: 32px;
             border-radius: 3px;
             cursor: pointer;
             transition: transform 0.1s ease;
-            min-height: 16px;
         }
 
         .heatmap-cell:hover {
@@ -729,6 +728,7 @@
             .chart-grid-row2 { grid-template-columns: 1fr; }
             .chart-container { height: 200px; }
             .heatmap-chart-container { min-height: 0; }
+            .heatmap-cell { height: 20px; }
             .summary-grid { grid-template-columns: 1fr; }
             .photo-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
             .lightbox-prev { left: 8px; }
@@ -1765,6 +1765,8 @@
 
             const labels = sorted.map(r => r.startLocal.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
             const speeds = sorted.map(r => r.avgSpeedKph);
+            const isCompactViewport = window.innerWidth <= 768;
+            const compactLabelStep = Math.max(1, Math.ceil(labels.length / 6));
             // Calculate rolling average (14 rides)
             const rollingAvg = [];
             for (let i = 0; i < speeds.length; i++) {
@@ -1828,7 +1830,22 @@
                         x: {
                             grid: { display: false },
                             border: { display: false },
-                            ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick, maxRotation: 45 }
+                            ticks: isCompactViewport
+                                ? {
+                                    font: { family: 'Inter', size: 10 },
+                                    color: CHART_COLORS.tick,
+                                    autoSkip: false,
+                                    minRotation: 0,
+                                    maxRotation: 0,
+                                    callback: (value, index) => index % compactLabelStep === 0 ? labels[index] : ''
+                                }
+                                : {
+                                    font: { family: 'Inter', size: 11 },
+                                    color: CHART_COLORS.tick,
+                                    autoSkip: true,
+                                    maxTicksLimit: 12,
+                                    maxRotation: 45
+                                }
                         },
                         y: {
                             title: { display: true, text: 'Speed (km/h)', font: { family: 'Inter', size: 12 }, color: '#697386' },
