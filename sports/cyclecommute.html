@@ -180,37 +180,6 @@
             overflow: hidden;
         }
 
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #e3e8ee;
-            padding-bottom: 8px;
-        }
-
-        .tab-btn {
-            padding: 6px 12px;
-            background: transparent;
-            color: #697386;
-            border: none;
-            border-bottom: 2px solid transparent;
-            font-size: 13px;
-            font-weight: 500;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .tab-btn:hover {
-            color: #1a1f36;
-        }
-
-        .tab-btn.active {
-            color: #635bff;
-            border-bottom-color: #635bff;
-        }
-
         /* Insights */
         .insights {
             margin-top: 16px;
@@ -357,31 +326,46 @@
         .status-tag.other { background-color: #8792a2; }
 
         /* Time Summary Styles (replaces Box Plots) */
-        .time-summary {
-            padding: 16px 0;
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
         }
 
-        .kpi-row {
-            display: flex;
-            gap: 32px;
-            margin-bottom: 24px;
+        .summary-panel {
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            background: #fbfcfe;
+            padding: 16px;
         }
 
-        .kpi-item {
-            flex: 1;
+        .summary-heading {
+            font-size: 12px;
+            font-weight: 700;
+            color: #4f5b76;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 14px;
         }
 
-        .kpi-label {
-            font-size: 11px;
+        .summary-kpi-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .summary-kpi-label {
+            font-size: 10px;
             font-weight: 600;
             color: #8792a2;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
-        .kpi-value {
-            font-size: 32px;
+        .summary-kpi-value {
+            font-size: 26px;
             font-weight: 700;
             color: #1a1f36;
             font-variant-numeric: tabular-nums;
@@ -390,15 +374,17 @@
         .primary-stat {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 12px;
-            margin-bottom: 20px;
-            font-size: 15px;
+            margin-bottom: 16px;
+            font-size: 14px;
             color: #697386;
+            flex-wrap: wrap;
         }
 
         .primary-stat strong {
             color: #1a1f36;
-            font-size: 18px;
+            font-size: 17px;
         }
 
         .streak-badge {
@@ -432,16 +418,15 @@
         }
 
         .target-visual {
-            margin-bottom: 16px;
-            padding: 20px 0;
+            margin-bottom: 14px;
+            padding: 12px 0 18px;
         }
 
         .time-bar {
             position: relative;
-            height: 40px;
+            height: 32px;
             background: linear-gradient(to right, #f0f3f7 0%, #f0f3f7 100%);
             border-radius: 8px;
-            padding: 0 20px;
         }
 
         .time-tick {
@@ -454,8 +439,8 @@
 
         .time-label {
             position: absolute;
-            top: 45px;
-            font-size: 11px;
+            top: 37px;
+            font-size: 10px;
             color: #8792a2;
             transform: translateX(-50%);
             white-space: nowrap;
@@ -466,7 +451,7 @@
             top: 0;
             left: 0;
             width: 2px;
-            height: 40px;
+            height: 32px;
             background: #635bff;
             border-left: 2px dashed #635bff;
         }
@@ -480,18 +465,18 @@
             position: absolute;
             top: 50%;
             transform: translate(-50%, -50%);
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            border: 3px solid white;
+            border: 2px solid white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             z-index: 10;
         }
 
         .supporting-line {
-            font-size: 13px;
+            font-size: 12px;
             color: #697386;
-            text-align: center;
+            line-height: 1.5;
         }
 
         /* Heatmap Styles */
@@ -742,6 +727,7 @@
             .chart-grid-row2 { grid-template-columns: 1fr; }
             .chart-container { height: 200px; }
             .heatmap-chart-container { min-height: 0; }
+            .summary-grid { grid-template-columns: 1fr; }
             .photo-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
             .lightbox-prev { left: 8px; }
             .lightbox-next { right: 8px; }
@@ -775,12 +761,8 @@
         <!-- Row 1: Leave/Arrival Times, Scatter, Heatmap -->
         <div class="chart-grid-row1">
             <div class="chart-card chart-card-wide">
-                <h3>Leave & Arrival Times</h3>
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="morning">Morning Rides</button>
-                    <button class="tab-btn" data-tab="evening">Evening Rides</button>
-                </div>
-                <div class="chart-container" style="height: 320px;">
+                <h3>Leave & Arrival Targets</h3>
+                <div class="chart-container" style="height: auto;">
                     <div id="boxPlotContainer"></div>
                 </div>
                 <div class="insights" id="boxPlotInsights"></div>
@@ -946,7 +928,6 @@
         // Global state
         let allRides = [];
         let normalizedRides = [];
-        let currentBoxPlotTab = 'morning';
         let chartInstances = {};
 
         // Photo & Hill state
@@ -983,22 +964,14 @@
             this.classList.toggle('active', isHidden);
         });
 
-        // Tab switching for box plots
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentBoxPlotTab = btn.dataset.tab;
-                renderBoxPlot(normalizedRides);
-            });
-        });
-
         // Data normalization function
         function normalizeRide(ride) {
             // Parse date in Europe/London timezone
             const startLocal = new Date(ride.start_date_local);
-            const durationSec = ride.moving_time || ride.elapsed_time;
-            const endLocal = new Date(startLocal.getTime() + durationSec * 1000);
+            const movingDurationSec = Number.isFinite(ride.moving_time) ? ride.moving_time : (ride.elapsed_time || 0);
+            const elapsedDurationSec = Number.isFinite(ride.elapsed_time) ? ride.elapsed_time : movingDurationSec;
+            const stoppedDurationSec = Math.max(0, elapsedDurationSec - movingDurationSec);
+            const endLocal = new Date(startLocal.getTime() + elapsedDurationSec * 1000);
 
             // Extract time components
             const leaveMinutes = startLocal.getHours() * 60 + startLocal.getMinutes();
@@ -1026,9 +999,14 @@
                 leaveMinutes,
                 arriveMinutes,
                 distanceKm: ride.distance / 1000,
-                durationSec,
-                durationMin: durationSec / 60,
-                avgSpeedKph: (ride.average_speed || (ride.distance / durationSec)) * 3.6,
+                durationSec: elapsedDurationSec,
+                durationMin: elapsedDurationSec / 60,
+                movingDurationSec,
+                elapsedDurationSec,
+                stoppedDurationSec,
+                frictionPct: elapsedDurationSec > 0 ? (stoppedDurationSec / elapsedDurationSec) * 100 : 0,
+                avgSpeedKph: (ride.average_speed || (ride.distance / movingDurationSec)) * 3.6,
+                avgHeartrate: Number.isFinite(ride.average_heartrate) ? ride.average_heartrate : null,
                 commuteType,
                 dayOfWeek,
                 yearWeekKey
@@ -1190,14 +1168,14 @@
             const tubeSavings = calculateTubeSavings(rides);
             const savings = tubeSavings.totalSavings.toFixed(2);
             const capAdjusted = tubeSavings.uncappedSavings > tubeSavings.totalSavings;
+            const totalStoppedSec = rides.reduce((t, r) => t + r.stoppedDurationSec, 0);
+            const totalElapsedSec = rides.reduce((t, r) => t + r.elapsedDurationSec, 0);
+            const avgStoppedMin = totalRides ? (totalStoppedSec / totalRides / 60) : 0;
+            const stoppedPct = totalElapsedSec ? (totalStoppedSec / totalElapsedSec) * 100 : 0;
             const totalDistFormatted = formatNumber(totalDist, {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
             });
-
-            // Calculate weeks cycling (unique weeks)
-            const uniqueWeeks = new Set(rides.map(r => r.yearWeekKey));
-            const weeksCycling = uniqueWeeks.size;
 
             const row = document.getElementById('stats-row');
             row.style.display = 'flex';
@@ -1216,15 +1194,16 @@
                     <div class="stat-sub">${TUBE_ROUTE_LABEL} (Peak ${tubeSavings.peakTrips}, Off-peak ${tubeSavings.offPeakTrips}${capAdjusted ? ', cap-adjusted' : ''})</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Weeks Cycling</div>
-                    <div class="stat-value">${weeksCycling}</div>
+                    <div class="stat-label">Traffic Friction</div>
+                    <div class="stat-value">${avgStoppedMin.toFixed(1)} min</div>
+                    <div class="stat-sub">${stoppedPct.toFixed(0)}% of commute time spent stopped</div>
                 </div>
             `;
         }
 
         // Render all charts
         function renderAllCharts(rides) {
-            renderBoxPlot(rides);
+            renderCombinedCommuteSummary(rides);
             renderHeatmap(rides);
             renderSpeedOverTime(rides);
         }
@@ -1558,6 +1537,145 @@
             insightsDiv.innerHTML = '';
         }
 
+        function renderCombinedCommuteSummary(rides) {
+            const container = document.getElementById('boxPlotContainer');
+            const insightsDiv = document.getElementById('boxPlotInsights');
+            const last30DaysRides = getRidesLastNDays(rides, 30);
+            const morningRides = last30DaysRides.filter(r => r.commuteType === 'morning');
+            const eveningRides = last30DaysRides.filter(r => r.commuteType === 'evening');
+
+            if (!morningRides.length && !eveningRides.length) {
+                container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:40px;">No rides in the last 30 days</p>';
+                insightsDiv.innerHTML = '';
+                return;
+            }
+
+            function renderSummaryPanel(config) {
+                const {
+                    heading,
+                    ridesSubset,
+                    targetTime,
+                    metricKey,
+                    targetLabel,
+                    streakTitle,
+                    rangeStart,
+                    rangeEnd,
+                    supportingPrefix,
+                    selectMetric
+                } = config;
+
+                if (!ridesSubset.length) {
+                    return `
+                        <div class="summary-panel">
+                            <div class="summary-heading">${heading}</div>
+                            <div class="supporting-line">No rides in the last 30 days.</div>
+                        </div>
+                    `;
+                }
+
+                const leaveTimes = ridesSubset.map(r => r.leaveMinutes);
+                const arriveTimes = ridesSubset.map(r => r.arriveMinutes);
+                const avgLeave = calculateCircularMean(leaveTimes);
+                const avgArrive = calculateCircularMean(arriveTimes);
+                const targetMetricValues = ridesSubset.map(r => r[metricKey]);
+                const onTimeCount = targetMetricValues.filter(t => t <= targetTime).length;
+                const onTimePct = Math.round((onTimeCount / ridesSubset.length) * 100);
+                const streakData = calculateTargetStreak(last30DaysRides, {
+                    commuteType: supportingPrefix,
+                    metricKey,
+                    targetTime,
+                    selectMetric,
+                    isOnTarget: (metric, target) => metric <= target
+                });
+                const averageTargetMetric = metricKey === 'leaveMinutes' ? avgLeave : avgArrive;
+                const targetColor = getTargetColor(averageTargetMetric, targetTime);
+                const streakBadgeClass = getStreakBadgeClass(streakData.streak);
+                const dotLeft = averageTargetMetric !== null
+                    ? ((averageTargetMetric - rangeStart) / (rangeEnd - rangeStart)) * 100
+                    : null;
+
+                return `
+                    <div class="summary-panel">
+                        <div class="summary-heading">${heading}</div>
+                        <div class="summary-kpi-row">
+                            <div>
+                                <div class="summary-kpi-label">Average Leave</div>
+                                <div class="summary-kpi-value">${avgLeave !== null ? formatTime(avgLeave) : '&mdash;'}</div>
+                            </div>
+                            <div>
+                                <div class="summary-kpi-label">Average Arrive</div>
+                                <div class="summary-kpi-value">${avgArrive !== null ? formatTime(avgArrive) : '&mdash;'}</div>
+                            </div>
+                        </div>
+
+                        <div class="primary-stat">
+                            <span class="stat-text">${targetLabel}: <strong>${onTimePct}%</strong></span>
+                            <span class="streak-badge ${streakBadgeClass}" title="${streakTitle}">
+                                Streak: ${streakData.streak !== null ? streakData.streak : '&mdash;'} ${streakData.streak === 1 ? 'day' : 'days'}
+                            </span>
+                        </div>
+
+                        <div class="target-visual">
+                            <div class="time-bar">
+                                <div class="time-tick" style="left: 0%;">
+                                    <span class="time-label">${formatTime(rangeStart)}</span>
+                                </div>
+                                <div class="time-tick target-tick" style="left: 50%;">
+                                    <span class="target-line"></span>
+                                    <span class="time-label target-label">Target ${formatTime(targetTime)}</span>
+                                </div>
+                                <div class="time-tick" style="left: 100%;">
+                                    <span class="time-label">${formatTime(rangeEnd)}</span>
+                                </div>
+                                ${dotLeft !== null ? `<div class="avg-dot" style="left: ${dotLeft}%; background-color: ${targetColor};"></div>` : ''}
+                            </div>
+                        </div>
+
+                        ${streakData.last10 && streakData.last10.total > 0 ? `
+                            <div class="supporting-line">
+                                Last ${streakData.last10.total} ${supportingPrefix} commute-days: ${streakData.last10.onTime}/${streakData.last10.total} on target
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="summary-grid">
+                    ${renderSummaryPanel({
+                        heading: 'Morning',
+                        ridesSubset: morningRides,
+                        targetTime: 480,
+                        metricKey: 'leaveMinutes',
+                        targetLabel: 'Leave by 08:00',
+                        streakTitle: "Counts consecutive commute-days where your earliest morning ride left by 08:00. Days without a morning ride don't break the streak.",
+                        rangeStart: 360,
+                        rangeEnd: 600,
+                        supportingPrefix: 'morning',
+                        selectMetric: Math.min
+                    })}
+                    ${renderSummaryPanel({
+                        heading: 'Evening',
+                        ridesSubset: eveningRides,
+                        targetTime: 19 * 60,
+                        metricKey: 'arriveMinutes',
+                        targetLabel: 'Arrive by 19:00',
+                        streakTitle: "Counts consecutive commute-days where your latest evening ride arrived by 19:00. Days without an evening ride don't break the streak.",
+                        rangeStart: 17 * 60,
+                        rangeEnd: 21 * 60,
+                        supportingPrefix: 'evening',
+                        selectMetric: Math.max
+                    })}
+                </div>
+            `;
+
+            const totalStoppedSec = last30DaysRides.reduce((sum, ride) => sum + ride.stoppedDurationSec, 0);
+            const totalElapsedSec = last30DaysRides.reduce((sum, ride) => sum + ride.elapsedDurationSec, 0);
+            const avgStoppedMin = last30DaysRides.length ? totalStoppedSec / last30DaysRides.length / 60 : 0;
+            const stoppedPct = totalElapsedSec ? (totalStoppedSec / totalElapsedSec) * 100 : 0;
+            insightsDiv.innerHTML = `<div class="insight-item"><span class="insight-bullet teal"></span><span>Average traffic friction over the last 30 days: ${avgStoppedMin.toFixed(1)} min stopped per ride (${stoppedPct.toFixed(0)}% of total commute time).</span></div>`;
+        }
+
         // CHART 3: Heatmap - Weekly Commute Pattern
         function renderHeatmap(rides) {
             const container = document.getElementById('heatmapContainer');
@@ -1645,6 +1763,8 @@
 
             const labels = sorted.map(r => r.startLocal.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
             const speeds = sorted.map(r => r.avgSpeedKph);
+            const hrValues = sorted.map(r => Number.isFinite(r.avgHeartrate) ? r.avgHeartrate : null);
+            const hasHrData = hrValues.some(value => value !== null);
 
             // Calculate rolling average (14 rides)
             const rollingAvg = [];
@@ -1655,31 +1775,49 @@
                 rollingAvg.push(avg);
             }
 
+            const datasets = [
+                {
+                    label: 'Speed',
+                    data: speeds,
+                    borderColor: 'rgba(99, 91, 255, 0.3)',
+                    backgroundColor: 'rgba(99, 91, 255, 0.05)',
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 2,
+                    pointBackgroundColor: 'rgba(99, 91, 255, 0.5)',
+                    yAxisID: 'y'
+                },
+                {
+                    label: '14-ride average',
+                    data: rollingAvg,
+                    borderColor: '#2e7d32',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    yAxisID: 'y'
+                }
+            ];
+
+            if (hasHrData) {
+                datasets.push({
+                    label: 'Average HR',
+                    data: hrValues,
+                    borderColor: '#ef6c00',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.25,
+                    pointRadius: 0,
+                    spanGaps: true,
+                    yAxisID: 'y1'
+                });
+            }
+
             chartInstances.speedTime = new Chart(document.getElementById('speedTimeChart').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels,
-                    datasets: [
-                        {
-                            label: 'Speed',
-                            data: speeds,
-                            borderColor: 'rgba(99, 91, 255, 0.3)',
-                            backgroundColor: 'rgba(99, 91, 255, 0.05)',
-                            fill: true,
-                            tension: 0.1,
-                            pointRadius: 2,
-                            pointBackgroundColor: 'rgba(99, 91, 255, 0.5)',
-                        },
-                        {
-                            label: '14-ride average',
-                            data: rollingAvg,
-                            borderColor: '#2e7d32',
-                            borderWidth: 3,
-                            fill: false,
-                            tension: 0.3,
-                            pointRadius: 0,
-                        }
-                    ]
+                    datasets
                 },
                 options: {
                     responsive: true,
@@ -1697,7 +1835,12 @@
                             padding: 12,
                             cornerRadius: 8,
                             callbacks: {
-                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} km/h`
+                                label: ctx => {
+                                    if (ctx.dataset.yAxisID === 'y1') {
+                                        return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(0)} bpm`;
+                                    }
+                                    return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} km/h`;
+                                }
                             }
                         }
                     },
@@ -1713,6 +1856,20 @@
                             border: { display: false },
                             ticks: { font: { family: 'Inter', size: 11 }, color: CHART_COLORS.tick },
                             beginAtZero: false
+                        },
+                        y1: {
+                            display: hasHrData,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            border: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#ef6c00' },
+                            title: {
+                                display: hasHrData,
+                                text: 'Heart Rate (bpm)',
+                                font: { family: 'Inter', size: 12 },
+                                color: '#ef6c00'
+                            },
+                            beginAtZero: false
                         }
                     }
                 }
@@ -1720,7 +1877,14 @@
 
             // Generate insights
             const latestAvg = rollingAvg[rollingAvg.length - 1];
-            if (latestAvg) {
+            if (latestAvg && hasHrData) {
+                const hrSamples = hrValues.filter(value => value !== null);
+                const avgHr = hrSamples.reduce((sum, value) => sum + value, 0) / hrSamples.length;
+                insightsDiv.innerHTML = `
+                    <div class="insight-item"><span class="insight-bullet blue"></span><span>Your 14-ride average is holding steady at ${latestAvg.toFixed(1)} km/h.</span></div>
+                    <div class="insight-item"><span class="insight-bullet teal"></span><span>Average HR is overlaid on the right axis, with a recent mean of ${avgHr.toFixed(0)} bpm.</span></div>
+                `;
+            } else if (latestAvg) {
                 insightsDiv.innerHTML = `<div class="insight-item"><span class="insight-bullet blue"></span><span>Your 14-ride average is holding steady at ${latestAvg.toFixed(1)} km/h.</span></div>`;
             } else {
                 insightsDiv.innerHTML = '';
