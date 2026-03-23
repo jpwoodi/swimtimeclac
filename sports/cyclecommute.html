@@ -137,7 +137,6 @@
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 16px;
-            align-items: start;
         }
 
         .chart-grid-row2 {
@@ -513,7 +512,7 @@
         }
 
         .heatmap-cell {
-            height: 32px;
+            height: 42px;
             border-radius: 3px;
             cursor: pointer;
             transition: transform 0.1s ease;
@@ -728,7 +727,7 @@
             .chart-grid-row2 { grid-template-columns: 1fr; }
             .chart-container { height: 200px; }
             .heatmap-chart-container { min-height: 0; }
-            .heatmap-cell { height: 20px; }
+            .heatmap-cell { height: 24px; }
             .summary-grid { grid-template-columns: 1fr; }
             .photo-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
             .lightbox-prev { left: 8px; }
@@ -1701,7 +1700,7 @@
             const latestRideDate = rides.reduce((latest, ride) => (
                 ride.startLocal > latest ? ride.startLocal : latest
             ), rides[0].startLocal);
-            const weeks = getRecentWeekEntries(latestRideDate, 8);
+            const weeks = getRecentWeekEntries(latestRideDate, 5);
 
             const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
