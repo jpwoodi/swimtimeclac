@@ -306,14 +306,44 @@
             overflow: hidden;
         }
 
-        .table-card h3 {
-            font-size: 14px;
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        .table-title {
+            font-size: 16px;
             font-weight: 600;
+            color: #1a1f36;
+            margin: 0;
+        }
+
+        .table-toggle-btn {
+            padding: 6px 14px;
+            background: #fff;
             color: #697386;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            padding: 20px 24px 0;
-            margin-bottom: 12px;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .table-toggle-btn:hover {
+            border-color: #635bff;
+            color: #635bff;
+        }
+
+        .table-toggle-btn.active {
+            background: #635bff;
+            border-color: #635bff;
+            color: #fff;
         }
 
         .table-scroll {
@@ -809,7 +839,7 @@
             </div>
             <div class="chart-card">
                 <h3>Weekly Commute Pattern</h3>
-                <div class="chart-container" style="height: 320px; overflow-y: auto;">
+                <div class="chart-container" style="height: 320px;">
                     <div id="heatmapContainer"></div>
                 </div>
                 <div class="insights" id="heatmapInsights"></div>
@@ -830,9 +860,9 @@
 
     <div class="table-section">
         <div class="table-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px 0;">
-                <h3 style="padding:0; margin:0;">All Commutes</h3>
-                <button class="filter-toggle" id="table-toggle-btn">Show Table</button>
+            <div class="table-header">
+                <h3 class="table-title">All commutes</h3>
+                <button class="table-toggle-btn" id="table-toggle-btn" type="button">Show table</button>
             </div>
             <div id="commute-table-wrapper" style="display:none;">
                 <div class="table-scroll">
@@ -1005,9 +1035,8 @@
             const wrapper = document.getElementById('commute-table-wrapper');
             const isHidden = wrapper.style.display === 'none';
             wrapper.style.display = isHidden ? '' : 'none';
-            this.textContent = isHidden ? 'Hide Table' : 'Show Table';
-            if (isHidden) this.classList.add('active');
-            else this.classList.remove('active');
+            this.textContent = isHidden ? 'Hide table' : 'Show table';
+            this.classList.toggle('active', isHidden);
         });
 
         // Setup filter event listeners
@@ -1020,7 +1049,7 @@
             });
         });
 
-        document.querySelectorAll('.filter-toggle').forEach(btn => {
+        document.querySelectorAll('.filter-toggle[data-toggle]').forEach(btn => {
             btn.addEventListener('click', () => {
                 btn.classList.toggle('active');
                 if (btn.dataset.toggle === 'last90') {
@@ -1094,6 +1123,41 @@
             }
             const weekNumber = 1 + Math.ceil((firstThursday - target) / 604800000);
             return `${target.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+        }
+
+        function getStartOfISOWeek(date) {
+            const start = new Date(date.valueOf());
+            const dayNr = (start.getDay() + 6) % 7;
+            start.setHours(0, 0, 0, 0);
+            start.setDate(start.getDate() - dayNr);
+            return start;
+        }
+
+        function getRecentWeekEntries(endDate, weekCount) {
+            const latestWeekStart = getStartOfISOWeek(endDate);
+            const weeks = [];
+
+            for (let i = weekCount - 1; i >= 0; i--) {
+                const weekStart = new Date(latestWeekStart.valueOf());
+                weekStart.setDate(weekStart.getDate() - (i * 7));
+                weeks.push({
+                    key: getISOWeek(weekStart),
+                    startDate: weekStart
+                });
+            }
+
+            return weeks;
+        }
+
+        function formatWeekLabel(date) {
+            return date.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short'
+            });
+        }
+
+        function formatNumber(value, options) {
+            return Number(value).toLocaleString('en-GB', options);
         }
 
         function getFareBandForDate(date) {
@@ -1225,6 +1289,10 @@
             const tubeSavings = calculateTubeSavings(rides);
             const savings = tubeSavings.totalSavings.toFixed(2);
             const capAdjusted = tubeSavings.uncappedSavings > tubeSavings.totalSavings;
+            const totalDistFormatted = formatNumber(totalDist, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
 
             // Calculate weeks cycling (unique weeks)
             const uniqueWeeks = new Set(rides.map(r => r.yearWeekKey));
@@ -1235,7 +1303,7 @@
             row.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-label">Total Distance</div>
-                    <div class="stat-value">${totalDist.toFixed(1)} km</div>
+                    <div class="stat-value">${totalDistFormatted} km</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">Rides</div>
@@ -1477,8 +1545,10 @@
                 weekMap[r.yearWeekKey][r.dayOfWeek]++;
             });
 
-            // Get last 12 weeks
-            const weeks = Object.keys(weekMap).sort().slice(-12);
+            const latestRideDate = rides.reduce((latest, ride) => (
+                ride.startLocal > latest ? ride.startLocal : latest
+            ), rides[0].startLocal);
+            const weeks = getRecentWeekEntries(latestRideDate, 8);
 
             const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -1486,13 +1556,20 @@
             dayNames.forEach(day => html += `<div>${day}</div>`);
             html += '</div>';
 
-            weeks.forEach(week => {
-                const weekLabel = week.replace('W', ' W');
+            weeks.forEach(({ key, startDate }) => {
+                const weekLabel = formatWeekLabel(startDate);
+                const fullWeekLabel = startDate.toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                });
+                const weekCounts = weekMap[key] || Array(7).fill(0);
                 html += `<div class="heatmap-row"><div class="heatmap-week-label">${weekLabel}</div>`;
 
-                weekMap[week].forEach((count, dayIdx) => {
+                weekCounts.forEach((count, dayIdx) => {
                     const level = count === 0 ? 0 : count === 1 ? 1 : count <= 3 ? 2 : count <= 5 ? 3 : 4;
-                    html += `<div class="heatmap-cell level-${level}" title="${dayNames[dayIdx]}, ${weekLabel}: ${count} rides"></div>`;
+                    const rideLabel = count === 1 ? 'ride' : 'rides';
+                    html += `<div class="heatmap-cell level-${level}" title="${dayNames[dayIdx]}, week of ${fullWeekLabel}: ${count} ${rideLabel}"></div>`;
                 });
 
                 html += '</div>';

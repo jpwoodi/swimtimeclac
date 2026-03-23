@@ -1,128 +1,155 @@
 # CLAUDE.md
 
-This file provides guidance for AI assistants working with the **swimtimecalc** codebase.
+This file provides guidance for AI assistants working with the `swimtimecalc` codebase.
 
 ## Project Overview
 
-A personal website covering work, music and sports. The sports section includes swim time/pace calculators, training dashboards, pool finders, and AI-powered workout plan generation. Built as a static site with Vercel serverless functions.
+`swimtimecalc` is the repo behind the password-gated `Woodnott.com` site.
+
+It is a static multi-page personal site with three top-level sections:
+- `Work`: article-style writing and project notes
+- `Music`: a lightweight holding page for music-related content
+- `Sports`: the main product surface, containing swim and cycling tools
+
+The sports section currently includes:
+- a swim time / pace calculator
+- a CSS calculator
+- a London pool finder
+- a Strava swim feed
+- an AI swim plan generator
+- a swim plan library backed by a checked-in template dataset
+- a cycle commute dashboard with charts, photos, and segment analysis
 
 ## Tech Stack
 
-- **Frontend:** Vanilla HTML5, CSS3, JavaScript (no framework)
-- **Backend:** Node.js serverless functions (Vercel Functions)
-- **Deployment:** Vercel (auto-deploys from git)
-- **External APIs:** Strava (activity data), OpenAI GPT-4o-mini (swim plans), Airtable (pool data)
-- **Libraries (CDN):** Chart.js, Leaflet (maps), Google Fonts (Inter)
+- Frontend: vanilla HTML, CSS, and JavaScript
+- Backend: Node.js Vercel serverless functions
+- Deployment: Vercel
+- External APIs:
+  - Strava
+  - OpenAI (`gpt-4o` in `api/generateSwimPlan.js`)
+  - Airtable
+- Client-side libraries loaded by page where needed:
+  - Chart.js
+  - Leaflet
+  - Google Fonts (`Inter`)
 
 ## Repository Structure
 
-```
+```text
 /
-├── index.html                         # Personal landing page (Work, Music, Sports)
-├── nav.css                            # Shared navigation bar styles
-├── shared.css                         # Design tokens (CSS custom properties) + common styles
-├── images/                            # Image assets (icons, markers, favicons)
-│
-├── components/
-│   └── nav.js                         # Shared navigation component (injected into all pages)
-│
-├── work/
-│   ├── index.html                     # Work section landing page
-│   ├── article-template.html          # Template for new articles
-│   ├── articles.js                    # Article metadata registry
-│   └── articles/
-│       └── YYYY-MM-DD-slug.html       # Individual article pages
-│
-├── music/
-│   └── index.html                     # Music section landing page
-│
-├── sports/
-│   ├── index.html                     # Sports section landing page (tool grid)
-│   ├── calculator.html                # Swim time/pace calculator
-│   ├── css.html                       # Critical Swim Speed calculator
-│   ├── pools.html                     # Pool finder with interactive map
-│   ├── stravafeed.html                # Strava swim activity feed
-│   ├── swim-plan-generator.html       # AI-powered swim plan generator
-│   ├── swim-plan-library.html         # Browse AI swim plan library
-│   └── cyclecommute.html              # Cycle commute tracker
-│
-├── api/
-│   ├── auth-login.js                  # Authentication login endpoint
-│   ├── auth-logout.js                 # Authentication logout endpoint
-│   ├── auth-status.js                 # Authentication status check
-│   ├── browseSwimPlans.js             # Browse swim plan library
-│   ├── generateSwimPlan.js            # OpenAI swim plan generation
-│   ├── get-rides.js                   # Fetch cycle rides from Strava
-│   ├── get-swims.js                   # Fetch swim activities from Strava
-│   ├── getPools.js                    # Fetch pool data from Airtable
-│   └── lib/
-│       ├── auth-utils.js              # Shared auth utilities
-│       ├── strava.js                  # Shared Strava token refresh + pagination helper
-│       └── templates.js               # Shared swim plan template loader (templates.v2.json)
-│
-├── data/
-│   └── templates.v2.json              # Swim plan template dataset
-├── vercel.json                        # Vercel deployment config
-└── package.json                       # Node.js dependencies
+|-- index.html                       # Site landing page
+|-- login.html                       # Password entry page
+|-- auth.js                          # Client-side auth bootstrap and redirects
+|-- nav.css                          # Shared navigation styles
+|-- shared.css                       # Shared design tokens / styles
+|-- images/                          # Favicons, icons, map markers
+|
+|-- components/
+|   `-- nav.js                       # Injects top nav and sports sub-nav
+|
+|-- work/
+|   |-- index.html                   # Work landing page
+|   |-- article-template.html        # Starting point for new articles
+|   |-- articles.js                  # Article metadata registry
+|   `-- articles/                    # Individual article pages
+|
+|-- music/
+|   `-- index.html                   # Music landing page
+|
+|-- sports/
+|   |-- index.html                   # Sports landing page
+|   |-- calculator.html              # Swim time / pace calculator
+|   |-- css.html                     # CSS calculator
+|   |-- pools.html                   # Pool finder
+|   |-- stravafeed.html              # Strava swim feed
+|   |-- swim-plan-generator.html     # AI swim plan generator
+|   |-- swim-plan-library.html       # Browseable swim plan library
+|   `-- cyclecommute.html            # Cycle commute dashboard
+|
+|-- api/
+|   |-- auth.js                      # Auth endpoint: ?action=status|login|logout
+|   |-- browseSwimPlans.js           # Filter / sort / paginate swim plans
+|   |-- generateSwimPlan.js          # OpenAI-backed plan generation
+|   |-- get-swims.js                 # Recent swim activities from Strava
+|   |-- get-rides.js                 # Commute rides from Strava
+|   |-- get-ride-photos.js           # Photos for commute rides
+|   |-- get-segment-times.js         # Segment efforts across commute rides
+|   |-- get-segment-detail.js        # Segment geometry / metadata
+|   |-- getPools.js                  # Pool data from Airtable
+|   `-- lib/
+|       |-- auth-utils.js            # Shared cookie / session helpers
+|       |-- strava.js                # Shared token refresh + pagination helpers
+|       `-- templates.js             # Shared loader for data/templates.v2.json
+|
+|-- data/
+|   `-- templates.v2.json            # Checked-in swim plan dataset
+|
+|-- swim_templates/
+|   |-- README.md                    # Template dataset overview
+|   |-- MIGRATION_GUIDE.md           # Operating / maintenance notes for v2
+|   |-- source/                      # Source .docx plans by category
+|   `-- scripts/                     # Python ingestion scripts
+|
+|-- scripts/
+|   `-- check-template-bundle.js     # Legacy Netlify/v1 checker; currently stale
+|
+|-- vercel.json                      # Vercel config
+`-- package.json                     # Node dependencies
 ```
 
-## Site Architecture
+## Architecture Notes
 
 ### Navigation
-- **Primary nav** (all pages): Home | Work | Music | Sports
-- **Sub-nav** (sports section only): Overview | Swim Calculator | CSS Calculator | Pool Finder | Swim Feed | AI Swim Plan | Swim Plans | Cycle Commute
-- Nav HTML is injected by `/components/nav.js` — **never write inline nav HTML manually**
-- `nav.js` auto-detects the current path to set active states and show/hide the sports sub-nav
-- Styles for the nav live in `nav.css` (linked via absolute path `/nav.css`)
-- Pages with sports sub-nav use `padding-top: 124px` (56px primary + 44px sub-nav + 24px spacing)
-- Pages without sub-nav use `padding-top: 80px`
+- Navigation HTML is injected by `components/nav.js`
+- Do not hand-write inline nav markup into pages
+- Sports pages get a second sub-nav automatically
+- Pages in the sports section should account for both nav bars with `padding-top: 124px`
+- Non-sports pages use `padding-top: 80px`
 
-### Sections
-- **Work** (`/work/`): Articles and project write-ups
-- **Music** (`/music/`): Playlists, gigs and music content (placeholder)
-- **Sports** (`/sports/`): All swim/cycle tools and dashboards
+### Authentication
+- The whole site is guarded by client-side auth bootstrap in `auth.js`
+- Login page: `/login.html`
+- Auth API endpoint: `/api/auth?action=status|login|logout`
+- Auth can be disabled by setting `AUTH_ENABLED=false`
 
 ### Frontend
-- Standalone HTML pages with inline CSS/JS
-- Navigation injected via `components/nav.js` (shared, no inline nav HTML in pages)
-- Design tokens available as CSS custom properties in `shared.css` (link if needed)
-- Client-side calculations for pace, distance, and SWOLF metrics
-- Chart.js for time-series dashboard visualizations
-- Leaflet + OpenStreetMap for interactive pool maps
-- Stripe-inspired design system (see Design Tokens below)
+- Pages are mostly self-contained HTML files with inline `<style>` and `<script>` blocks
+- Cross-page dependencies are intentionally light
+- Absolute paths are preferred for links and assets:
+  - `/sports/calculator.html`
+  - `/nav.css`
+  - `/images/...`
 
-### Backend (Vercel Functions)
-- Stateless serverless functions at `api/`
-- Act as API proxies between frontend and external services
-- In-memory caching with 1-hour TTL and force-refresh support
-- CORS enabled for all function endpoints (configured in `vercel.json`)
-- Shared utilities in `api/lib/` — use these instead of duplicating logic
+### Backend
+- Vercel functions live in `api/`
+- Functions are CommonJS modules
+- Most functions proxy external APIs and add light filtering / caching
+- Reuse helpers in `api/lib/` instead of duplicating Strava or template-loading logic
 
-### Data Flow
-- **Strava integration:** `api/lib/strava.js` handles token refresh + pagination; `get-swims.js` and `get-rides.js` each pass a filter function to `createStravaHandler()`
-- **AI plans:** User input -> prompt construction with retrieved templates -> OpenAI chat completion -> parse response -> display
-- **Pool finder:** Airtable data -> fetch -> display on Leaflet map
-- No database; all persistent data lives in Airtable or external services
+### Swim Plan Data
+- `data/templates.v2.json` is the live bundle used by the swim plan library
+- `api/lib/templates.js` loads and caches that bundle
+- The checked-in dataset is generated from `.docx` files in `swim_templates/source/`
+- The current checked-in bundle was generated on `2026-02-10` and contains 401 plans
 
-## Development Workflow
-
-### Running Locally
+## Running Locally
 
 Install dependencies:
+
 ```bash
 npm install
 ```
 
-For local development with Vercel Functions:
+Run the site and serverless functions locally:
+
 ```bash
 vercel dev
 ```
 
-This serves the static site and makes serverless functions available at `/api/*`.
+## Environment Variables
 
-### Environment Variables Required
-
-The following must be set in Vercel (or `.env` for local dev):
+Required for full functionality:
 
 | Variable | Purpose |
 |----------|---------|
@@ -135,83 +162,61 @@ The following must be set in Vercel (or `.env` for local dev):
 | `SITE_PASSWORD` | Password required to unlock the site |
 | `AUTH_SESSION_SECRET` | Secret used to sign auth session cookies |
 
-### Deployment
+Optional:
 
-Push to the main branch triggers automatic Vercel deployment. No build step is needed — the site is served as static files with serverless functions.
+| Variable | Purpose |
+|----------|---------|
+| `AUTH_ENABLED` | Set to `false` to bypass the password gate |
 
 ## Code Conventions
 
-### Path Conventions
-- All inter-page links use absolute paths (e.g. `/sports/calculator.html`, `/nav.css`)
-- Images referenced via `/images/` from any page
-- Vercel function URLs use `/api/<name>` (absolute, works from any path)
-
 ### HTML Pages
-- Each page is self-contained with embedded `<style>` and `<script>` blocks
-- Navigation is injected by adding `<script src="/components/nav.js"></script>` in `<head>` — no inline nav HTML
-- Do NOT add a `toggleMenu()` function to pages; it is handled by `nav.js`
-- Mobile-responsive; hamburger menu handled by `nav.js`
-- All pages follow the Stripe-inspired design system
+- Keep pages standalone and simple
+- Include `nav.css` and `components/nav.js` on navigable pages
+- Do not add a page-local `toggleMenu()` implementation; the nav component owns that behavior
 
 ### JavaScript
-- Vanilla JS (no TypeScript, no bundler, no modules)
-- DOM manipulation via `document.getElementById()` / `querySelector()`
-- Fetch API for all HTTP requests to serverless functions
-- Client-side calculations (no server round-trips for math)
-- Always escape user-controlled or external data before injecting into innerHTML (use a `escapeHtml()` helper)
+- Vanilla JS only
+- Prefer `document.getElementById()` / `querySelector()` over abstractions
+- Escape user-controlled data before injecting into `innerHTML`
 
 ### Serverless Functions
-- CommonJS module format (`module.exports = async (req, res) => {}`)
-- Use `node-fetch` v2 for outbound HTTP requests
-- Respond with `res.status(code).json(data)` or `res.status(code).send(string)`
-- Cache responses in module-scope variables with TTL logic
-- Use `api/lib/strava.js` for any Strava data fetching (do not duplicate token/pagination logic)
-- Use `api/lib/templates.js` for loading swim plan templates (do not duplicate `loadTemplates`)
-- Request data: `req.method`, `req.body`, `req.query`, `req.headers`
-
-### Design Tokens (Stripe-Inspired)
-CSS custom properties are defined in `shared.css`. Raw values for reference:
-```
---color-primary:    #635bff (purple)
---color-green:      #2e7d32
---color-orange:     #ef6c00
---color-teal:       #009688
---color-text:       #1a1f36
---color-text-secondary: #697386
---color-text-muted: #8792a2
---color-bg:         #f6f9fc
---color-surface:    #fff
---color-border:     #e3e8ee
-Font:               'Inter', sans-serif
-Spacing:            8px grid system
-```
-
-## Testing & Quality
-
-- No test framework is currently configured
-- No linting or formatting tools installed
-- No CI/CD pipeline beyond Vercel auto-deploy
-- Manual testing via browser and Vercel Dev
+- Use `node-fetch` v2 for outbound requests
+- Respond with `res.status(...).json(...)` or `res.status(...).send(...)`
+- Module-scope caching is acceptable for expensive upstream calls
+- For Strava endpoints, prefer `api/lib/strava.js`
+- For template data, prefer `api/lib/templates.js`
 
 ## Common Tasks
 
-### Adding a new sports page
+### Add a new sports page
 1. Create the HTML file in `sports/`
-2. Add `<link rel="stylesheet" href="/nav.css">` and `<script src="/components/nav.js"></script>` in `<head>`
-3. Use `padding-top: 124px` on body to account for both navbars
-4. Follow the Stripe design tokens for consistent styling
-5. Add the page to `sportsSubLinks` in `components/nav.js` so it appears in the sub-nav
+2. Link `/nav.css` and `/components/nav.js`
+3. Use `padding-top: 124px`
+4. Add the page to `sportsSubLinks` in `components/nav.js`
 
-### Adding a new work article
-1. Create the HTML file in `work/articles/` following the `YYYY-MM-DD-slug.html` naming convention
-2. Use `work/article-template.html` as the starting point
-3. Add the article metadata to `work/articles.js` so it appears on the Work index page
+### Add a new work article
+1. Create a file in `work/articles/` using the `YYYY-MM-DD-slug.html` pattern
+2. Start from `work/article-template.html`
+3. Add metadata in `work/articles.js`
 
-### Adding a new serverless function
-1. Create a `.js` file in `api/`
-2. Export the handler: `module.exports = async (req, res) => { ... }`
-3. Respond with `res.status(code).json(data)` or `res.status(code).send(string)`
-4. For Strava data: use `createStravaHandler()` from `api/lib/strava.js`
-5. For template data: use `loadTemplates()` from `api/lib/templates.js`
-6. Add any new API keys as environment variables in Vercel
-7. The function is automatically available at `/api/<filename>`
+### Refresh the swim plan dataset
+1. Add or update `.docx` files under `swim_templates/source/`
+2. Run one of:
+
+```bash
+py swim_templates/scripts/ingest_v2.py
+```
+
+```bash
+python3 swim_templates/scripts/ingest_v2.py
+```
+
+3. Confirm `data/templates.v2.json` was updated as expected
+4. Test `/sports/swim-plan-library.html` and `/api/browseSwimPlans`
+
+## Notes on Stale Artifacts
+
+- `scripts/check-template-bundle.js` still references the older Netlify / `templates.v1.json` setup
+- The live site uses Vercel, `api/`, and `data/templates.v2.json`
+- If you need to touch template tooling, prefer the v2 ingestion flow unless explicitly asked to revive the legacy path
