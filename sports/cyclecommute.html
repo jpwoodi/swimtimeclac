@@ -137,6 +137,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 16px;
+            align-items: start;
         }
 
         .chart-grid-row2 {
@@ -176,7 +177,7 @@
 
         .heatmap-chart-container {
             height: auto;
-            min-height: 320px;
+            min-height: 0;
             overflow: hidden;
         }
 
@@ -481,14 +482,14 @@
 
         /* Heatmap Styles */
         #heatmapContainer {
-            padding: 8px 0;
+            padding: 4px 0 2px;
         }
 
         .heatmap-header {
             display: grid;
-            grid-template-columns: 60px repeat(7, 1fr);
+            grid-template-columns: 68px repeat(7, minmax(0, 1fr));
             gap: 2px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-size: 10px;
             font-weight: 600;
             color: #8792a2;
@@ -497,15 +498,16 @@
 
         .heatmap-row {
             display: grid;
-            grid-template-columns: 60px repeat(7, 1fr);
+            grid-template-columns: 68px repeat(7, minmax(0, 1fr));
             gap: 2px;
             margin-bottom: 2px;
         }
 
         .heatmap-week-label {
-            font-size: 10px;
-            color: #8792a2;
-            padding: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #4f5b76;
+            padding: 4px 6px 4px 0;
             display: flex;
             align-items: center;
         }
@@ -532,7 +534,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            margin-top: 12px;
+            margin-top: 10px;
             font-size: 10px;
             color: #8792a2;
         }
