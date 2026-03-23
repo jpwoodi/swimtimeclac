@@ -78,52 +78,6 @@
             margin-top: 4px;
         }
 
-        /* Filter Bar */
-        .filter-bar {
-            max-width: 1200px;
-            margin: 16px auto 0;
-            padding: 0 24px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .filter-group + .filter-group {
-            margin-left: 8px;
-            padding-left: 16px;
-            border-left: 1px solid #e3e8ee;
-        }
-
-        .filter-pill {
-            padding: 6px 16px;
-            background: #f6f9fc;
-            color: #697386;
-            border: 1px solid #e3e8ee;
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 500;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .filter-pill:hover {
-            background: #e3e8ee;
-        }
-
-        .filter-pill.active {
-            background: #635bff;
-            color: #fff;
-            border-color: #635bff;
-        }
-
         .filter-toggle {
             padding: 6px 14px;
             background: transparent;
@@ -781,7 +735,6 @@
             .chart-grid-row1 { grid-template-columns: 1fr; }
             .chart-grid-row2 { grid-template-columns: 1fr; }
             .chart-container { height: 200px; }
-            .filter-bar { flex-direction: column; align-items: flex-start; }
             .photo-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
             .lightbox-prev { left: 8px; }
             .lightbox-next { right: 8px; }
@@ -810,18 +763,6 @@
 
     <div id="dashboard-section">
     <div class="stats-row" id="stats-row" style="display:none;"></div>
-
-    <!-- Filter Bar -->
-    <div class="filter-bar" id="filter-bar" style="display:none;">
-        <div class="filter-group">
-            <button class="filter-pill active" data-filter="all">All</button>
-            <button class="filter-pill" data-filter="morning">Morning</button>
-            <button class="filter-pill" data-filter="evening">Evening</button>
-        </div>
-        <div class="filter-group">
-            <button class="filter-toggle" data-toggle="last90">Last 90 days</button>
-        </div>
-    </div>
 
     <div class="charts-section">
         <!-- Row 1: Leave/Arrival Times, Scatter, Heatmap -->
@@ -998,10 +939,6 @@
         // Global state
         let allRides = [];
         let normalizedRides = [];
-        let filters = {
-            type: 'all', // all, morning, evening
-            last90Days: false
-        };
         let currentBoxPlotTab = 'morning';
         let chartInstances = {};
 
@@ -1039,33 +976,13 @@
             this.classList.toggle('active', isHidden);
         });
 
-        // Setup filter event listeners
-        document.querySelectorAll('.filter-pill').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                filters.type = btn.dataset.filter;
-                applyFiltersAndRender();
-            });
-        });
-
-        document.querySelectorAll('.filter-toggle[data-toggle]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.classList.toggle('active');
-                if (btn.dataset.toggle === 'last90') {
-                    filters.last90Days = btn.classList.contains('active');
-                }
-                applyFiltersAndRender();
-            });
-        });
-
         // Tab switching for box plots
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentBoxPlotTab = btn.dataset.tab;
-                renderBoxPlot(getFilteredRides());
+                renderBoxPlot(normalizedRides);
             });
         });
 
@@ -1211,31 +1128,10 @@
             return { peakTrips, offPeakTrips, totalSavings: cappedSavings, uncappedSavings };
         }
 
-        // Apply filters and re-render
-        function applyFiltersAndRender() {
-            const filtered = getFilteredRides();
-            renderStats(filtered);
-            renderAllCharts(filtered);
-            renderTable(filtered);
-        }
-
-        // Get filtered rides
-        function getFilteredRides() {
-            let filtered = [...normalizedRides];
-
-            // Filter by type
-            if (filters.type !== 'all') {
-                filtered = filtered.filter(r => r.commuteType === filters.type);
-            }
-
-            // Filter last 90 days
-            if (filters.last90Days) {
-                const ninetyDaysAgo = new Date();
-                ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-                filtered = filtered.filter(r => r.startLocal >= ninetyDaysAgo);
-            }
-
-            return filtered;
+        function renderDashboard() {
+            renderStats(normalizedRides);
+            renderAllCharts(normalizedRides);
+            renderTable(normalizedRides);
         }
 
         async function parseJsonResponse(response) {
@@ -1271,12 +1167,10 @@
                 allRides = data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
                 normalizedRides = allRides.map(normalizeRide);
 
-                // Show filter bar and section tabs
-                document.getElementById('filter-bar').style.display = 'flex';
                 document.getElementById('section-tabs').style.display = 'flex';
 
                 // Render everything
-                applyFiltersAndRender();
+                renderDashboard();
             } catch (err) {
                 console.error('Error:', err);
                 loading.innerHTML = `<p>Something went wrong: ${err.message}</p>`;
@@ -1363,45 +1257,58 @@
             return rides.filter(r => r.startLocal >= cutoff);
         }
 
-        // Calculate streak for "Leave by 08:00" target
-        function calculateLeaveBy08Streak(rides) {
-            const TARGET_TIME = 480; // 08:00 in minutes
+        function calculateTargetStreak(rides, options) {
+            const {
+                commuteType,
+                metricKey,
+                targetTime,
+                selectMetric,
+                isOnTarget
+            } = options;
+            const commuteRides = rides.filter(r => r.commuteType === commuteType);
+            if (commuteRides.length === 0) return { streak: null, last10: null };
 
-            // Get morning rides only
-            const morningRides = rides.filter(r => r.commuteType === 'morning');
-            if (morningRides.length === 0) return { streak: null, last10: null };
-
-            // Group by date (YYYY-MM-DD) and find earliest leave time per day
             const dayMap = {};
-            morningRides.forEach(r => {
+            commuteRides.forEach(r => {
                 const dateKey = r.startLocal.toISOString().split('T')[0];
-                if (!dayMap[dateKey] || r.leaveMinutes < dayMap[dateKey]) {
-                    dayMap[dateKey] = r.leaveMinutes;
+                const metric = r[metricKey];
+                if (dayMap[dateKey] === undefined) {
+                    dayMap[dateKey] = metric;
+                } else {
+                    dayMap[dateKey] = selectMetric(dayMap[dateKey], metric);
                 }
             });
 
-            // Get sorted array of morning commute-days (most recent first)
             const sortedDays = Object.keys(dayMap).sort().reverse();
-
-            // Calculate streak from most recent day backwards
             let streak = 0;
             for (const day of sortedDays) {
-                if (dayMap[day] <= TARGET_TIME) {
+                if (isOnTarget(dayMap[day], targetTime)) {
                     streak++;
                 } else {
-                    break; // Streak broken
+                    break;
                 }
             }
 
-            // Calculate last 10 morning commute-days on-time count
             const last10Days = sortedDays.slice(0, 10);
-            const last10OnTime = last10Days.filter(day => dayMap[day] <= TARGET_TIME).length;
+            const last10OnTime = last10Days.filter(day => isOnTarget(dayMap[day], targetTime)).length;
 
             return { streak, last10: { onTime: last10OnTime, total: last10Days.length } };
         }
 
-        // CHART 1: Leave & Arrival Times - Last 30 Days Summary
-        function renderBoxPlot(rides) {
+        function getTargetColor(actualTime, targetTime) {
+            if (actualTime <= targetTime) return '#2e7d32';
+            if (actualTime <= targetTime + 10) return '#ef6c00';
+            return '#d32f2f';
+        }
+
+        function getStreakBadgeClass(streak) {
+            if (streak && streak >= 5) return 'streak-badge-green';
+            if (streak && streak >= 1) return 'streak-badge-amber';
+            return 'streak-badge-grey';
+        }
+
+        // Legacy summary renderer retained only as reference during dashboard iteration.
+        function renderBoxPlotLegacy(rides) {
             const container = document.getElementById('boxPlotContainer');
             const insightsDiv = document.getElementById('boxPlotInsights');
 
@@ -1523,6 +1430,125 @@
                     insightsDiv.innerHTML = '';
                 }
             }
+        }
+
+        function renderBoxPlot(rides) {
+            const container = document.getElementById('boxPlotContainer');
+            const insightsDiv = document.getElementById('boxPlotInsights');
+            const last30DaysRides = getRidesLastNDays(rides, 30);
+            const typeRides = last30DaysRides.filter(r => r.commuteType === currentBoxPlotTab);
+
+            if (typeRides.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:40px;">No rides in the last 30 days</p>';
+                insightsDiv.innerHTML = '';
+                return;
+            }
+
+            const leaveTimes = typeRides.map(r => r.leaveMinutes);
+            const arriveTimes = typeRides.map(r => r.arriveMinutes);
+            const avgLeave = calculateCircularMean(leaveTimes);
+            const avgArrive = calculateCircularMean(arriveTimes);
+            let targetTime;
+            let onTimeCount;
+            let onTimePct;
+            let streakData;
+            let targetColor;
+            let streakBadgeClass;
+            let primaryLabel;
+            let streakTitle;
+            let rangeStart;
+            let rangeEnd;
+            let targetLabel;
+            let dotLeft;
+            let supportingPrefix;
+
+            if (currentBoxPlotTab === 'morning') {
+                targetTime = 480;
+                onTimeCount = leaveTimes.filter(t => t <= targetTime).length;
+                onTimePct = Math.round((onTimeCount / leaveTimes.length) * 100);
+                streakData = calculateTargetStreak(last30DaysRides, {
+                    commuteType: 'morning',
+                    metricKey: 'leaveMinutes',
+                    targetTime,
+                    selectMetric: Math.min,
+                    isOnTarget: (metric, target) => metric <= target
+                });
+                targetColor = getTargetColor(avgLeave, targetTime);
+                streakBadgeClass = getStreakBadgeClass(streakData.streak);
+                primaryLabel = 'Leave by 08:00';
+                streakTitle = "Counts consecutive commute-days where your earliest morning ride left by 08:00. Days without a morning ride don't break the streak.";
+                rangeStart = 360;
+                rangeEnd = 600;
+                targetLabel = 'Target 08:00';
+                dotLeft = avgLeave !== null ? ((avgLeave - rangeStart) / (rangeEnd - rangeStart)) * 100 : null;
+                supportingPrefix = 'morning';
+            } else {
+                targetTime = 19 * 60;
+                onTimeCount = arriveTimes.filter(t => t <= targetTime).length;
+                onTimePct = Math.round((onTimeCount / arriveTimes.length) * 100);
+                streakData = calculateTargetStreak(last30DaysRides, {
+                    commuteType: 'evening',
+                    metricKey: 'arriveMinutes',
+                    targetTime,
+                    selectMetric: Math.max,
+                    isOnTarget: (metric, target) => metric <= target
+                });
+                targetColor = getTargetColor(avgArrive, targetTime);
+                streakBadgeClass = getStreakBadgeClass(streakData.streak);
+                primaryLabel = 'Arrive by 19:00';
+                streakTitle = "Counts consecutive commute-days where your latest evening ride arrived by 19:00. Days without an evening ride don't break the streak.";
+                rangeStart = 17 * 60;
+                rangeEnd = 21 * 60;
+                targetLabel = 'Target 19:00';
+                dotLeft = avgArrive !== null ? ((avgArrive - rangeStart) / (rangeEnd - rangeStart)) * 100 : null;
+                supportingPrefix = 'evening';
+            }
+
+            container.innerHTML = `
+                <div class="time-summary">
+                    <div class="kpi-row">
+                        <div class="kpi-item">
+                            <div class="kpi-label">Average Leave Time</div>
+                            <div class="kpi-value">${avgLeave !== null ? formatTime(avgLeave) : 'â€”'}</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-label">Average Arrive Time</div>
+                            <div class="kpi-value">${avgArrive !== null ? formatTime(avgArrive) : 'â€”'}</div>
+                        </div>
+                    </div>
+
+                    <div class="primary-stat">
+                        <span class="stat-text">${primaryLabel}: <strong>${onTimePct}%</strong></span>
+                        <span class="streak-badge ${streakBadgeClass}" title="${streakTitle}">
+                            Streak: ${streakData.streak !== null ? streakData.streak : 'â€”'} ${streakData.streak === 1 ? 'day' : 'days'}
+                        </span>
+                    </div>
+
+                    <div class="target-visual">
+                        <div class="time-bar">
+                            <div class="time-tick" style="left: 0%;">
+                                <span class="time-label">${formatTime(rangeStart)}</span>
+                            </div>
+                            <div class="time-tick target-tick" style="left: 50%;">
+                                <span class="target-line"></span>
+                                <span class="time-label target-label">${targetLabel}</span>
+                            </div>
+                            <div class="time-tick" style="left: 100%;">
+                                <span class="time-label">${formatTime(rangeEnd)}</span>
+                            </div>
+                            ${dotLeft !== null ? `<div class="avg-dot" style="left: ${dotLeft}%; background-color: ${targetColor};"></div>` : ''}
+                        </div>
+                    </div>
+
+                    ${streakData.last10 && streakData.last10.total > 0 ? `
+                        <div class="supporting-line">
+                            Last ${streakData.last10.total} ${supportingPrefix} commute-days: ${streakData.last10.onTime}/${streakData.last10.total} on time
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            insightsDiv.innerHTML = '';
         }
 
         // CHART 3: Heatmap - Weekly Commute Pattern

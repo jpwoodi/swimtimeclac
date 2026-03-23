@@ -1,0 +1,5 @@
+(node:28832) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Vercel CLI 28.18.5
+Error: No existing credentials found. Please run `vercel login` or pass "--token"
+Learn More: https://err.sh/vercel/no-credentials-found
