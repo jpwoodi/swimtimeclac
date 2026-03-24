@@ -941,8 +941,13 @@
         }
 
         .dashboard-grid-top {
-            grid-template-columns: 1.04fr 1fr;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             margin-bottom: 18px;
+        }
+
+        .timing-card,
+        .heatmap-card {
+            grid-column: span 2;
         }
 
         .dashboard-card,
