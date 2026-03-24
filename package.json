@@ -5,6 +5,7 @@
     "check-template-bundle": "node scripts/check-template-bundle.js"
   },
   "dependencies": {
+    "@vercel/blob": "^2.3.1",
     "node-fetch": "^2.6.1",
     "vercel": "^28.18.5"
   }

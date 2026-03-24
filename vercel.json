@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/sync-commute-rides",
+      "schedule": "0 4 * * *"
+    }
+  ],
   "functions": {
     "api/get-segment-times.js": {
       "maxDuration": 60,

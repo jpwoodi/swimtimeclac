@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-const { loadTemplates } = require("./lib/templates");
+const { loadTemplates } = require("../lib/templates");
 
 const TEMPLATE_TYPES = ["mileage", "im", "fast", "kitchen_sink"];
 const FOCUS_TYPE_LABELS = {

@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const { getAccessToken, fetchRecentActivities } = require('./lib/strava');
+const { getAccessToken, fetchRecentActivities } = require('../lib/strava');
 
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 const BATCH_SIZE = 10;

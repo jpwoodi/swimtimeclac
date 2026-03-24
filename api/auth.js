@@ -4,7 +4,7 @@ const {
   createSessionToken,
   getAuthCookie,
   verifySessionToken,
-} = require("./lib/auth-utils");
+} = require("../lib/auth-utils");
 
 module.exports = async (req, res) => {
   if (req.method === "OPTIONS") {

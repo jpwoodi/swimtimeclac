@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const { getAccessToken } = require('./lib/strava');
+const { getAccessToken } = require('../lib/strava');
 
 // Segment routes don't change, cache for 24 hours
 const CACHE_DURATION = 24 * 60 * 60 * 1000;

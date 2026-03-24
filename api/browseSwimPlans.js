@@ -1,4 +1,4 @@
-const { loadTemplates } = require('./lib/templates');
+const { loadTemplates } = require('../lib/templates');
 
 // Filter templates based on query parameters
 function filterTemplates(templates, filters) {
