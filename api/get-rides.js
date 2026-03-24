@@ -1,5 +1,6 @@
 const {
   buildCommuteSnapshot,
+  enrichRidesWithWeather,
   fetchLatestCommuteRides,
   getSnapshotRides,
   isBlobConfigured,
@@ -37,7 +38,8 @@ module.exports = async (req, res) => {
     }
 
     const liveRides = await fetchLatestCommuteRides();
-    const snapshot = buildCommuteSnapshot(liveRides, {
+    const enrichedRides = await enrichRidesWithWeather(liveRides);
+    const snapshot = buildCommuteSnapshot(enrichedRides, {
       source: shouldRefresh ? 'live-refresh-fallback' : 'live-fallback',
     });
 

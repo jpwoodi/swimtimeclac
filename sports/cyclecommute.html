@@ -377,6 +377,21 @@
             border-bottom: 1px solid #f0f3f7;
         }
 
+        .table-primary {
+            font-weight: 500;
+        }
+
+        .table-secondary {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #7c7971;
+            line-height: 1.35;
+        }
+
+        .table-weather-inline {
+            display: none;
+        }
+
         tr:hover td {
             background-color: #f6f9fc;
         }
@@ -388,6 +403,43 @@
             font-size: 11px;
             font-weight: 600;
             color: white;
+        }
+
+        .weather-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .weather-pill.wet {
+            background: #d9ecff;
+            color: #1f5f99;
+        }
+
+        .weather-pill.headwind {
+            background: #ffe5c3;
+            color: #9a5b05;
+        }
+
+        .weather-pill.tailwind {
+            background: #d8f0df;
+            color: #2d7b43;
+        }
+
+        .weather-pill.mixed {
+            background: #e7def6;
+            color: #5a3f8c;
+        }
+
+        .weather-pill.neutral,
+        .weather-pill.unknown {
+            background: #ebe7de;
+            color: #625f57;
         }
 
         .status-tag.morning { background-color: #635bff; }
@@ -1361,6 +1413,13 @@
                 width: 100%;
                 text-align: center;
             }
+            th:nth-child(6),
+            td:nth-child(6) {
+                display: none;
+            }
+            .table-weather-inline {
+                display: block;
+            }
             #segment-map {
                 height: 260px !important;
             }
@@ -1448,6 +1507,7 @@
                                 <th>Distance</th>
                                 <th>Time</th>
                                 <th>Avg Speed</th>
+                                <th>Weather</th>
                                 <th>Type</th>
                             </tr>
                         </thead>
@@ -1652,6 +1712,7 @@
 
             // ISO week calculation
             const yearWeekKey = getISOWeek(startLocal);
+            const weather = normalizeRideWeather(ride.weather);
 
             return {
                 ...ride,
@@ -1668,9 +1729,31 @@
                 frictionPct: elapsedDurationSec > 0 ? (stoppedDurationSec / elapsedDurationSec) * 100 : 0,
                 avgSpeedKph: (ride.average_speed || (ride.distance / movingDurationSec)) * 3.6,
                 avgHeartrate: Number.isFinite(ride.average_heartrate) ? ride.average_heartrate : null,
+                weather,
                 commuteType,
                 dayOfWeek,
                 yearWeekKey
+            };
+        }
+
+        function normalizeRideWeather(weather) {
+            if (!weather || typeof weather !== 'object') return null;
+
+            const tempC = Number.isFinite(weather.tempC) ? weather.tempC : null;
+            const feelsLikeC = Number.isFinite(weather.feelsLikeC) ? weather.feelsLikeC : null;
+            const precipMm = Number.isFinite(weather.precipMm) ? weather.precipMm : null;
+            const windKph = Number.isFinite(weather.windKph) ? weather.windKph : null;
+            const headwindKph = Number.isFinite(weather.headwindKph) ? weather.headwindKph : null;
+            const weatherCode = Number.isFinite(weather.weatherCode) ? weather.weatherCode : null;
+
+            return {
+                tempC,
+                feelsLikeC,
+                precipMm,
+                windKph,
+                headwindKph,
+                weatherCode,
+                tone: getWeatherTone({ precipMm, headwindKph }),
             };
         }
 
@@ -2012,6 +2095,121 @@
             const h = Math.floor(minutes / 60);
             const m = Math.round(minutes % 60);
             return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+
+        function getWeatherTone(weather) {
+            if (!weather) return 'unknown';
+            const precipMm = Number.isFinite(weather.precipMm) ? weather.precipMm : null;
+            const headwindKph = Number.isFinite(weather.headwindKph) ? weather.headwindKph : null;
+            const isWet = precipMm !== null && precipMm >= 0.2;
+            const hasHeadwind = headwindKph !== null && headwindKph >= 5;
+            const hasTailwind = headwindKph !== null && headwindKph <= -5;
+
+            if (isWet && (hasHeadwind || hasTailwind)) return 'mixed';
+            if (isWet) return 'wet';
+            if (hasHeadwind) return 'headwind';
+            if (hasTailwind) return 'tailwind';
+            return 'neutral';
+        }
+
+        function formatWeatherNumber(value, digits = 1) {
+            return Number.isFinite(value) ? Number(value).toFixed(digits).replace(/\.0$/, '') : null;
+        }
+
+        function describeWindEffect(weather) {
+            if (!weather || !Number.isFinite(weather.headwindKph)) return null;
+            if (weather.headwindKph >= 3) return `${formatWeatherNumber(weather.headwindKph, 0)} kph headwind`;
+            if (weather.headwindKph <= -3) return `${formatWeatherNumber(Math.abs(weather.headwindKph), 0)} kph tailwind`;
+            return weather.windKph != null ? `${formatWeatherNumber(weather.windKph, 0)} kph crosswind-ish` : 'Light wind';
+        }
+
+        function formatWeatherSummary(weather) {
+            if (!weather) return 'Weather unavailable';
+
+            const parts = [];
+            if (weather.feelsLikeC != null) {
+                parts.push(`${formatWeatherNumber(weather.feelsLikeC)}C feels like`);
+            } else if (weather.tempC != null) {
+                parts.push(`${formatWeatherNumber(weather.tempC)}C`);
+            }
+
+            if (weather.precipMm != null) {
+                parts.push(weather.precipMm >= 0.2 ? `${formatWeatherNumber(weather.precipMm)}mm rain` : 'Dry');
+            }
+
+            const windLabel = describeWindEffect(weather);
+            if (windLabel) parts.push(windLabel);
+
+            return parts.join(' · ') || 'Weather unavailable';
+        }
+
+        function formatWeatherTooltipLines(ride) {
+            if (!ride || !ride.weather) return ['Weather unavailable'];
+
+            const lines = [];
+            if (ride.weather.feelsLikeC != null || ride.weather.tempC != null) {
+                const label = ride.weather.feelsLikeC != null
+                    ? `Feels like ${formatWeatherNumber(ride.weather.feelsLikeC)}C`
+                    : `Temp ${formatWeatherNumber(ride.weather.tempC)}C`;
+                lines.push(label);
+            }
+
+            if (ride.weather.precipMm != null) {
+                lines.push(ride.weather.precipMm >= 0.2
+                    ? `Rain ${formatWeatherNumber(ride.weather.precipMm)}mm`
+                    : 'Dry road weather');
+            }
+
+            const windLabel = describeWindEffect(ride.weather);
+            if (windLabel) lines.push(windLabel);
+
+            return lines.length ? lines : ['Weather unavailable'];
+        }
+
+        function getWeatherPointColor(ride) {
+            switch (ride?.weather?.tone) {
+                case 'wet':
+                    return '#5fa8ff';
+                case 'headwind':
+                    return '#d49734';
+                case 'tailwind':
+                    return '#2aa177';
+                case 'mixed':
+                    return '#8a67c7';
+                case 'neutral':
+                    return '#9c978c';
+                default:
+                    return '#bbb4a9';
+            }
+        }
+
+        function renderSpeedWeatherInsights(rides, insightsDiv) {
+            const withWeather = rides.filter(r => r.weather);
+            if (withWeather.length === 0) {
+                insightsDiv.innerHTML = '';
+                return;
+            }
+
+            const wetRides = withWeather.filter(r => (r.weather.precipMm || 0) >= 0.2);
+            const dryRides = withWeather.filter(r => (r.weather.precipMm || 0) < 0.2);
+            const headwindRides = withWeather.filter(r => (r.weather.headwindKph || 0) >= 5);
+            const calmRides = withWeather.filter(r => Math.abs(r.weather.headwindKph || 0) < 3);
+            const notes = [];
+
+            if (wetRides.length >= 2 && dryRides.length >= 2) {
+                const wetAvg = wetRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / wetRides.length;
+                const dryAvg = dryRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / dryRides.length;
+                notes.push(`Wet rides average ${wetAvg.toFixed(1)} km/h vs ${dryAvg.toFixed(1)} km/h when dry.`);
+            }
+
+            if (headwindRides.length >= 2 && calmRides.length >= 2) {
+                const headwindAvg = headwindRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / headwindRides.length;
+                const calmAvg = calmRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / calmRides.length;
+                notes.push(`Headwind rides average ${headwindAvg.toFixed(1)} km/h vs ${calmAvg.toFixed(1)} km/h in calmer conditions.`);
+            }
+
+            notes.push('Points: blue wet, amber headwind, green tailwind.');
+            insightsDiv.innerHTML = notes.map(note => `<div class="insight-item"><span>${note}</span></div>`).join('');
         }
 
         // Utility: calculate circular mean for times (handles wraparound at midnight)
@@ -2498,7 +2696,11 @@
                     backgroundColor: 'rgba(135, 221, 198, 0.12)',
                     fill: false,
                     tension: 0.42,
-                    pointRadius: 0,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: sorted.map(getWeatherPointColor),
+                    pointBorderColor: '#f7f4ee',
+                    pointBorderWidth: 1.5,
                     borderWidth: 3,
                     yAxisID: 'y'
                 },
@@ -2545,7 +2747,13 @@
                             padding: 12,
                             cornerRadius: 8,
                             callbacks: {
-                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} km/h`
+                                label: (ctx) => {
+                                    const lines = [`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} km/h`];
+                                    if (ctx.datasetIndex === 0) {
+                                        lines.push(...formatWeatherTooltipLines(sorted[ctx.dataIndex]));
+                                    }
+                                    return lines;
+                                }
                             }
                         }
                     },
@@ -2585,7 +2793,7 @@
                 }
             });
 
-            insightsDiv.innerHTML = '';
+            renderSpeedWeatherInsights(sorted, insightsDiv);
         }
 
         function renderStreakCard(rides) {
@@ -2674,14 +2882,20 @@
                 const secs = r.durationSec % 60;
                 const time = `${mins}m ${secs}s`;
                 const speed = r.avgSpeedKph.toFixed(1) + ' km/h';
+                const weatherSummary = escapeHtml(formatWeatherSummary(r.weather));
+                const weather = `<span class="weather-pill ${r.weather ? r.weather.tone : 'unknown'}">${escapeHtml(formatWeatherSummary(r.weather))}</span>`;
                 const typeTag = `<span class="status-tag ${r.commuteType}">${r.commuteType.charAt(0).toUpperCase() + r.commuteType.slice(1)}</span>`;
 
                 return `<tr>
                     <td>${date}</td>
-                    <td>${r.name}</td>
+                    <td>
+                        <div class="table-primary">${escapeHtml(r.name)}</div>
+                        <div class="table-secondary table-weather-inline">${weatherSummary}</div>
+                    </td>
                     <td>${dist}</td>
                     <td>${time}</td>
                     <td>${speed}</td>
+                    <td>${weather}</td>
                     <td>${typeTag}</td>
                 </tr>`;
             }).join('');
