@@ -2,8 +2,9 @@ const fetch = require('node-fetch');
 const { getAccessToken, fetchRecentActivities } = require('../lib/strava');
 const { requireSiteAuth } = require('../lib/server-security');
 
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 const BATCH_SIZE = 10;
+const MAX_COMMUTE_RIDES = 260;
 let cached = null;
 let cacheTimestamp = null;
 
@@ -22,11 +23,12 @@ module.exports = async (req, res) => {
 
     const accessToken = await getAccessToken();
     const allActivities = await fetchRecentActivities(accessToken);
-    // Cap at the 75 most recent commute rides to stay within Strava's rate limits
+    // Pull enough commute rides to make the 12/6/3 month ranges meaningfully different.
+    // This endpoint is lazy-loaded and cached for longer, so a fuller yearly window is OK.
     const rides = allActivities
       .filter(a => a.type === 'Ride' && a.commute === true)
       .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
-      .slice(0, 75);
+      .slice(0, MAX_COMMUTE_RIDES);
 
     const segments = {};
     const efforts = [];
