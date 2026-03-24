@@ -405,43 +405,6 @@
             color: white;
         }
 
-        .weather-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 9px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
-            line-height: 1.2;
-            white-space: nowrap;
-        }
-
-        .weather-pill.wet {
-            background: #d9ecff;
-            color: #1f5f99;
-        }
-
-        .weather-pill.headwind {
-            background: #ffe5c3;
-            color: #9a5b05;
-        }
-
-        .weather-pill.tailwind {
-            background: #d8f0df;
-            color: #2d7b43;
-        }
-
-        .weather-pill.mixed {
-            background: #e7def6;
-            color: #5a3f8c;
-        }
-
-        .weather-pill.neutral,
-        .weather-pill.unknown {
-            background: #ebe7de;
-            color: #625f57;
-        }
-
         .status-tag.morning { background-color: #635bff; }
         .status-tag.evening { background-color: #2e7d32; }
         .status-tag.other { background-color: #8792a2; }
@@ -1414,7 +1377,11 @@
                 text-align: center;
             }
             th:nth-child(6),
-            td:nth-child(6) {
+            td:nth-child(6),
+            th:nth-child(7),
+            td:nth-child(7),
+            th:nth-child(8),
+            td:nth-child(8) {
                 display: none;
             }
             .table-weather-inline {
@@ -1507,7 +1474,9 @@
                                 <th>Distance</th>
                                 <th>Time</th>
                                 <th>Avg Speed</th>
-                                <th>Weather</th>
+                                <th>Temperature</th>
+                                <th>Wind</th>
+                                <th>Dry/Wet</th>
                                 <th>Type</th>
                             </tr>
                         </thead>
@@ -2143,6 +2112,33 @@
             return parts.join(' · ') || 'Weather unavailable';
         }
 
+        function formatTemperatureCell(weather) {
+            if (!weather) return '--';
+            if (weather.feelsLikeC != null) return `${formatWeatherNumber(weather.feelsLikeC)}C`;
+            if (weather.tempC != null) return `${formatWeatherNumber(weather.tempC)}C`;
+            return '--';
+        }
+
+        function formatWindCell(weather) {
+            if (!weather) return '--';
+            const windLabel = describeWindEffect(weather);
+            return windLabel || '--';
+        }
+
+        function formatSurfaceCell(weather) {
+            if (!weather || weather.precipMm == null) return '--';
+            return weather.precipMm >= 0.2 ? `${formatWeatherNumber(weather.precipMm)}mm rain` : 'Dry';
+        }
+
+        function formatWeatherInlineSummary(weather) {
+            if (!weather) return 'Weather unavailable';
+            return [
+                formatTemperatureCell(weather),
+                formatSurfaceCell(weather),
+                formatWindCell(weather)
+            ].join(' · ');
+        }
+
         function formatWeatherTooltipLines(ride) {
             if (!ride || !ride.weather) return ['Weather unavailable'];
 
@@ -2184,42 +2180,7 @@
         }
 
         function renderSpeedWeatherInsights(rides, insightsDiv) {
-            const withWeather = rides.filter(r => r.weather);
-            if (withWeather.length === 0) {
-                insightsDiv.innerHTML = '';
-                return;
-            }
-
-            const wetRides = withWeather.filter(r => (r.weather.precipMm || 0) >= 0.2);
-            const dryRides = withWeather.filter(r => (r.weather.precipMm || 0) < 0.2);
-            const headwindRides = withWeather.filter(r => (r.weather.headwindKph || 0) >= 5);
-            const calmRides = withWeather.filter(r => Math.abs(r.weather.headwindKph || 0) < 3);
-            const summaries = [];
-
-            if (wetRides.length >= 3 && dryRides.length >= 3) {
-                const wetAvg = wetRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / wetRides.length;
-                const dryAvg = dryRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / dryRides.length;
-                const delta = dryAvg - wetAvg;
-                if (Math.abs(delta) >= 0.5) {
-                    summaries.push(delta > 0
-                        ? `${delta.toFixed(1)} km/h slower in the wet`
-                        : `${Math.abs(delta).toFixed(1)} km/h quicker in the wet`);
-                }
-            }
-
-            if (headwindRides.length >= 3 && calmRides.length >= 3) {
-                const headwindAvg = headwindRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / headwindRides.length;
-                const calmAvg = calmRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / calmRides.length;
-                const delta = calmAvg - headwindAvg;
-                if (Math.abs(delta) >= 0.5) {
-                    summaries.push(delta > 0
-                        ? `${delta.toFixed(1)} km/h slower into a headwind`
-                        : `${Math.abs(delta).toFixed(1)} km/h quicker into a headwind`);
-                }
-            }
-
-            const lead = summaries[0] ? `${summaries[0]}. ` : '';
-            insightsDiv.innerHTML = `<div class="insight-item"><span>${lead}Blue = wet, amber = headwind, green = tailwind.</span></div>`;
+            insightsDiv.innerHTML = '';
         }
 
         // Utility: calculate circular mean for times (handles wraparound at midnight)
@@ -2892,8 +2853,10 @@
                 const secs = r.durationSec % 60;
                 const time = `${mins}m ${secs}s`;
                 const speed = r.avgSpeedKph.toFixed(1) + ' km/h';
-                const weatherSummary = escapeHtml(formatWeatherSummary(r.weather));
-                const weather = `<span class="weather-pill ${r.weather ? r.weather.tone : 'unknown'}">${escapeHtml(formatWeatherSummary(r.weather))}</span>`;
+                const weatherSummary = escapeHtml(formatWeatherInlineSummary(r.weather));
+                const temperature = escapeHtml(formatTemperatureCell(r.weather));
+                const wind = escapeHtml(formatWindCell(r.weather));
+                const surface = escapeHtml(formatSurfaceCell(r.weather));
                 const typeTag = `<span class="status-tag ${r.commuteType}">${r.commuteType.charAt(0).toUpperCase() + r.commuteType.slice(1)}</span>`;
 
                 return `<tr>
@@ -2905,7 +2868,9 @@
                     <td>${dist}</td>
                     <td>${time}</td>
                     <td>${speed}</td>
-                    <td>${weather}</td>
+                    <td>${temperature}</td>
+                    <td>${wind}</td>
+                    <td>${surface}</td>
                     <td>${typeTag}</td>
                 </tr>`;
             }).join('');
