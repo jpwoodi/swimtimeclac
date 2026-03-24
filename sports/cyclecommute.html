@@ -2194,22 +2194,32 @@
             const dryRides = withWeather.filter(r => (r.weather.precipMm || 0) < 0.2);
             const headwindRides = withWeather.filter(r => (r.weather.headwindKph || 0) >= 5);
             const calmRides = withWeather.filter(r => Math.abs(r.weather.headwindKph || 0) < 3);
-            const notes = [];
+            const summaries = [];
 
-            if (wetRides.length >= 2 && dryRides.length >= 2) {
+            if (wetRides.length >= 3 && dryRides.length >= 3) {
                 const wetAvg = wetRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / wetRides.length;
                 const dryAvg = dryRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / dryRides.length;
-                notes.push(`Wet rides average ${wetAvg.toFixed(1)} km/h vs ${dryAvg.toFixed(1)} km/h when dry.`);
+                const delta = dryAvg - wetAvg;
+                if (Math.abs(delta) >= 0.5) {
+                    summaries.push(delta > 0
+                        ? `${delta.toFixed(1)} km/h slower in the wet`
+                        : `${Math.abs(delta).toFixed(1)} km/h quicker in the wet`);
+                }
             }
 
-            if (headwindRides.length >= 2 && calmRides.length >= 2) {
+            if (headwindRides.length >= 3 && calmRides.length >= 3) {
                 const headwindAvg = headwindRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / headwindRides.length;
                 const calmAvg = calmRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / calmRides.length;
-                notes.push(`Headwind rides average ${headwindAvg.toFixed(1)} km/h vs ${calmAvg.toFixed(1)} km/h in calmer conditions.`);
+                const delta = calmAvg - headwindAvg;
+                if (Math.abs(delta) >= 0.5) {
+                    summaries.push(delta > 0
+                        ? `${delta.toFixed(1)} km/h slower into a headwind`
+                        : `${Math.abs(delta).toFixed(1)} km/h quicker into a headwind`);
+                }
             }
 
-            notes.push('Points: blue wet, amber headwind, green tailwind.');
-            insightsDiv.innerHTML = notes.map(note => `<div class="insight-item"><span>${note}</span></div>`).join('');
+            const lead = summaries[0] ? `${summaries[0]}. ` : '';
+            insightsDiv.innerHTML = `<div class="insight-item"><span>${lead}Blue = wet, amber = headwind, green = tailwind.</span></div>`;
         }
 
         // Utility: calculate circular mean for times (handles wraparound at midnight)
