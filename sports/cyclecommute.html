@@ -784,6 +784,38 @@
             background: #fff;
         }
 
+        .hills-shell {
+            max-width: 1200px;
+            margin: 24px auto 0;
+            padding: 0 24px;
+        }
+
+        .hill-map-header,
+        .hill-chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .hill-map-copy,
+        .hill-chart-copy {
+            min-width: 0;
+            flex: 1 1 240px;
+        }
+
+        .segment-strava-link {
+            font-size: 12px;
+            color: #635bff;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 2px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
         .range-toggle {
             display: inline-flex;
             align-items: center;
@@ -792,6 +824,8 @@
             background: #f6f9fc;
             border: 1px solid #e3e8ee;
             border-radius: 999px;
+            max-width: 100%;
+            flex-wrap: wrap;
         }
 
         .range-chip {
@@ -1253,7 +1287,8 @@
             .page-header,
             .dashboard-shell,
             .table-section,
-            .section-tabs {
+            .section-tabs,
+            .hills-shell {
                 padding-left: 18px;
                 padding-right: 18px;
             }
@@ -1304,6 +1339,33 @@
             .timing-layout {
                 grid-template-columns: 1fr;
                 gap: 24px;
+            }
+            .hill-controls select {
+                max-width: none;
+            }
+            .hill-map-header,
+            .hill-chart-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .segment-strava-link {
+                white-space: normal;
+            }
+            .range-toggle {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                border-radius: 18px;
+                width: 100%;
+            }
+            .range-chip {
+                width: 100%;
+                text-align: center;
+            }
+            #segment-map {
+                height: 260px !important;
+            }
+            #hill-chart-card .chart-container {
+                height: 260px !important;
             }
             .photo-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
             .lightbox-prev { left: 8px; }
@@ -1422,7 +1484,7 @@
     </div>
 
     <div id="hills-section" style="display:none;">
-        <div style="max-width:1200px; margin:24px auto 0; padding:0 24px;">
+        <div class="hills-shell">
             <div id="hills-loading" class="loading" style="display:none;">
                 <div class="spinner"></div>
                 Loading segment data (this may take a moment on first load)...
@@ -1439,13 +1501,12 @@
                 </div>
 
                 <div class="chart-card" id="segment-map-card" style="display:none; margin-bottom:24px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-                        <div>
+                    <div class="hill-map-header">
+                        <div class="hill-map-copy">
                             <h3 id="segment-map-title" style="margin:0; font-size:16px; font-weight:600; color:#1a1f36;"></h3>
                             <p id="segment-map-meta" style="font-size:13px; color:#697386; margin:4px 0 0;"></p>
                         </div>
-                        <a id="segment-strava-link" href="#" target="_blank" rel="noopener noreferrer"
-                           style="font-size:12px; color:#635bff; text-decoration:none; font-weight:500; margin-top:2px; white-space:nowrap;">
+                        <a id="segment-strava-link" class="segment-strava-link" href="#" target="_blank" rel="noopener noreferrer">
                             View on Strava →
                         </a>
                     </div>
@@ -1474,8 +1535,8 @@
                 </div>
 
                 <div class="chart-card" id="hill-chart-card" style="display:none; margin-top:24px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-                        <div>
+                    <div class="hill-chart-header">
+                        <div class="hill-chart-copy">
                             <h3 id="hill-chart-title" style="margin:0;">Segment Time Over Date</h3>
                             <p id="hill-chart-coverage" style="margin:6px 0 0; font-size:13px; color:#697386;"></p>
                         </div>
