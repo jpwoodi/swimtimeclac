@@ -5,6 +5,12 @@ const {
   getAuthCookie,
   verifySessionToken,
 } = require("../lib/auth-utils");
+const {
+  consumeLoginAttempt,
+  requireSameOriginWrite,
+  resetLoginAttempts,
+  secureCompareString,
+} = require("../lib/server-security");
 
 module.exports = async (req, res) => {
   if (req.method === "OPTIONS") {
@@ -51,6 +57,10 @@ async function handleLogin(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!requireSameOriginWrite(req, res)) {
+    return;
+  }
+
   const authEnabled = process.env.AUTH_ENABLED !== "false";
   if (!authEnabled) {
     return res.status(200).json({ ok: true, authEnabled: false, bypassed: true });
@@ -65,10 +75,17 @@ async function handleLogin(req, res) {
   const body = req.body || {};
   const password = typeof body.password === "string" ? body.password : "";
 
-  if (!password || password !== expectedPassword) {
+  const rateLimit = consumeLoginAttempt(req);
+  if (rateLimit.limited) {
+    res.setHeader("Retry-After", String(rateLimit.retryAfterSec));
+    return res.status(429).json({ error: "Too many login attempts. Try again later.", authEnabled: true });
+  }
+
+  if (!password || !secureCompareString(password, expectedPassword)) {
     return res.status(401).json({ error: "Invalid password", authEnabled: true });
   }
 
+  resetLoginAttempts(req);
   const token = createSessionToken(sessionSecret);
   res.setHeader("Set-Cookie", buildCookie(token, req.headers));
   res.setHeader("Cache-Control", "no-store");
@@ -78,6 +95,10 @@ async function handleLogin(req, res) {
 async function handleLogout(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSameOriginWrite(req, res)) {
+    return;
   }
 
   const authEnabled = process.env.AUTH_ENABLED !== "false";

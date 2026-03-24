@@ -1,11 +1,16 @@
 const fetch = require('node-fetch');
 const { getAccessToken } = require('../lib/strava');
+const { requireSiteAuth } = require('../lib/server-security');
 
 // Segment routes don't change, cache for 24 hours
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 const cache = {};
 
 module.exports = async (req, res) => {
+  if (!requireSiteAuth(req, res)) {
+    return;
+  }
+
   const segmentId = req.query.id;
   if (!segmentId) {
     return res.status(400).json({ error: 'Missing segment id' });

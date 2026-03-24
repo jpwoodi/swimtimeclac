@@ -5,6 +5,7 @@ const {
   isBlobConfigured,
   readCommuteSnapshot,
 } = require('../lib/commute-snapshot');
+const { requireSiteAuth } = require('../lib/server-security');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
@@ -13,6 +14,10 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!requireSiteAuth(req, res)) {
+    return;
   }
 
   const shouldRefresh = req.query?.refresh === 'true';

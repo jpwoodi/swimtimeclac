@@ -1,5 +1,3 @@
-const crypto = require('crypto');
-const { getAuthCookie, verifySessionToken } = require('../lib/auth-utils');
 const {
   COMMUTE_SNAPSHOT_PATH,
   getSnapshotRides,
@@ -7,51 +5,24 @@ const {
   readCommuteSnapshot,
   syncCommuteSnapshot,
 } = require('../lib/commute-snapshot');
-
-function getHeader(headers, name) {
-  if (!headers) return '';
-  const lower = name.toLowerCase();
-  for (const key of Object.keys(headers)) {
-    if (key.toLowerCase() === lower) {
-      return headers[key] || '';
-    }
-  }
-  return '';
-}
-
-function safeEqual(left, right) {
-  const leftBuf = Buffer.from(left);
-  const rightBuf = Buffer.from(right);
-  if (leftBuf.length !== rightBuf.length) return false;
-  return crypto.timingSafeEqual(leftBuf, rightBuf);
-}
+const {
+  allowSecretBearer,
+  isAuthenticatedSiteRequest,
+  requireSameOriginWrite,
+} = require('../lib/server-security');
 
 function matchesSharedSecret(req) {
-  const expected = process.env.COMMUTE_SYNC_SECRET || process.env.CRON_SECRET;
-  if (!expected) return false;
-
-  const providedHeader = getHeader(req.headers, 'authorization');
-  if (providedHeader && safeEqual(providedHeader, `Bearer ${expected}`)) {
-    return true;
-  }
-
-  const providedQuery = typeof req.query?.secret === 'string' ? req.query.secret : '';
-  return providedQuery ? safeEqual(providedQuery, expected) : false;
-}
-
-function hasValidSession(req) {
-  const authEnabled = process.env.AUTH_ENABLED !== 'false';
-  if (!authEnabled) return true;
-
-  const sessionSecret = process.env.AUTH_SESSION_SECRET;
-  if (!sessionSecret) return false;
-
-  const token = getAuthCookie(req.headers);
-  return verifySessionToken(token, sessionSecret);
+  return (
+    allowSecretBearer(req, process.env.COMMUTE_SYNC_SECRET) ||
+    allowSecretBearer(req, process.env.CRON_SECRET)
+  );
 }
 
 function isAuthorized(req) {
-  return matchesSharedSecret(req) || hasValidSession(req);
+  if (req.method === 'GET') {
+    return matchesSharedSecret(req);
+  }
+  return matchesSharedSecret(req) || isAuthenticatedSiteRequest(req);
 }
 
 module.exports = async (req, res) => {
@@ -65,8 +36,12 @@ module.exports = async (req, res) => {
 
   if (!isAuthorized(req)) {
     return res.status(401).json({
-      error: 'Unauthorized. Provide a valid session, COMMUTE_SYNC_SECRET, or CRON_SECRET.',
+      error: 'Unauthorized. Provide a valid session or bearer secret.',
     });
+  }
+
+  if (req.method === 'POST' && !matchesSharedSecret(req) && !requireSameOriginWrite(req, res)) {
+    return;
   }
 
   if (!isBlobConfigured()) {
@@ -80,7 +55,7 @@ module.exports = async (req, res) => {
     const beforeRideCount = getSnapshotRides(beforeSnapshot).length;
 
     const { snapshot, blob } = await syncCommuteSnapshot({
-      source: req.method === 'POST' ? 'manual-post' : 'manual-get',
+      source: req.method === 'POST' ? 'manual-post' : 'cron-get',
     });
 
     return res.status(200).json({

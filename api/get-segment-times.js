@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { getAccessToken, fetchRecentActivities } = require('../lib/strava');
+const { requireSiteAuth } = require('../lib/server-security');
 
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 const BATCH_SIZE = 10;
@@ -9,6 +10,10 @@ let cacheTimestamp = null;
 module.exports = async (req, res) => {
   const now = Date.now();
   const forceRefresh = req.query?.refresh === 'true';
+
+  if (!requireSiteAuth(req, res)) {
+    return;
+  }
 
   try {
     if (!forceRefresh && cacheTimestamp !== null && (now - cacheTimestamp < CACHE_DURATION)) {

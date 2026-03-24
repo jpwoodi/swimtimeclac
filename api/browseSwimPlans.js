@@ -1,4 +1,5 @@
 const { loadTemplates } = require('../lib/templates');
+const { requireSiteAuth } = require('../lib/server-security');
 
 // Filter templates based on query parameters
 function filterTemplates(templates, filters) {
@@ -158,6 +159,10 @@ function getFilterOptions(templates) {
 }
 
 module.exports = async (req, res) => {
+    if (!requireSiteAuth(req, res)) {
+        return;
+    }
+
     // Support GET requests
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });

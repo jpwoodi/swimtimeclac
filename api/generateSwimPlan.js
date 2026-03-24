@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const { loadTemplates } = require("../lib/templates");
+const { requireSameOriginWrite, requireSiteAuth } = require("../lib/server-security");
 
 const TEMPLATE_TYPES = ["mileage", "im", "fast", "kitchen_sink"];
 const FOCUS_TYPE_LABELS = {
@@ -530,6 +531,10 @@ function shouldIncludeDebugMeta(headers, parsed) {
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res) || !requireSameOriginWrite(req, res)) {
+    return;
   }
 
   const parsed = req.body || {};

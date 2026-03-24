@@ -1,6 +1,11 @@
 const fetch = require('node-fetch');
+const { requireSiteAuth } = require('../lib/server-security');
 
 module.exports = async (req, res) => {
+    if (!requireSiteAuth(req, res)) {
+        return;
+    }
+
     const baseId = process.env.AIRTABLE_BASE_ID;
     const token = process.env.AIRTABLE_TOKEN;
     const tableName = 'SwimmingPools';

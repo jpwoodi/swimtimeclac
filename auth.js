@@ -7,7 +7,15 @@
   const DEFAULT_AUTH_STATE = { authenticated: false, authEnabled: true };
 
   function isSafeRedirect(target) {
-    return typeof target === "string" && target.startsWith("/");
+    if (typeof target !== "string") return false;
+    if (!target.startsWith("/") || target.startsWith("//")) return false;
+
+    try {
+      const url = new URL(target, window.location.origin);
+      return url.origin === window.location.origin && !url.pathname.startsWith("//");
+    } catch {
+      return false;
+    }
   }
 
   function getRedirectTarget() {
