@@ -8,6 +8,11 @@ const {
 } = require('../lib/commute-snapshot');
 const { requireSiteAuth } = require('../lib/server-security');
 
+function needsWeatherEnrichment(rides) {
+  if (!Array.isArray(rides) || rides.length === 0) return false;
+  return rides.some((ride) => !ride || !ride.weather);
+}
+
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     return res.status(200).json({ ok: true });
@@ -29,11 +34,15 @@ module.exports = async (req, res) => {
       const snapshotRides = getSnapshotRides(snapshot);
 
       if (snapshotRides.length > 0) {
-        res.setHeader('X-Commute-Data-Source', 'blob');
+        const ridesToReturn = needsWeatherEnrichment(snapshotRides)
+          ? await enrichRidesWithWeather(snapshotRides)
+          : snapshotRides;
+
+        res.setHeader('X-Commute-Data-Source', needsWeatherEnrichment(snapshotRides) ? 'blob-enriched' : 'blob');
         if (snapshot && snapshot.generatedAt) {
           res.setHeader('X-Commute-Generated-At', snapshot.generatedAt);
         }
-        return res.status(200).json(snapshotRides);
+        return res.status(200).json(ridesToReturn);
       }
     }
 
@@ -54,11 +63,15 @@ module.exports = async (req, res) => {
       const snapshotRides = getSnapshotRides(snapshot);
 
       if (snapshotRides.length > 0) {
-        res.setHeader('X-Commute-Data-Source', 'blob-stale');
+        const ridesToReturn = needsWeatherEnrichment(snapshotRides)
+          ? await enrichRidesWithWeather(snapshotRides)
+          : snapshotRides;
+
+        res.setHeader('X-Commute-Data-Source', needsWeatherEnrichment(snapshotRides) ? 'blob-stale-enriched' : 'blob-stale');
         if (snapshot && snapshot.generatedAt) {
           res.setHeader('X-Commute-Generated-At', snapshot.generatedAt);
         }
-        return res.status(200).json(snapshotRides);
+        return res.status(200).json(ridesToReturn);
       }
     } catch (snapshotError) {
       console.error('Error reading fallback snapshot:', snapshotError);

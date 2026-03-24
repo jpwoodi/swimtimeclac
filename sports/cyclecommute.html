@@ -1875,12 +1875,12 @@
             const formatted = formatSyncTimestamp(generatedAt);
             pageUpdated.textContent = formatUpdatedDate(generatedAt);
 
-            if (dataSource === 'blob' && formatted) {
+            if ((dataSource === 'blob' || dataSource === 'blob-enriched') && formatted) {
                 setRefreshStatus(`Snapshot synced ${formatted}.`, 'success');
                 return;
             }
 
-            if (dataSource === 'blob-stale' && formatted) {
+            if ((dataSource === 'blob-stale' || dataSource === 'blob-stale-enriched') && formatted) {
                 setRefreshStatus(`Showing stored snapshot from ${formatted}.`);
                 return;
             }
