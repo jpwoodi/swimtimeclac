@@ -3,11 +3,19 @@
     {
       "path": "/api/sync-commute-rides",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/sync-segment-times",
+      "schedule": "15 4 * * *"
     }
   ],
   "functions": {
     "api/get-segment-times.js": {
       "maxDuration": 60,
+      "includeFiles": "data/**"
+    },
+    "api/sync-segment-times.js": {
+      "maxDuration": 300,
       "includeFiles": "data/**"
     },
     "api/**/*.js": {

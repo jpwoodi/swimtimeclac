@@ -1026,11 +1026,15 @@
 
                 <div class="chart-card" id="hill-chart-card" style="display:none; margin-top:24px;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
-                        <h3 id="hill-chart-title" style="margin:0;">Segment Time Over Date</h3>
+                        <div>
+                            <h3 id="hill-chart-title" style="margin:0;">Segment Time Over Date</h3>
+                            <p id="hill-chart-coverage" style="margin:6px 0 0; font-size:13px; color:#697386;"></p>
+                        </div>
                         <div class="range-toggle" id="hill-range-toggle" aria-label="Segment chart time range">
-                            <button class="range-chip active" type="button" data-hill-range="12">Last year</button>
-                            <button class="range-chip" type="button" data-hill-range="6">Last 6 months</button>
-                            <button class="range-chip" type="button" data-hill-range="3">Last 3 months</button>
+                            <button class="range-chip active" type="button" data-hill-range="all">All time</button>
+                            <button class="range-chip" type="button" data-hill-range="12m">Last year</button>
+                            <button class="range-chip" type="button" data-hill-range="6m">Last 6 months</button>
+                            <button class="range-chip" type="button" data-hill-range="3m">Last 3 months</button>
                         </div>
                     </div>
                     <div class="chart-container" style="height:300px;">
@@ -1080,7 +1084,7 @@
         let hillChartInstance = null;
         let segmentMapInstance = null;
         let segmentPolylineLayer = null;
-        let currentHillRangeMonths = 12;
+        let currentHillRangeKey = 'all';
         let currentHillSegmentId = null;
         const HILL_STORAGE_KEY = 'cyclecommute_selected_segment';
         const HILL_RANGE_STORAGE_KEY = 'cyclecommute_selected_hill_range';
@@ -1208,10 +1212,39 @@
             return Number(value).toLocaleString('en-GB', options);
         }
 
-        function formatHillRangeLabel(months) {
-            if (months === 12) return 'Last year';
-            if (months === 6) return 'Last 6 months';
+        function getRelativeDate({ months = 0, weeks = 0 }) {
+            const date = new Date();
+            date.setHours(0, 0, 0, 0);
+            if (months) {
+                date.setMonth(date.getMonth() - months);
+            }
+            if (weeks) {
+                date.setDate(date.getDate() - (weeks * 7));
+            }
+            return date;
+        }
+
+        function formatHillRangeLabel(rangeKey) {
+            if (rangeKey === 'all') return 'All time';
+            if (rangeKey === '12m') return 'Last year';
+            if (rangeKey === '6m') return 'Last 6 months';
             return 'Last 3 months';
+        }
+
+        function formatCoverageLabel(date) {
+            return date.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function getHillCoverageText(efforts) {
+            const base = `Available effort history: ${formatCoverageLabel(new Date(efforts[0].activityDate))} to ${formatCoverageLabel(new Date(efforts[efforts.length - 1].activityDate))}`;
+            if (hillData && Number.isFinite(hillData.pendingRideCount) && hillData.pendingRideCount > 0) {
+                return `${base} · Backfill in progress (${hillData.syncedRideCount}/${hillData.activityCount} commute rides synced)`;
+            }
+            return base;
         }
 
         function formatSyncTimestamp(isoString) {
@@ -2235,17 +2268,27 @@
             return m > 0 ? m + 'm ' + s + 's' : s + 's';
         }
 
-        function filterEffortsByRange(efforts, months) {
-            const cutoff = new Date();
-            cutoff.setHours(0, 0, 0, 0);
-            cutoff.setMonth(cutoff.getMonth() - months);
+        function filterEffortsByRange(efforts, rangeKey) {
+            if (rangeKey === 'all') {
+                return efforts;
+            }
+
+            let cutoff = null;
+            if (rangeKey === '12m') cutoff = getRelativeDate({ months: 12 });
+            if (rangeKey === '6m') cutoff = getRelativeDate({ months: 6 });
+            if (rangeKey === '3m') cutoff = getRelativeDate({ months: 3 });
+            if (rangeKey === '6w') cutoff = getRelativeDate({ weeks: 6 });
+
+            if (!cutoff) {
+                return efforts;
+            }
 
             return efforts.filter(effort => new Date(effort.activityDate) >= cutoff);
         }
 
         function updateHillRangeButtons() {
             document.querySelectorAll('[data-hill-range]').forEach(btn => {
-                const isActive = Number(btn.dataset.hillRange) === currentHillRangeMonths;
+                const isActive = btn.dataset.hillRange === currentHillRangeKey;
                 btn.classList.toggle('active', isActive);
             });
         }
@@ -2339,9 +2382,11 @@
                 'Last 5 avg: ' + formatDuration(Math.round(last5Avg)) + ' (' + (trendPct > 0 ? '+' : '') + trendPct + '%)';
 
             document.getElementById('hill-stats').style.display = 'flex';
+            document.getElementById('hill-chart-coverage').textContent = getHillCoverageText(efforts);
+            updateHillRangeButtons();
 
             fetchAndRenderSegmentMap(segmentId);
-            renderHillChart(filterEffortsByRange(efforts, currentHillRangeMonths));
+            renderHillChart(filterEffortsByRange(efforts, currentHillRangeKey));
         }
 
         // Client-side cache for segment detail (polyline etc.) – persists across selections
@@ -2457,7 +2502,7 @@
         function renderHillChart(efforts) {
             if (hillChartInstance) hillChartInstance.destroy();
             document.getElementById('hill-chart-card').style.display = '';
-            document.getElementById('hill-chart-title').textContent = `Segment Time Over Date · ${formatHillRangeLabel(currentHillRangeMonths)}`;
+            document.getElementById('hill-chart-title').textContent = `Segment Time Over Date · ${formatHillRangeLabel(currentHillRangeKey)}`;
 
             const canvas = document.getElementById('hillChart');
             const emptyState = document.getElementById('hill-chart-empty');
@@ -2560,17 +2605,17 @@
 
         // Auto-load on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const savedHillRange = Number(localStorage.getItem(HILL_RANGE_STORAGE_KEY));
-            if ([12, 6, 3].includes(savedHillRange)) {
-                currentHillRangeMonths = savedHillRange;
+            const savedHillRange = localStorage.getItem(HILL_RANGE_STORAGE_KEY);
+            if (['all', '12m', '6m', '3m'].includes(savedHillRange)) {
+                currentHillRangeKey = savedHillRange;
             }
 
             document.querySelectorAll('[data-hill-range]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const nextRange = Number(btn.dataset.hillRange);
-                    if (!Number.isFinite(nextRange) || nextRange === currentHillRangeMonths) return;
-                    currentHillRangeMonths = nextRange;
-                    localStorage.setItem(HILL_RANGE_STORAGE_KEY, String(nextRange));
+                    const nextRange = btn.dataset.hillRange;
+                    if (!nextRange || nextRange === currentHillRangeKey) return;
+                    currentHillRangeKey = nextRange;
+                    localStorage.setItem(HILL_RANGE_STORAGE_KEY, nextRange);
                     updateHillRangeButtons();
                     if (currentHillSegmentId) {
                         renderSegmentView(currentHillSegmentId);

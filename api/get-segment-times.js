@@ -5,6 +5,10 @@ const {
   fetchRecentActivities,
   getNextQuarterHourIso,
 } = require('../lib/strava');
+const {
+  getSnapshotSegmentPayload,
+  readSegmentSnapshot,
+} = require('../lib/segment-snapshot');
 const { requireSiteAuth } = require('../lib/server-security');
 
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
@@ -22,7 +26,21 @@ module.exports = async (req, res) => {
   }
 
   try {
+    if (!forceRefresh) {
+      const snapshot = await readSegmentSnapshot();
+      const snapshotPayload = getSnapshotSegmentPayload(snapshot);
+
+      if (snapshotPayload.efforts.length > 0) {
+        res.setHeader('X-Segment-Data-Source', 'blob');
+        if (snapshot && snapshot.generatedAt) {
+          res.setHeader('X-Segment-Generated-At', snapshot.generatedAt);
+        }
+        return res.status(200).json(snapshotPayload);
+      }
+    }
+
     if (!forceRefresh && cacheTimestamp !== null && (now - cacheTimestamp < CACHE_DURATION)) {
+      res.setHeader('X-Segment-Data-Source', 'strava-cache');
       return res.status(200).json(cached);
     }
 
@@ -74,12 +92,29 @@ module.exports = async (req, res) => {
 
     cached = { segments, efforts };
     cacheTimestamp = now;
+    res.setHeader('X-Segment-Data-Source', 'strava-live');
     res.status(200).json(cached);
   } catch (error) {
     console.error('Error fetching segment times:', error);
     if (cacheTimestamp !== null) {
+      res.setHeader('X-Segment-Data-Source', 'strava-cache-stale');
       return res.status(200).json(cached);
     }
+
+    try {
+      const snapshot = await readSegmentSnapshot();
+      const snapshotPayload = getSnapshotSegmentPayload(snapshot);
+      if (snapshotPayload.efforts.length > 0) {
+        res.setHeader('X-Segment-Data-Source', 'blob-stale');
+        if (snapshot && snapshot.generatedAt) {
+          res.setHeader('X-Segment-Generated-At', snapshot.generatedAt);
+        }
+        return res.status(200).json(snapshotPayload);
+      }
+    } catch (snapshotError) {
+      console.error('Error reading fallback segment snapshot:', snapshotError);
+    }
+
     if (error && error.code === 'STRAVA_RATE_LIMIT') {
       res.setHeader('Retry-After', new Date(getNextQuarterHourIso()).toUTCString());
       return res.status(429).json({
