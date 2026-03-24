@@ -10,6 +10,7 @@ const {
   isAuthenticatedSiteRequest,
   requireSameOriginWrite,
 } = require('../lib/server-security');
+const { buildRateLimitMessage, getNextQuarterHourIso } = require('../lib/strava');
 
 function matchesSharedSecret(req) {
   return (
@@ -69,6 +70,12 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error('Error syncing commute rides snapshot:', error);
+    if (error && error.code === 'STRAVA_RATE_LIMIT') {
+      res.setHeader('Retry-After', new Date(getNextQuarterHourIso()).toUTCString());
+      return res.status(429).json({
+        error: `${buildRateLimitMessage()} Your current stored commute snapshot is still available.`,
+      });
+    }
     return res.status(500).json({ error: 'Failed to sync commute rides snapshot' });
   }
 };

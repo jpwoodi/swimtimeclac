@@ -1,10 +1,15 @@
 const fetch = require('node-fetch');
-const { getAccessToken, fetchRecentActivities } = require('../lib/strava');
+const {
+  buildRateLimitMessage,
+  getAccessToken,
+  fetchRecentActivities,
+  getNextQuarterHourIso,
+} = require('../lib/strava');
 const { requireSiteAuth } = require('../lib/server-security');
 
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
 const BATCH_SIZE = 10;
-const MAX_COMMUTE_RIDES = 260;
+const MAX_COMMUTE_RIDES = 90;
 let cached = null;
 let cacheTimestamp = null;
 
@@ -23,8 +28,8 @@ module.exports = async (req, res) => {
 
     const accessToken = await getAccessToken();
     const allActivities = await fetchRecentActivities(accessToken);
-    // Pull enough commute rides to make the 12/6/3 month ranges meaningfully different.
-    // This endpoint is lazy-loaded and cached for longer, so a fuller yearly window is OK.
+    // Stay under Strava's short-term read cap: 1 activity-list request + up to 90 detail requests.
+    // This still gives enough history for the 12/6/3 month toggle without breaking the endpoint.
     const rides = allActivities
       .filter(a => a.type === 'Ride' && a.commute === true)
       .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
@@ -74,6 +79,12 @@ module.exports = async (req, res) => {
     console.error('Error fetching segment times:', error);
     if (cacheTimestamp !== null) {
       return res.status(200).json(cached);
+    }
+    if (error && error.code === 'STRAVA_RATE_LIMIT') {
+      res.setHeader('Retry-After', new Date(getNextQuarterHourIso()).toUTCString());
+      return res.status(429).json({
+        error: buildRateLimitMessage(),
+      });
     }
     res.status(500).json({ error: 'Failed to fetch segment times' });
   }
