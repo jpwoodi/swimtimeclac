@@ -26,6 +26,17 @@
             padding: 32px 24px 0;
         }
 
+        .page-header-bar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .page-header-copy {
+            min-width: 0;
+        }
+
         .page-header h1 {
             font-size: 28px;
             font-weight: 700;
@@ -37,6 +48,52 @@
             color: #697386;
             font-size: 15px;
             margin-top: 4px;
+        }
+
+        .page-header-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .refresh-button {
+            padding: 8px 14px;
+            background: #fff;
+            color: #4f5b76;
+            border: 1px solid #d6dee8;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .refresh-button:hover {
+            border-color: #635bff;
+            color: #635bff;
+        }
+
+        .refresh-button:disabled {
+            cursor: wait;
+            opacity: 0.7;
+        }
+
+        .refresh-status {
+            min-height: 18px;
+            font-size: 12px;
+            color: #8792a2;
+            text-align: right;
+        }
+
+        .refresh-status.success {
+            color: #2e7d32;
+        }
+
+        .refresh-status.error {
+            color: #c62828;
         }
 
         /* Stats row */
@@ -152,6 +209,11 @@
             padding: 24px;
         }
 
+        .heatmap-card {
+            display: flex;
+            flex-direction: column;
+        }
+
         .chart-card-wide {
             grid-column: span 1;
         }
@@ -178,6 +240,13 @@
             height: auto;
             min-height: 0;
             overflow: hidden;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .heatmap-card #heatmapContainer {
+            width: 100%;
         }
 
         /* Insights */
@@ -722,6 +791,17 @@
         }
 
         @media (max-width: 768px) {
+            .page-header-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .page-header-actions {
+                width: 100%;
+                align-items: flex-start;
+            }
+            .refresh-status {
+                text-align: left;
+            }
             .stats-row { flex-direction: column; }
             .chart-grid-row1 { grid-template-columns: 1fr; }
             .chart-grid-row2 { grid-template-columns: 1fr; }
@@ -740,8 +820,16 @@
 <body>
 
     <div class="page-header">
-        <h1>Cycle Commute</h1>
-        <p>Your cycle commute data and savings</p>
+        <div class="page-header-bar">
+            <div class="page-header-copy">
+                <h1>Cycle Commute</h1>
+                <p>Your cycle commute data and savings</p>
+            </div>
+            <div class="page-header-actions">
+                <button class="refresh-button" id="refresh-commute-btn" type="button">Refresh data</button>
+                <div class="refresh-status" id="refresh-status"></div>
+            </div>
+        </div>
     </div>
 
     <div class="section-tabs" id="section-tabs" style="display:none;">
@@ -768,7 +856,7 @@
                 </div>
                 <div class="insights" id="boxPlotInsights"></div>
             </div>
-            <div class="chart-card">
+            <div class="chart-card heatmap-card">
                 <h3>Weekly Commute Pattern</h3>
                 <div class="chart-container heatmap-chart-container">
                     <div id="heatmapContainer"></div>
@@ -941,6 +1029,8 @@
         let segmentMapInstance = null;
         let segmentPolylineLayer = null;
         const HILL_STORAGE_KEY = 'cyclecommute_selected_segment';
+        const refreshButton = document.getElementById('refresh-commute-btn');
+        const refreshStatus = document.getElementById('refresh-status');
 
         // Section tab switching
         document.querySelectorAll('.section-tab').forEach(btn => {
@@ -1063,6 +1153,46 @@
             return Number(value).toLocaleString('en-GB', options);
         }
 
+        function formatSyncTimestamp(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            if (Number.isNaN(date.getTime())) return '';
+            return date.toLocaleString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function setRefreshStatus(message, tone = '') {
+            refreshStatus.textContent = message || '';
+            refreshStatus.className = tone ? `refresh-status ${tone}` : 'refresh-status';
+        }
+
+        function updateRefreshStatusFromResponse(response) {
+            const generatedAt = response.headers.get('X-Commute-Generated-At');
+            const dataSource = response.headers.get('X-Commute-Data-Source');
+            const formatted = formatSyncTimestamp(generatedAt);
+
+            if (dataSource === 'blob' && formatted) {
+                setRefreshStatus(`Snapshot synced ${formatted}.`, 'success');
+                return;
+            }
+
+            if (dataSource === 'blob-stale' && formatted) {
+                setRefreshStatus(`Showing stored snapshot from ${formatted}.`);
+                return;
+            }
+
+            if (formatted) {
+                setRefreshStatus(`Live Strava fallback at ${formatted}.`);
+                return;
+            }
+
+            setRefreshStatus('');
+        }
+
         function getFareBandForDate(date) {
             const timestamp = date.getTime();
             for (const fareBand of TUBE_FARE_TABLE) {
@@ -1129,10 +1259,14 @@
             }
         }
 
-        async function fetchCommutes() {
+        async function fetchCommutes(options = {}) {
+            const { showLoading = true } = options;
             const loading = document.getElementById('loading-area');
-            loading.style.display = 'block';
-            loading.innerHTML = '<div class="spinner"></div>Loading commute data...';
+
+            if (showLoading) {
+                loading.style.display = 'block';
+                loading.innerHTML = '<div class="spinner"></div>Loading commute data...';
+            }
 
             try {
                 const response = await fetch(COMMUTES_ENDPOINT);
@@ -1154,12 +1288,44 @@
                 normalizedRides = allRides.map(normalizeRide);
 
                 document.getElementById('section-tabs').style.display = 'flex';
+                updateRefreshStatusFromResponse(response);
 
                 // Render everything
                 renderDashboard();
             } catch (err) {
                 console.error('Error:', err);
                 loading.innerHTML = `<p>Something went wrong: ${err.message}</p>`;
+                setRefreshStatus('Refresh failed.', 'error');
+            }
+        }
+
+        async function refreshCommuteData() {
+            if (refreshButton.disabled) return;
+
+            refreshButton.disabled = true;
+            refreshButton.textContent = 'Refreshing...';
+            setRefreshStatus('Updating commute snapshot...');
+
+            try {
+                const response = await fetch('/api/sync-commute-rides', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+                const data = await parseJsonResponse(response);
+
+                if (!response.ok || data.error) {
+                    throw new Error(data && data.error ? data.error : 'Unable to refresh commute data.');
+                }
+
+                await fetchCommutes({ showLoading: false });
+                const formatted = formatSyncTimestamp(data.generatedAt);
+                setRefreshStatus(formatted ? `Snapshot updated ${formatted}.` : 'Snapshot updated.', 'success');
+            } catch (err) {
+                console.error('Refresh error:', err);
+                setRefreshStatus(err.message, 'error');
+            } finally {
+                refreshButton.disabled = false;
+                refreshButton.textContent = 'Refresh data';
             }
         }
 
@@ -2302,7 +2468,10 @@
         }
 
         // Auto-load on page load
-        document.addEventListener('DOMContentLoaded', fetchCommutes);
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshButton.addEventListener('click', refreshCommuteData);
+            fetchCommutes();
+        });
     </script>
 </body>
 </html>
