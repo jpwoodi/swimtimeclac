@@ -1,6 +1,8 @@
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
   var path = window.location.pathname;
+  var SPORTS_SUBNAV_STORAGE_KEY = 'sportsSubNavCollapsed';
+  var CONTENT_TOP_GAP = 24;
 
   var topLinks = [
     { href: '/index.html', label: 'Home' },
@@ -76,8 +78,16 @@
 
   // Build sub-nav for sports section
   if (isSportsSection()) {
+    var body = document.body;
     var subNav = document.createElement('nav');
     subNav.className = 'sub-nav';
+    subNav.id = 'sports-sub-nav';
+
+    var subNavToggle = document.createElement('button');
+    subNavToggle.className = 'sub-nav-toggle';
+    subNavToggle.type = 'button';
+    subNavToggle.setAttribute('aria-controls', 'sports-sub-nav');
+
     var subUl = document.createElement('ul');
     for (var j = 0; j < sportsSubLinks.length; j++) {
       var subLi = document.createElement('li');
@@ -88,8 +98,53 @@
       subLi.appendChild(subA);
       subUl.appendChild(subLi);
     }
+
     subNav.appendChild(subUl);
+    topNav.appendChild(subNavToggle);
     topNav.insertAdjacentElement('afterend', subNav);
+
+    function isCollapsedPreference() {
+      try {
+        return window.localStorage.getItem(SPORTS_SUBNAV_STORAGE_KEY) !== 'expanded';
+      } catch (error) {
+        return true;
+      }
+    }
+
+    function storeCollapsedPreference(collapsed) {
+      try {
+        window.localStorage.setItem(
+          SPORTS_SUBNAV_STORAGE_KEY,
+          collapsed ? 'collapsed' : 'expanded'
+        );
+      } catch (error) {
+        // Ignore localStorage issues and keep the UI working.
+      }
+    }
+
+    function updateBodyPadding() {
+      var navOffset = topNav.offsetHeight + CONTENT_TOP_GAP;
+      if (!subNav.classList.contains('is-collapsed')) {
+        navOffset += subNav.offsetHeight;
+      }
+      body.style.paddingTop = navOffset + 'px';
+    }
+
+    function setCollapsedState(collapsed) {
+      subNav.classList.toggle('is-collapsed', collapsed);
+      body.classList.toggle('sports-sub-nav-collapsed', collapsed);
+      subNavToggle.setAttribute('aria-expanded', String(!collapsed));
+      subNavToggle.textContent = collapsed ? 'Sports Menu' : 'Hide Sports Menu';
+      storeCollapsedPreference(collapsed);
+      updateBodyPadding();
+    }
+
+    subNavToggle.addEventListener('click', function () {
+      setCollapsedState(!subNav.classList.contains('is-collapsed'));
+    });
+
+    setCollapsedState(isCollapsedPreference());
+    window.addEventListener('resize', updateBodyPadding);
   }
   });
 })();
