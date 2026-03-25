@@ -880,7 +880,7 @@
         body {
             background: #ffffff;
             color: #1f1f1d;
-            padding: 116px 0 72px;
+            padding: 124px 0 72px;
         }
 
         .page-header,
@@ -899,10 +899,6 @@
             font-weight: 650;
             letter-spacing: -0.04em;
             color: #171717;
-        }
-
-        .page-header p {
-            display: none;
         }
 
         .page-header-actions {
@@ -992,7 +988,7 @@
         }
 
         .dashboard-grid-top {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             margin-bottom: 18px;
         }
 
@@ -1276,7 +1272,9 @@
         }
 
         @media (max-width: 1024px) {
-            .stats-row,
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
             .dashboard-grid-top,
             .chart-grid-row1 {
                 grid-template-columns: 1fr;
@@ -1407,7 +1405,6 @@
         <div class="page-header-bar">
             <div class="page-header-copy">
                 <h1>Cycle Commute</h1>
-                <p>Your cycle commute data and savings</p>
             </div>
             <div class="page-header-actions">
                 <div class="page-updated" id="page-updated">Updated --</div>
@@ -1448,7 +1445,7 @@
             </div>
         </div>
 
-        <div class="chart-card dashboard-card speed-card">
+        <div class="chart-card dashboard-card">
             <h3 class="dashboard-card-title">Speed over time</h3>
             <div class="chart-container dashboard-speed-chart">
                 <canvas id="speedTimeChart"></canvas>
@@ -1489,7 +1486,7 @@
     </div><!-- /dashboard-section -->
 
     <div id="photos-section" style="display:none;">
-        <div style="max-width:1200px; margin:24px auto 0; padding:0 24px;">
+        <div style="max-width:1420px; margin:24px auto 0; padding:0 32px;">
             <div id="photos-loading" class="loading" style="display:none;">
                 <div class="spinner"></div>
                 Loading photos...
@@ -1521,15 +1518,15 @@
 
             <div id="hills-content" style="display:none;">
                 <div class="hill-controls" style="margin-bottom:24px;">
-                    <label for="segment-select" style="font-size:13px; font-weight:600; color:#697386; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:8px;">
-                        Select Segment
+                    <label for="segment-select" style="font-size:15px; font-weight:500; color:#434341; letter-spacing:-0.02em; display:block; margin-bottom:8px;">
+                        Select segment
                     </label>
                     <select id="segment-select">
                         <option value="">Choose a segment...</option>
                     </select>
                 </div>
 
-                <div class="chart-card" id="segment-map-card" style="display:none; margin-bottom:24px;">
+                <div class="chart-card dashboard-card" id="segment-map-card" style="display:none; margin-bottom:24px;">
                     <div class="hill-map-header">
                         <div class="hill-map-copy">
                             <h3 id="segment-map-title" style="margin:0; font-size:16px; font-weight:600; color:#1a1f36;"></h3>
@@ -1539,7 +1536,7 @@
                             View on Strava →
                         </a>
                     </div>
-                    <div id="segment-map" style="height:320px; border-radius:6px; overflow:hidden; border:1px solid #e3e8ee;"></div>
+                    <div id="segment-map" style="height:320px; border-radius:6px; overflow:hidden; border:1px solid #d8d1c4;"></div>
                 </div>
 
                 <div class="stats-row" id="hill-stats" style="display:none;">
@@ -1563,7 +1560,7 @@
                     </div>
                 </div>
 
-                <div class="chart-card" id="hill-chart-card" style="display:none; margin-top:24px;">
+                <div class="chart-card dashboard-card" id="hill-chart-card" style="display:none; margin-top:24px;">
                     <div class="hill-chart-header">
                         <div class="hill-chart-copy">
                             <h3 id="hill-chart-title" style="margin:0;">Segment Time Over Date</h3>

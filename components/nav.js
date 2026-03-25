@@ -117,17 +117,31 @@
       updateBodyPadding();
     }
 
+    var hideTimer = null;
+
+    function scheduleHide() {
+      hideTimer = setTimeout(function () {
+        setSubNavVisible(false);
+      }, 100);
+    }
+
+    function cancelHide() {
+      clearTimeout(hideTimer);
+    }
+
     if (sportsNavItem) {
       sportsNavItem.addEventListener('mouseenter', function () {
+        cancelHide();
         setSubNavVisible(true);
       });
 
       sportsNavItem.addEventListener('mouseleave', function (event) {
         if (subNav.contains(event.relatedTarget)) return;
-        setSubNavVisible(false);
+        scheduleHide();
       });
 
       sportsNavItem.addEventListener('focusin', function () {
+        cancelHide();
         setSubNavVisible(true);
       });
 
@@ -138,12 +152,13 @@
     }
 
     subNav.addEventListener('mouseenter', function () {
+      cancelHide();
       setSubNavVisible(true);
     });
 
     subNav.addEventListener('mouseleave', function (event) {
       if (sportsNavItem && sportsNavItem.contains(event.relatedTarget)) return;
-      setSubNavVisible(false);
+      scheduleHide();
     });
 
     subNav.addEventListener('focusin', function () {
