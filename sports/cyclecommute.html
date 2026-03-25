@@ -880,40 +880,81 @@
         body {
             background: #ffffff;
             color: #1f1f1d;
-            padding: 124px 0 72px;
+            padding: 108px 0 72px;
         }
 
-        .page-header,
         .dashboard-shell,
-        .section-tabs,
         .table-section {
             max-width: 1420px;
         }
 
-        .page-header {
-            padding: 28px 32px 0;
+        .page-toolbar {
+            max-width: 1420px;
+            margin: 0 auto;
+            padding: 0 32px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #d5cdbf;
         }
 
-        .page-header h1 {
-            font-size: 34px;
-            font-weight: 650;
-            letter-spacing: -0.04em;
+        .page-toolbar-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.03em;
             color: #171717;
+            flex-shrink: 0;
+            padding-right: 20px;
+            border-right: 1px solid #d5cdbf;
+            line-height: 1;
+            margin: 0;
         }
 
-        .page-header-actions {
+        .page-toolbar-tabs {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            flex: 1;
+            height: 100%;
+        }
+
+        .page-toolbar .section-tab {
+            height: 100%;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid transparent;
+            font-size: 14px;
+            color: #7e7b74;
+        }
+
+        .page-toolbar .section-tab:hover {
+            color: #1b1b1a;
+        }
+
+        .page-toolbar .section-tab.active {
+            color: #1b1b1a;
+            border-bottom-color: #1b1b1a;
+        }
+
+        .page-toolbar-actions {
+            display: flex;
+            align-items: center;
             gap: 10px;
+            flex-shrink: 0;
+            margin-left: auto;
         }
 
         .page-updated {
-            font-size: 16px;
-            font-weight: 500;
-            color: #5f5d57;
-            letter-spacing: -0.02em;
+            font-size: 13px;
+            font-weight: 400;
+            color: #7c7971;
+            white-space: nowrap;
         }
 
         .refresh-button {
-            padding: 8px 12px;
+            padding: 6px 12px;
             border-radius: 999px;
             border: 1px solid #cbc2b6;
             background: transparent;
@@ -926,8 +967,12 @@
         }
 
         .refresh-status {
+            max-width: 1420px;
+            margin: 0 auto;
+            padding: 5px 32px 0;
+            font-size: 12px;
             color: #7c7971;
-            max-width: 220px;
+            min-height: 20px;
             line-height: 1.4;
         }
 
@@ -937,25 +982,6 @@
 
         .refresh-status.error {
             color: #f4b27f;
-        }
-
-        .section-tabs {
-            margin-top: 18px;
-            padding: 0 32px;
-            border-bottom: 1px solid #d5cdbf;
-        }
-
-        .section-tab {
-            color: #7e7b74;
-        }
-
-        .section-tab:hover {
-            color: #1b1b1a;
-        }
-
-        .section-tab.active {
-            color: #1b1b1a;
-            border-bottom-color: #1b1b1a;
         }
 
         .loading {
@@ -1292,28 +1318,45 @@
             body {
                 padding-top: 106px;
             }
-            .page-header-bar {
-                flex-direction: column;
-                align-items: flex-start;
+            .page-toolbar {
+                height: auto;
+                flex-wrap: wrap;
+                padding: 10px 18px 0;
+                gap: 0;
             }
 
-            .page-header,
+            .page-toolbar-title {
+                border-right: none;
+                padding-right: 0;
+                font-size: 18px;
+                flex: 1;
+            }
+
+            .page-toolbar-actions {
+                margin-left: 0;
+            }
+
+            .page-toolbar-tabs {
+                width: 100%;
+                flex: none;
+                order: 3;
+            }
+
+            .page-toolbar .section-tab {
+                padding: 8px 12px;
+                height: auto;
+            }
+
             .dashboard-shell,
             .table-section,
-            .section-tabs,
             .hills-shell {
                 padding-left: 18px;
                 padding-right: 18px;
             }
 
-            .page-header-actions {
-                width: 100%;
-                align-items: flex-start;
-            }
-
             .refresh-status {
-                text-align: left;
-                max-width: none;
+                padding-left: 18px;
+                padding-right: 18px;
             }
 
             .stats-row,
@@ -1401,24 +1444,19 @@
 </head>
 <body>
 
-    <div class="page-header">
-        <div class="page-header-bar">
-            <div class="page-header-copy">
-                <h1>Cycle Commute</h1>
-            </div>
-            <div class="page-header-actions">
-                <div class="page-updated" id="page-updated">Updated --</div>
-                <button class="refresh-button" id="refresh-commute-btn" type="button">Refresh data</button>
-                <div class="refresh-status" id="refresh-status"></div>
-            </div>
+    <div class="page-toolbar" id="section-tabs" style="display:none;">
+        <h1 class="page-toolbar-title">Cycle Commute</h1>
+        <div class="page-toolbar-tabs">
+            <button class="section-tab active" data-section="dashboard">Dashboard</button>
+            <button class="section-tab" data-section="photos">Photos</button>
+            <button class="section-tab" data-section="hills">Hill Tracker</button>
+        </div>
+        <div class="page-toolbar-actions">
+            <div class="page-updated" id="page-updated">Updated --</div>
+            <button class="refresh-button" id="refresh-commute-btn" type="button">Refresh</button>
         </div>
     </div>
-
-    <div class="section-tabs" id="section-tabs" style="display:none;">
-        <button class="section-tab active" data-section="dashboard">Dashboard</button>
-        <button class="section-tab" data-section="photos">Photos</button>
-        <button class="section-tab" data-section="hills">Hill Tracker</button>
-    </div>
+    <div class="refresh-status" id="refresh-status"></div>
 
     <div id="loading-area" class="loading" style="display:none;">
         <div class="spinner"></div>
