@@ -1015,7 +1015,6 @@
 
         .dashboard-grid-top {
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            align-items: start;
             margin-bottom: 18px;
         }
 
@@ -1071,6 +1070,18 @@
 
         .dashboard-card {
             padding: 28px 36px;
+        }
+
+        .timing-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timing-card #boxPlotContainer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .dashboard-card-title,
