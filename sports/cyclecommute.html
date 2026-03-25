@@ -570,7 +570,7 @@
 
         .heatmap-header {
             display: grid;
-            grid-template-columns: 68px repeat(7, minmax(0, 1fr));
+            grid-template-columns: 68px repeat(5, minmax(0, 1fr));
             gap: 2px;
             margin-bottom: 6px;
             font-size: 10px;
@@ -581,7 +581,7 @@
 
         .heatmap-row {
             display: grid;
-            grid-template-columns: 68px repeat(7, minmax(0, 1fr));
+            grid-template-columns: 68px repeat(5, minmax(0, 1fr));
             gap: 2px;
             margin-bottom: 2px;
         }
@@ -1015,6 +1015,7 @@
 
         .dashboard-grid-top {
             grid-template-columns: repeat(4, minmax(0, 1fr));
+            align-items: start;
             margin-bottom: 18px;
         }
 
@@ -1243,7 +1244,7 @@
         }
 
         .heatmap-header {
-            grid-template-columns: 72px repeat(7, minmax(0, 1fr));
+            grid-template-columns: 72px repeat(5, minmax(0, 1fr));
             gap: 6px;
             margin-bottom: 8px;
             font-size: 17px;
@@ -1252,7 +1253,7 @@
         }
 
         .heatmap-row {
-            grid-template-columns: 72px repeat(7, minmax(0, 1fr));
+            grid-template-columns: 72px repeat(5, minmax(0, 1fr));
             gap: 6px;
             margin-bottom: 6px;
         }
@@ -1380,11 +1381,11 @@
             .chart-container { height: 200px; }
             .heatmap-chart-container { min-height: 0; }
             .heatmap-header {
-                grid-template-columns: 54px repeat(7, minmax(0, 1fr));
+                grid-template-columns: 54px repeat(5, minmax(0, 1fr));
                 font-size: 13px;
             }
             .heatmap-row {
-                grid-template-columns: 54px repeat(7, minmax(0, 1fr));
+                grid-template-columns: 54px repeat(5, minmax(0, 1fr));
             }
             .heatmap-week-label {
                 font-size: 14px;
@@ -2619,11 +2620,12 @@
                 return;
             }
 
-            // Group by week and day
+            // Group by week and day (weekdays only: Mon=0 … Fri=4)
             const weekMap = {};
             rides.forEach(r => {
+                if (r.dayOfWeek >= 5) return;
                 if (!weekMap[r.yearWeekKey]) {
-                    weekMap[r.yearWeekKey] = Array(7).fill(0);
+                    weekMap[r.yearWeekKey] = Array(5).fill(0);
                 }
                 weekMap[r.yearWeekKey][r.dayOfWeek]++;
             });
@@ -2633,7 +2635,7 @@
             ), rides[0].startLocal);
             const weeks = getRecentWeekEntries(latestRideDate, 5);
 
-            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
             let html = '<div class="heatmap-header"><div></div>';
             dayNames.forEach(day => html += `<div>${day}</div>`);
@@ -2646,7 +2648,7 @@
                     month: 'short',
                     year: 'numeric'
                 });
-                const weekCounts = weekMap[key] || Array(7).fill(0);
+                const weekCounts = weekMap[key] || Array(5).fill(0);
                 html += `<div class="heatmap-row"><div class="heatmap-week-label">${weekLabel}</div>`;
 
                 weekCounts.forEach((count, dayIdx) => {
@@ -2660,9 +2662,9 @@
 
             container.innerHTML = html;
 
-            // Generate insights
-            const dayCounts = [0, 0, 0, 0, 0, 0, 0];
-            rides.forEach(r => dayCounts[r.dayOfWeek]++);
+            // Generate insights (weekdays only)
+            const dayCounts = [0, 0, 0, 0, 0];
+            rides.forEach(r => { if (r.dayOfWeek < 5) dayCounts[r.dayOfWeek]++; });
             const topDays = dayCounts
                 .map((count, idx) => ({ day: dayNames[idx], count }))
                 .sort((a, b) => b.count - a.count)
