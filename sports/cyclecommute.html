@@ -1081,7 +1081,16 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: space-between;
+        }
+
+        .tt-col-header {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #8c8880;
+            margin-bottom: 2px;
         }
 
         /* Timing Targets redesign */
@@ -2751,6 +2760,7 @@
                     </div>
                     <div class="tt-cols">
                         <div class="tt-col">
+                            <div class="tt-col-header">Morning</div>
                             <div class="tt-line"><span class="tt-line-label">Leave by</span><strong class="tt-line-val">08:00</strong></div>
                             <div class="tt-line"><span class="tt-line-label">You avg</span><strong class="tt-line-val">${morningAvgLeave !== null ? formatTime(morningAvgLeave) : '&mdash;'}</strong></div>
                             ${diffPill(morningDiffMin)}
@@ -2759,6 +2769,7 @@
                         </div>
                         <div class="tt-col-sep"></div>
                         <div class="tt-col">
+                            <div class="tt-col-header">Evening</div>
                             <div class="tt-line"><span class="tt-line-label">Arrive by</span><strong class="tt-line-val">19:00</strong></div>
                             <div class="tt-line"><span class="tt-line-label">You avg</span><strong class="tt-line-val">${eveningAvgArrive !== null ? formatTime(eveningAvgArrive) : '&mdash;'}</strong></div>
                             ${diffPill(eveningDiffMin)}
