@@ -1081,7 +1081,120 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
+        }
+
+        /* Timing Targets redesign */
+        .tt-section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .tt-emoji {
+            font-size: 18px;
+            line-height: 1;
+        }
+        .tt-section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #3e3d39;
+            letter-spacing: -0.01em;
+        }
+        .tt-cols {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: start;
+            gap: 0;
+        }
+        .tt-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 0 20px;
+        }
+        .tt-col:first-child { padding-left: 0; }
+        .tt-col:last-child  { padding-right: 0; }
+        .tt-col-sep {
+            width: 1px;
+            background: #ddd5c8;
+            align-self: stretch;
+        }
+        .tt-line {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+        }
+        .tt-line-label {
+            font-size: 14px;
+            color: #6e6c66;
+            white-space: nowrap;
+        }
+        .tt-line-val {
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: -0.04em;
+            color: #171717;
+            line-height: 1;
+        }
+        .tt-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            align-self: flex-start;
+        }
+        .tt-pill.amber { background: #f4e1bf; color: #9b5e06; }
+        .tt-pill.green { background: #dce8c8; color: #437517; }
+        .tt-pct {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .tt-pct.amber { color: #9b5e06; }
+        .tt-pct.green { color: #437517; }
+        .tt-divider {
+            border: none;
+            border-top: 1px solid #ddd5c8;
+            margin: 20px 0;
+        }
+        .tt-track {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .tt-track-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tt-track-label {
+            font-size: 14px;
+            color: #6e6c66;
+            width: 62px;
+            flex-shrink: 0;
+        }
+        .tt-dots {
+            display: flex;
+            gap: 5px;
+            flex: 1;
+        }
+        .tt-dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .tt-dot.amber { background: #f4a021; }
+        .tt-dot.green { background: #24a279; }
+        .tt-dot.miss  { background: #e0d8cc; }
+        .tt-track-count {
+            font-size: 13px;
+            color: #7c7971;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .dashboard-card-title,
@@ -2594,30 +2707,87 @@
                 ? Math.round((eveningRides.filter(r => r.arriveMinutes <= 19 * 60).length / eveningRides.length) * 100)
                 : 0;
 
+            // Delta from target
+            const morningDiffMin = morningAvgLeave !== null ? Math.round(morningAvgLeave - 480) : null;
+            const eveningDiffMin = eveningAvgArrive !== null ? Math.round(eveningAvgArrive - 19 * 60) : null;
+
+            // Last 10 individual ride dots (oldest → newest)
+            const morningDots = rides
+                .filter(r => r.commuteType === 'morning')
+                .sort((a, b) => b.startLocal - a.startLocal)
+                .slice(0, 10).reverse()
+                .map(r => r.leaveMinutes <= 480);
+            const eveningDots = rides
+                .filter(r => r.commuteType === 'evening')
+                .sort((a, b) => b.startLocal - a.startLocal)
+                .slice(0, 10).reverse()
+                .map(r => r.arriveMinutes <= 19 * 60);
+
+            function buildDots(dots, color) {
+                const filled = dots.map(hit =>
+                    `<span class="tt-dot ${hit ? color : 'miss'}"></span>`
+                ).join('');
+                const empty = Array(Math.max(0, 10 - dots.length))
+                    .fill('<span class="tt-dot miss"></span>').join('');
+                return filled + empty;
+            }
+
+            function diffPill(diffMin) {
+                if (diffMin === null) return '';
+                const abs = Math.abs(diffMin);
+                return diffMin <= 0
+                    ? `<div class="tt-pill green">&#10003; ${abs} min early</div>`
+                    : `<div class="tt-pill amber">&#9651; +${abs} min late</div>`;
+            }
+
+            const morningOnTime = morningDots.filter(Boolean).length;
+            const eveningOnTime = eveningDots.filter(Boolean).length;
+
             container.innerHTML = `
-                <div class="timing-layout">
-                    <div class="timing-panel">
-                        <div class="timing-label">Morning avg leave</div>
-                        <div class="timing-value">${morningAvgLeave !== null ? formatTime(morningAvgLeave) : '&mdash;'}</div>
-                        <div class="timing-pill amber">${morningPct}% on target</div>
-                        <div class="timing-meter amber"><span style="width:${Math.max(6, morningPct)}%;"></span></div>
+                <div class="tt-section">
+                    <div class="tt-section-header">
+                        <span class="tt-emoji">&#128690;</span>
+                        <span class="tt-section-title">Commute targets</span>
                     </div>
-                    <div class="timing-panel">
-                        <div class="timing-label">Evening avg arrive</div>
-                        <div class="timing-value">${eveningAvgArrive !== null ? formatTime(eveningAvgArrive) : '&mdash;'}</div>
-                        <div class="timing-pill green">${eveningPct}% on target</div>
-                        <div class="timing-meter green"><span style="width:${Math.max(6, eveningPct)}%;"></span></div>
+                    <div class="tt-cols">
+                        <div class="tt-col">
+                            <div class="tt-line"><span class="tt-line-label">Leave by</span><strong class="tt-line-val">08:00</strong></div>
+                            <div class="tt-line"><span class="tt-line-label">You avg</span><strong class="tt-line-val">${morningAvgLeave !== null ? formatTime(morningAvgLeave) : '&mdash;'}</strong></div>
+                            ${diffPill(morningDiffMin)}
+                            <div class="timing-meter amber"><span style="width:${Math.max(4, morningPct)}%;"></span></div>
+                            <div class="tt-pct amber">${morningPct}% on target</div>
+                        </div>
+                        <div class="tt-col-sep"></div>
+                        <div class="tt-col">
+                            <div class="tt-line"><span class="tt-line-label">Arrive by</span><strong class="tt-line-val">19:00</strong></div>
+                            <div class="tt-line"><span class="tt-line-label">You avg</span><strong class="tt-line-val">${eveningAvgArrive !== null ? formatTime(eveningAvgArrive) : '&mdash;'}</strong></div>
+                            ${diffPill(eveningDiffMin)}
+                            <div class="timing-meter green"><span style="width:${Math.max(4, eveningPct)}%;"></span></div>
+                            <div class="tt-pct green">${eveningPct}% on target</div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="tt-divider">
+                <div class="tt-section">
+                    <div class="tt-section-header">
+                        <span class="tt-emoji">&#128197;</span>
+                        <span class="tt-section-title">Last 10 rides</span>
+                    </div>
+                    <div class="tt-track">
+                        <div class="tt-track-row">
+                            <span class="tt-track-label">Morning</span>
+                            <span class="tt-dots">${buildDots(morningDots, 'amber')}</span>
+                            <span class="tt-track-count">(${morningOnTime}/${morningDots.length})</span>
+                        </div>
+                        <div class="tt-track-row">
+                            <span class="tt-track-label">Evening</span>
+                            <span class="tt-dots">${buildDots(eveningDots, 'green')}</span>
+                            <span class="tt-track-count">(${eveningOnTime}/${eveningDots.length})</span>
+                        </div>
                     </div>
                 </div>
             `;
-
-            const morningLast10 = morningStreak.last10 && morningStreak.last10.total > 0
-                ? `${morningStreak.last10.onTime}/${morningStreak.last10.total} morning on-target last 10 days.`
-                : 'No recent morning target data.';
-            const eveningLast10 = eveningStreak.last10 && eveningStreak.last10.total > 0
-                ? `${eveningStreak.last10.onTime}/${eveningStreak.last10.total} evenings on-target.`
-                : 'No recent evening target data.';
-            insightsDiv.innerHTML = `<div class="timing-summary">${morningLast10} ${eveningLast10}</div>`;
+            insightsDiv.innerHTML = '';
         }
 
         // CHART 3: Heatmap - Weekly Commute Pattern
