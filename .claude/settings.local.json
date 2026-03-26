@@ -13,7 +13,21 @@
       "Bash(node -e \"require\\(''./api/generateSwimPlan.js''\\); console.log\\(''Module loaded OK''\\)\")",
       "Bash(node -e \"require\\(''./api/generateSwimPlan.js''\\); console.log\\(''OK''\\)\")",
       "Bash(git rm --cached package-lock.json)",
-      "Bash(git rm -r --cached node_modules/)"
+      "Bash(git rm -r --cached node_modules/)",
+      "Bash(ls -la \"c:\\\\Users\\\\j.woodnott\\\\.vscode\\\\Coding\\\\swimtimeclac\\\\api\"\" 2>/dev/null; ls -la \"c:Usersj.woodnott.vscodeCodingswimtimeclac\"\")",
+      "Bash(dir /b \"c:\\\\Users\\\\j.woodnott\\\\.vscode\\\\Coding\\\\swimtimeclac\\\\api\")",
+      "Bash(dir /b \"c:\\\\Users\\\\j.woodnott\\\\.vscode\\\\Coding\\\\swimtimeclac\\\\api\\\\lib\")",
+      "Bash(powershell -Command \"Get-ChildItem ''c:\\\\Users\\\\j.woodnott\\\\.vscode\\\\Coding\\\\swimtimeclac\\\\api\\\\lib'' | Select-Object Name\")",
+      "Bash(python -c \"import os; files = os.listdir\\(r''c:\\\\Users\\\\j.woodnott\\\\.vscode\\\\Coding\\\\swimtimeclac\\\\api\\\\lib''\\); print\\(''\\\\n''.join\\(files\\)\\)\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\); console.log\\(fs.readdirSync\\(''c:/Users/j.woodnott/.vscode/Coding/swimtimeclac/api/lib''\\).join\\(''\\\\n''\\)\\)\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\); try { console.log\\(JSON.stringify\\(fs.readdirSync\\(''c:/Users/j.woodnott/.vscode/Coding/swimtimeclac/api/lib''\\)\\)\\); } catch\\(e\\) { console.error\\(e.message\\); }\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\); try { console.log\\(JSON.stringify\\(fs.readdirSync\\(''c:/Users/j.woodnott/.vscode/Coding/swimtimeclac/api''\\)\\)\\); } catch\\(e\\) { console.error\\(e.message\\); }\")",
+      "WebSearch",
+      "WebFetch(domain:stitch.withgoogle.com)",
+      "Bash(npm show:*)",
+      "Bash(node -e \"const f = require\\(''./c:/Users/j.woodnott/.vscode/Coding/swimtimeclac/.mcp.json''\\); console.log\\(JSON.stringify\\(f.mcpServers.stitch, null, 2\\)\\)\")",
+      "Bash(node -e \"const f = require\\(''./.mcp.json''\\); console.log\\(JSON.stringify\\(f.mcpServers.stitch, null, 2\\)\\)\" --cwd \"C:/Users/j.woodnott/.vscode/Coding/swimtimeclac\")",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\(''C:/Users/j.woodnott/.vscode/Coding/swimtimeclac/.mcp.json''\\).mcpServers.stitch, null, 2\\)\\)\")"
     ]
   }
 }
