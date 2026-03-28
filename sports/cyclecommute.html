@@ -910,16 +910,16 @@
 
         .page-toolbar {
             max-width: 1420px;
-            margin: 28px auto 0;
+            margin: 14px auto 0;
             padding: 0 32px;
         }
 
         .page-masthead-top {
             display: grid;
             grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
-            gap: 28px;
-            align-items: end;
-            margin-bottom: 20px;
+            gap: 20px;
+            align-items: start;
+            margin-bottom: 14px;
         }
 
         .page-masthead-copy {
@@ -932,23 +932,23 @@
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: var(--accent);
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
 
         .page-toolbar-title {
-            font-size: clamp(36px, 5vw, 64px);
+            font-size: clamp(30px, 4.4vw, 56px);
             font-weight: 600;
             letter-spacing: -0.055em;
             color: var(--text);
-            line-height: 0.95;
+            line-height: 0.92;
             margin: 0;
         }
 
         .page-lead {
-            max-width: 780px;
-            margin-top: 16px;
-            font-size: 18px;
-            line-height: 1.55;
+            max-width: 700px;
+            margin-top: 12px;
+            font-size: 15px;
+            line-height: 1.45;
             color: var(--text-muted);
         }
 
@@ -956,7 +956,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px;
+            padding: 6px;
             border: 1px solid var(--line);
             border-radius: 999px;
             background: rgba(251, 248, 241, 0.85);
@@ -964,7 +964,7 @@
         }
 
         .page-toolbar .section-tab {
-            padding: 10px 18px;
+            padding: 8px 16px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -999,7 +999,7 @@
         }
 
         .page-updated {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             letter-spacing: 0.02em;
             color: var(--text-soft);
@@ -1007,7 +1007,7 @@
         }
 
         .refresh-button {
-            padding: 11px 18px;
+            padding: 9px 16px;
             border-radius: 999px;
             border: 1px solid var(--line);
             background: rgba(251, 248, 241, 0.9);
@@ -1135,38 +1135,6 @@
             font-size: 13px;
             line-height: 1.45;
             color: var(--text-muted);
-        }
-
-        .hero-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .hero-link-button {
-            padding: 12px 18px;
-            border: none;
-            border-radius: 999px;
-            background: var(--text);
-            color: #fdfaf4;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: transform 0.15s ease, opacity 0.15s ease;
-        }
-
-        .hero-link-button:hover {
-            transform: translateY(-1px);
-            opacity: 0.94;
-        }
-
-        .hero-supporting-note {
-            font-size: 13px;
-            line-height: 1.45;
-            color: var(--text-soft);
-            max-width: 32ch;
         }
 
         .dashboard-hero-visual {
@@ -1882,12 +1850,12 @@
             }
 
             .page-toolbar-title {
-                font-size: 40px;
+                font-size: 34px;
             }
 
             .page-lead {
-                font-size: 15px;
-                margin-top: 14px;
+                font-size: 14px;
+                margin-top: 10px;
             }
 
             .page-toolbar-tabs {
@@ -1935,15 +1903,6 @@
 
             .hero-fact:last-child {
                 grid-column: 1 / -1;
-            }
-
-            .hero-actions {
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .hero-link-button {
-                width: 100%;
             }
 
             .dashboard-hero-visual {
@@ -2093,10 +2052,6 @@
                 <h2 class="dashboard-hero-title" id="hero-title">Loading your commute story...</h2>
                 <p class="dashboard-hero-description" id="hero-description">Pulling together your recent riding rhythm, pace, and timing patterns.</p>
                 <div class="hero-facts" id="hero-facts"></div>
-                <div class="hero-actions">
-                    <button class="hero-link-button" id="hero-view-photos-btn" type="button">Browse ride photos</button>
-                    <div class="hero-supporting-note" id="hero-supporting-note">Ride photos will appear here once the dashboard has loaded them.</div>
-                </div>
             </div>
             <div class="dashboard-hero-visual" id="dashboard-hero-visual">
                 <div class="hero-visual-empty">
@@ -2347,8 +2302,6 @@
         const heroDescription = document.getElementById('hero-description');
         const heroFacts = document.getElementById('hero-facts');
         const heroVisual = document.getElementById('dashboard-hero-visual');
-        const heroSupportingNote = document.getElementById('hero-supporting-note');
-        const heroViewPhotosButton = document.getElementById('hero-view-photos-btn');
         const timingMeta = document.getElementById('timingMeta');
         const heatmapMeta = document.getElementById('heatmapMeta');
         const speedMeta = document.getElementById('speedMeta');
@@ -2374,8 +2327,6 @@
         document.querySelectorAll('.section-tab').forEach(btn => {
             btn.addEventListener('click', () => switchSection(btn.dataset.section));
         });
-
-        heroViewPhotosButton.addEventListener('click', () => switchSection('photos'));
 
         // Collapsible table toggle
         document.getElementById('table-toggle-btn').addEventListener('click', function() {
@@ -2752,7 +2703,6 @@
                 heroDescription.textContent = 'Once rides are available, this space will summarize your recent rhythm and bring in route photos as the page anchor.';
                 heroFacts.innerHTML = '';
                 heroVisual.innerHTML = buildHeroPhotoMarkup();
-                heroSupportingNote.textContent = 'Connect ride data to build the dashboard story.';
                 return;
             }
 
@@ -2800,9 +2750,6 @@
             ].join('');
 
             heroVisual.innerHTML = buildHeroPhotoMarkup();
-            heroSupportingNote.textContent = allPhotos.length
-                ? 'Ride photos now lead the dashboard and the full archive stays available in the photo tab.'
-                : 'Ride photos are loading in the background so the dashboard can use the route itself as its main visual.';
         }
 
         function renderDashboard() {
