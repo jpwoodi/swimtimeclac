@@ -914,44 +914,6 @@
             padding: 0 32px;
         }
 
-        .page-masthead-top {
-            display: grid;
-            grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
-            gap: 20px;
-            align-items: start;
-            margin-bottom: 14px;
-        }
-
-        .page-masthead-copy {
-            min-width: 0;
-        }
-
-        .page-eyebrow {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 10px;
-        }
-
-        .page-toolbar-title {
-            font-size: clamp(30px, 4.4vw, 56px);
-            font-weight: 600;
-            letter-spacing: -0.055em;
-            color: var(--text);
-            line-height: 0.92;
-            margin: 0;
-        }
-
-        .page-lead {
-            max-width: 700px;
-            margin-top: 12px;
-            font-size: 15px;
-            line-height: 1.45;
-            color: var(--text-muted);
-        }
-
         .page-toolbar-tabs {
             display: inline-flex;
             align-items: center;
@@ -1265,10 +1227,7 @@
         }
 
         .section-heading-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
-            gap: 24px;
-            align-items: end;
+            display: block;
             margin: 8px 0 18px;
         }
 
@@ -1299,6 +1258,33 @@
             font-size: 14px;
             line-height: 1.55;
             color: var(--text-muted);
+        }
+
+        .page-utility-bar {
+            max-width: 1420px;
+            margin: 18px auto 0;
+            padding: 0 32px;
+        }
+
+        .page-utility-card {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--line-soft);
+        }
+
+        .page-utility-card .refresh-button {
+            padding: 7px 14px;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .page-utility-copy {
+            display: grid;
+            gap: 2px;
+            justify-items: end;
         }
 
         .dashboard-grid-top {
@@ -1789,10 +1775,6 @@
         }
 
         @media (max-width: 1024px) {
-            .section-heading-row {
-                grid-template-columns: 1fr;
-            }
-
             .card-header {
                 flex-direction: column;
                 align-items: start;
@@ -1803,7 +1785,6 @@
                 text-align: left;
             }
 
-            .page-masthead-top,
             .dashboard-hero {
                 grid-template-columns: 1fr;
             }
@@ -1849,15 +1830,6 @@
                 padding: 0 18px;
             }
 
-            .page-toolbar-title {
-                font-size: 34px;
-            }
-
-            .page-lead {
-                font-size: 14px;
-                margin-top: 10px;
-            }
-
             .page-toolbar-tabs {
                 width: 100%;
                 justify-content: space-between;
@@ -1873,7 +1845,8 @@
 
             .dashboard-shell,
             .table-section,
-            .hills-shell {
+            .hills-shell,
+            .page-utility-bar {
                 padding-left: 18px;
                 padding-right: 18px;
             }
@@ -1932,6 +1905,15 @@
 
             .table-intro {
                 font-size: 13px;
+            }
+
+            .page-utility-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-utility-copy {
+                justify-items: start;
             }
 
             .stats-row,
@@ -2020,18 +2002,6 @@
 <body>
 
     <div class="page-toolbar" id="section-tabs" style="display:none;">
-        <div class="page-masthead-top">
-            <div class="page-masthead-copy">
-                <div class="page-eyebrow">Cycle commute dashboard</div>
-                <h1 class="page-toolbar-title">Cycle Commute</h1>
-                <p class="page-lead">Daily riding rhythm, route friction, and the moments from the ride that make the dashboard feel like a place instead of a spreadsheet.</p>
-            </div>
-            <div class="page-toolbar-actions">
-                <div class="page-updated" id="page-updated">Updated --</div>
-                <button class="refresh-button" id="refresh-commute-btn" type="button">Refresh data</button>
-                <div class="refresh-status" id="refresh-status"></div>
-            </div>
-        </div>
         <div class="page-toolbar-tabs">
             <button class="section-tab active" data-section="dashboard">Dashboard</button>
             <button class="section-tab" data-section="photos">Photos</button>
@@ -2066,7 +2036,6 @@
                 <div class="section-kicker">At a glance</div>
                 <h2 class="section-title">The core commute numbers</h2>
             </div>
-            <p class="section-note">Lifetime distance, rolling pace, and how much London traffic is still getting in your way.</p>
         </div>
         <div class="stats-row" id="stats-row" style="display:none;"></div>
 
@@ -2075,7 +2044,6 @@
                 <div class="section-kicker">Recent patterns</div>
                 <h2 class="section-title">How the last few weeks are behaving</h2>
             </div>
-            <p class="section-note">Targets, weekday rhythm, and speed trends pulled into one calmer read of the commute.</p>
         </div>
         <div class="dashboard-grid dashboard-grid-top">
             <div class="chart-card dashboard-card timing-card">
@@ -2154,6 +2122,16 @@
         </div>
     </div>
     </div><!-- /dashboard-section -->
+
+    <div class="page-utility-bar">
+        <div class="page-utility-card">
+            <div class="page-utility-copy">
+                <div class="page-updated" id="page-updated">Updated --</div>
+                <div class="refresh-status" id="refresh-status"></div>
+            </div>
+            <button class="refresh-button" id="refresh-commute-btn" type="button">Refresh data</button>
+        </div>
+    </div>
 
     <div id="photos-section" style="display:none;">
         <div style="max-width:1420px; margin:24px auto 0; padding:0 32px;">
