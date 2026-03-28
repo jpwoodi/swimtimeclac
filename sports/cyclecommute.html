@@ -877,9 +877,29 @@
             padding: 0 20px;
         }
 
+        :root {
+            --page-bg: #f8f4ec;
+            --page-bg-accent: #efe7d8;
+            --surface: #f6f1e8;
+            --surface-strong: #fbf8f1;
+            --surface-contrast: #ece3d3;
+            --line: #d9cfbf;
+            --line-soft: #e6dccd;
+            --text: #191816;
+            --text-muted: #666159;
+            --text-soft: #827b71;
+            --accent: #237f64;
+            --accent-strong: #145845;
+            --accent-warm: #c77a12;
+            --accent-warm-soft: #f0dcc0;
+            --shadow-soft: 0 20px 50px rgba(80, 63, 40, 0.07);
+        }
+
         body {
-            background: #ffffff;
-            color: #1f1f1d;
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.9), transparent 30%),
+                linear-gradient(180deg, #fcfaf6 0%, var(--page-bg) 22%, #f7f2e8 100%);
+            color: var(--text);
             padding: 108px 0 72px;
         }
 
@@ -890,112 +910,374 @@
 
         .page-toolbar {
             max-width: 1420px;
-            margin: 0 auto;
+            margin: 28px auto 0;
             padding: 0 32px;
-            height: 52px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            border-bottom: 1px solid #d5cdbf;
+        }
+
+        .page-masthead-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
+            gap: 28px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+
+        .page-masthead-copy {
+            min-width: 0;
+        }
+
+        .page-eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 14px;
         }
 
         .page-toolbar-title {
-            font-size: 20px;
+            font-size: clamp(36px, 5vw, 64px);
             font-weight: 600;
-            letter-spacing: -0.03em;
-            color: #171717;
-            flex-shrink: 0;
-            padding-right: 20px;
-            border-right: 1px solid #d5cdbf;
-            line-height: 1;
+            letter-spacing: -0.055em;
+            color: var(--text);
+            line-height: 0.95;
             margin: 0;
         }
 
+        .page-lead {
+            max-width: 780px;
+            margin-top: 16px;
+            font-size: 18px;
+            line-height: 1.55;
+            color: var(--text-muted);
+        }
+
         .page-toolbar-tabs {
-            display: flex;
-            align-items: stretch;
-            gap: 0;
-            flex: 1;
-            height: 100%;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(251, 248, 241, 0.85);
+            box-shadow: 0 8px 24px rgba(80, 63, 40, 0.05);
         }
 
         .page-toolbar .section-tab {
-            height: 100%;
-            padding: 0 16px;
-            display: flex;
+            padding: 10px 18px;
+            display: inline-flex;
             align-items: center;
-            border-bottom: 2px solid transparent;
+            justify-content: center;
+            border: none;
+            border-radius: 999px;
+            background: transparent;
             font-size: 14px;
-            color: #7e7b74;
+            font-weight: 600;
+            color: var(--text-soft);
+            font-family: inherit;
+            cursor: pointer;
+            transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
         }
 
         .page-toolbar .section-tab:hover {
-            color: #1b1b1a;
+            color: var(--text);
+            transform: translateY(-1px);
         }
 
         .page-toolbar .section-tab.active {
-            color: #1b1b1a;
-            border-bottom-color: #1b1b1a;
+            color: var(--text);
+            background: var(--surface-strong);
+            box-shadow: 0 6px 18px rgba(55, 38, 17, 0.08);
         }
 
         .page-toolbar-actions {
-            display: flex;
-            align-items: center;
+            display: grid;
+            justify-items: end;
             gap: 10px;
-            flex-shrink: 0;
-            margin-left: auto;
+            min-width: 0;
         }
 
         .page-updated {
             font-size: 13px;
-            font-weight: 400;
-            color: #7c7971;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--text-soft);
             white-space: nowrap;
         }
 
         .refresh-button {
-            padding: 6px 12px;
+            padding: 11px 18px;
             border-radius: 999px;
-            border: 1px solid #cbc2b6;
-            background: transparent;
-            color: #595750;
+            border: 1px solid var(--line);
+            background: rgba(251, 248, 241, 0.9);
+            color: var(--text);
+            box-shadow: 0 10px 20px rgba(80, 63, 40, 0.05);
         }
 
         .refresh-button:hover {
-            border-color: #1b1b1a;
-            color: #1b1b1a;
+            border-color: var(--text);
+            color: var(--text);
+            background: #fffdf9;
         }
 
         .refresh-status {
-            max-width: 1420px;
-            margin: 0 auto;
-            padding: 5px 32px 0;
+            max-width: 320px;
+            margin: 0;
+            padding: 0;
             font-size: 12px;
-            color: #7c7971;
-            min-height: 20px;
+            color: var(--text-soft);
+            min-height: 16px;
             line-height: 1.4;
+            text-align: right;
         }
 
         .refresh-status.success {
-            color: #86c7aa;
+            color: var(--accent);
         }
 
         .refresh-status.error {
-            color: #f4b27f;
+            color: #b25d18;
         }
 
         .loading {
-            color: #7c7971;
+            color: var(--text-soft);
         }
 
         .loading .spinner {
-            border-color: #d8d0c4;
-            border-top-color: #1b1b1a;
+            border-color: var(--line);
+            border-top-color: var(--text);
         }
 
         .dashboard-shell {
-            margin: 28px auto 0;
+            margin: 22px auto 0;
             padding: 0 32px;
+        }
+
+        .dashboard-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+            gap: 22px;
+            margin-bottom: 22px;
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: 32px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(247, 241, 232, 0.92)),
+                var(--surface-strong);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+        }
+
+        .dashboard-hero-copy {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .hero-eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .dashboard-hero-title {
+            font-size: clamp(30px, 4vw, 50px);
+            line-height: 0.96;
+            letter-spacing: -0.05em;
+            font-weight: 600;
+            color: var(--text);
+            margin: 0;
+            max-width: 10ch;
+        }
+
+        .dashboard-hero-description {
+            max-width: 60ch;
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.65;
+            color: var(--text-muted);
+        }
+
+        .hero-facts {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .hero-fact {
+            padding-top: 14px;
+            border-top: 1px solid var(--line-soft);
+        }
+
+        .hero-fact-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            margin-bottom: 8px;
+        }
+
+        .hero-fact-value {
+            font-size: 22px;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            color: var(--text);
+        }
+
+        .hero-fact-note {
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text-muted);
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .hero-link-button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 999px;
+            background: var(--text);
+            color: #fdfaf4;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        .hero-link-button:hover {
+            transform: translateY(-1px);
+            opacity: 0.94;
+        }
+
+        .hero-supporting-note {
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text-soft);
+            max-width: 32ch;
+        }
+
+        .dashboard-hero-visual {
+            position: relative;
+            min-height: 440px;
+            padding: 16px;
+            border-radius: 28px;
+            background:
+                linear-gradient(160deg, rgba(255, 255, 255, 0.58), rgba(237, 228, 211, 0.96)),
+                var(--surface);
+            border: 1px solid rgba(217, 207, 191, 0.8);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 148px;
+            gap: 12px;
+        }
+
+        .hero-main-photo {
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+            background: linear-gradient(160deg, #efe6d8, #dcd1bf);
+            min-height: 100%;
+        }
+
+        .hero-main-photo img,
+        .hero-side-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-photo-caption {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 18px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(20, 15, 10, 0.62);
+            color: #fcf8f1;
+            backdrop-filter: blur(14px);
+        }
+
+        .hero-photo-caption strong {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .hero-photo-caption span {
+            display: block;
+            font-size: 12px;
+            line-height: 1.45;
+            color: rgba(252, 248, 241, 0.78);
+        }
+
+        .hero-photo-stack {
+            display: grid;
+            gap: 12px;
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+        }
+
+        .hero-side-photo {
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            background: linear-gradient(160deg, #e8decf, #d6c8b4);
+        }
+
+        .hero-side-meta {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(20, 15, 10, 0.55);
+            color: #fcf8f1;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .hero-visual-empty {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at top right, rgba(36, 163, 121, 0.18), transparent 28%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(235, 227, 212, 0.72)),
+                linear-gradient(135deg, #efe5d6, #ddd0bc);
+        }
+
+        .hero-visual-empty-kicker {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent-strong);
+            margin-bottom: 12px;
+        }
+
+        .hero-visual-empty-copy {
+            max-width: 26ch;
+            font-size: 26px;
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+            color: var(--text);
         }
 
         .stats-row {
@@ -1026,8 +1308,8 @@
         .dashboard-card,
         .stat-card,
         .table-card {
-            background: #f7f4ee;
-            border: 1px solid #d8d1c4;
+            background: var(--surface);
+            border: 1px solid var(--line);
             border-radius: 22px;
             box-shadow: none;
         }
@@ -1042,7 +1324,7 @@
             font-weight: 500;
             text-transform: none;
             letter-spacing: -0.02em;
-            color: #434341;
+            color: var(--text-muted);
         }
 
         .stat-value {
@@ -1050,22 +1332,22 @@
             font-weight: 500;
             letter-spacing: -0.04em;
             line-height: 1;
-            color: #181818;
+            color: var(--text);
         }
 
         .stat-value.accent-green {
-            color: #23a57a;
+            color: var(--accent);
         }
 
         .stat-value.accent-amber {
-            color: #c77a12;
+            color: var(--accent-warm);
         }
 
         .stat-sub {
             margin-top: 12px;
             font-size: 15px;
             line-height: 1.35;
-            color: #4b4a46;
+            color: var(--text-muted);
         }
 
         .dashboard-card {
@@ -1107,7 +1389,7 @@
         .tt-section-title {
             font-size: 15px;
             font-weight: 600;
-            color: #3e3d39;
+            color: var(--text);
             letter-spacing: -0.01em;
         }
         .tt-cols {
@@ -1218,7 +1500,7 @@
 
         .dashboard-inline-note {
             font-size: 13px;
-            color: #696761;
+            color: var(--text-muted);
         }
 
         .table-section {
@@ -1432,6 +1714,27 @@
         }
 
         @media (max-width: 1024px) {
+            .page-masthead-top,
+            .dashboard-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .page-toolbar-actions {
+                justify-items: start;
+            }
+
+            .refresh-status {
+                text-align: left;
+            }
+
+            .dashboard-hero-visual {
+                min-height: 360px;
+            }
+
+            .hero-facts {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .stats-row {
                 grid-template-columns: 1fr 1fr;
             }
@@ -1453,32 +1756,30 @@
                 padding-top: 106px;
             }
             .page-toolbar {
-                height: auto;
-                flex-wrap: wrap;
-                padding: 10px 18px 0;
-                gap: 0;
+                margin-top: 18px;
+                padding: 0 18px;
             }
 
             .page-toolbar-title {
-                border-right: none;
-                padding-right: 0;
-                font-size: 18px;
-                flex: 1;
+                font-size: 40px;
             }
 
-            .page-toolbar-actions {
-                margin-left: 0;
+            .page-lead {
+                font-size: 15px;
+                margin-top: 14px;
             }
 
             .page-toolbar-tabs {
                 width: 100%;
-                flex: none;
-                order: 3;
+                justify-content: space-between;
+                gap: 4px;
+                padding: 6px;
             }
 
             .page-toolbar .section-tab {
-                padding: 8px 12px;
-                height: auto;
+                flex: 1;
+                padding: 10px 12px;
+                font-size: 13px;
             }
 
             .dashboard-shell,
@@ -1488,9 +1789,55 @@
                 padding-right: 18px;
             }
 
+            .dashboard-hero {
+                padding: 18px;
+                border-radius: 24px;
+            }
+
+            .dashboard-hero-title {
+                font-size: 34px;
+                max-width: none;
+            }
+
+            .dashboard-hero-description {
+                font-size: 15px;
+            }
+
+            .hero-facts {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .hero-link-button {
+                width: 100%;
+            }
+
+            .dashboard-hero-visual {
+                min-height: auto;
+                grid-template-columns: 1fr;
+                padding: 12px;
+            }
+
+            .hero-main-photo {
+                min-height: 260px;
+            }
+
+            .hero-photo-stack {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-rows: none;
+            }
+
+            .hero-side-photo {
+                min-height: 140px;
+            }
+
             .refresh-status {
-                padding-left: 18px;
-                padding-right: 18px;
+                max-width: none;
+                text-align: left;
             }
 
             .stats-row,
@@ -1579,18 +1926,24 @@
 <body>
 
     <div class="page-toolbar" id="section-tabs" style="display:none;">
-        <h1 class="page-toolbar-title">Cycle Commute</h1>
+        <div class="page-masthead-top">
+            <div class="page-masthead-copy">
+                <div class="page-eyebrow">Cycle commute dashboard</div>
+                <h1 class="page-toolbar-title">Cycle Commute</h1>
+                <p class="page-lead">Daily riding rhythm, route friction, and the moments from the ride that make the dashboard feel like a place instead of a spreadsheet.</p>
+            </div>
+            <div class="page-toolbar-actions">
+                <div class="page-updated" id="page-updated">Updated --</div>
+                <button class="refresh-button" id="refresh-commute-btn" type="button">Refresh data</button>
+                <div class="refresh-status" id="refresh-status"></div>
+            </div>
+        </div>
         <div class="page-toolbar-tabs">
             <button class="section-tab active" data-section="dashboard">Dashboard</button>
             <button class="section-tab" data-section="photos">Photos</button>
             <button class="section-tab" data-section="hills">Hill Tracker</button>
         </div>
-        <div class="page-toolbar-actions">
-            <div class="page-updated" id="page-updated">Updated --</div>
-            <button class="refresh-button" id="refresh-commute-btn" type="button">Refresh</button>
-        </div>
     </div>
-    <div class="refresh-status" id="refresh-status"></div>
 
     <div id="loading-area" class="loading" style="display:none;">
         <div class="spinner"></div>
@@ -1599,6 +1952,25 @@
 
     <div id="dashboard-section">
     <div class="dashboard-shell">
+        <section class="dashboard-hero" id="dashboard-hero">
+            <div class="dashboard-hero-copy">
+                <div class="hero-eyebrow">Commute story</div>
+                <h2 class="dashboard-hero-title" id="hero-title">Loading your commute story...</h2>
+                <p class="dashboard-hero-description" id="hero-description">Pulling together your recent riding rhythm, pace, and timing patterns.</p>
+                <div class="hero-facts" id="hero-facts"></div>
+                <div class="hero-actions">
+                    <button class="hero-link-button" id="hero-view-photos-btn" type="button">Browse ride photos</button>
+                    <div class="hero-supporting-note" id="hero-supporting-note">Ride photos will appear here once the dashboard has loaded them.</div>
+                </div>
+            </div>
+            <div class="dashboard-hero-visual" id="dashboard-hero-visual">
+                <div class="hero-visual-empty">
+                    <div class="hero-visual-empty-kicker">Waiting on the ride archive</div>
+                    <div class="hero-visual-empty-copy">Recent commute photos will anchor this dashboard once the data is in.</div>
+                </div>
+            </div>
+        </section>
+
         <div class="stats-row" id="stats-row" style="display:none;"></div>
 
         <div class="dashboard-grid dashboard-grid-top">
@@ -1786,6 +2158,7 @@
         // Photo & Hill state
         let photosLoaded = false;
         let allPhotos = [];
+        let photoFetchPromise = null;
         let lightboxIndex = 0;
         let hillsLoaded = false;
         let hillData = null;
@@ -1799,20 +2172,35 @@
         const refreshButton = document.getElementById('refresh-commute-btn');
         const refreshStatus = document.getElementById('refresh-status');
         const pageUpdated = document.getElementById('page-updated');
+        const heroTitle = document.getElementById('hero-title');
+        const heroDescription = document.getElementById('hero-description');
+        const heroFacts = document.getElementById('hero-facts');
+        const heroVisual = document.getElementById('dashboard-hero-visual');
+        const heroSupportingNote = document.getElementById('hero-supporting-note');
+        const heroViewPhotosButton = document.getElementById('hero-view-photos-btn');
+
+        function switchSection(section) {
+            document.querySelectorAll('.section-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.section === section);
+            });
+
+            document.getElementById('dashboard-section').style.display = section === 'dashboard' ? '' : 'none';
+            document.getElementById('photos-section').style.display = section === 'photos' ? '' : 'none';
+            document.getElementById('hills-section').style.display = section === 'hills' ? '' : 'none';
+
+            if (section === 'photos') {
+                if (!photosLoaded) loadPhotos();
+                else renderPhotoGrid();
+            }
+            if (section === 'hills' && !hillsLoaded) loadHillData();
+        }
 
         // Section tab switching
         document.querySelectorAll('.section-tab').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const section = btn.dataset.section;
-                document.getElementById('dashboard-section').style.display = section === 'dashboard' ? '' : 'none';
-                document.getElementById('photos-section').style.display = section === 'photos' ? '' : 'none';
-                document.getElementById('hills-section').style.display = section === 'hills' ? '' : 'none';
-                if (section === 'photos' && !photosLoaded) loadPhotos();
-                if (section === 'hills' && !hillsLoaded) loadHillData();
-            });
+            btn.addEventListener('click', () => switchSection(btn.dataset.section));
         });
+
+        heroViewPhotosButton.addEventListener('click', () => switchSection('photos'));
 
         // Collapsible table toggle
         document.getElementById('table-toggle-btn').addEventListener('click', function() {
@@ -1942,6 +2330,27 @@
 
         function formatNumber(value, options) {
             return Number(value).toLocaleString('en-GB', options);
+        }
+
+        function formatShortDate(dateInput) {
+            const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+            return date.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short'
+            });
+        }
+
+        function formatLongDate(dateInput) {
+            const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+            return date.toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function escapeAttribute(str) {
+            return escapeHtml(str).replace(/"/g, '&quot;');
         }
 
         function getRelativeDate({ months = 0, weeks = 0 }) {
@@ -2092,10 +2501,220 @@
             return { peakTrips, offPeakTrips, totalSavings: cappedSavings, uncappedSavings };
         }
 
+        function buildHeroFact(label, value, note = '') {
+            return `
+                <div class="hero-fact">
+                    <div class="hero-fact-label">${label}</div>
+                    <div class="hero-fact-value">${value}</div>
+                    ${note ? `<div class="hero-fact-note">${note}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function getAnchorDaysLabel(rides) {
+            const weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const counts = [0, 0, 0, 0, 0];
+            rides.forEach(ride => {
+                if (ride.dayOfWeek < 5) counts[ride.dayOfWeek]++;
+            });
+
+            const topDays = counts
+                .map((count, idx) => ({ label: weekdayNames[idx], count }))
+                .filter(day => day.count > 0)
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 3)
+                .map(day => day.label);
+
+            if (!topDays.length) return 'weekday rides';
+            if (topDays.length === 1) return topDays[0];
+            if (topDays.length === 2) return `${topDays[0]} and ${topDays[1]}`;
+            return `${topDays[0]} to ${topDays[topDays.length - 1]}`;
+        }
+
+        function buildHeroPhotoMarkup() {
+            if (!allPhotos.length) {
+                return `
+                    <div class="hero-visual-empty">
+                        <div class="hero-visual-empty-kicker">Visual anchor coming in</div>
+                        <div class="hero-visual-empty-copy">Recent commute photos will land here as soon as the ride archive responds.</div>
+                    </div>
+                `;
+            }
+
+            const [mainPhoto, ...sidePhotos] = allPhotos.slice(0, 3);
+            const mainCaption = mainPhoto.caption ? escapeHtml(mainPhoto.caption) : '';
+            const sideMarkup = sidePhotos.map(photo => `
+                <div class="hero-side-photo">
+                    <img src="${escapeAttribute(photo.url)}" alt="${escapeAttribute(photo.activityName)}" loading="lazy">
+                    <div class="hero-side-meta">${escapeHtml(photo.activityName)} · ${formatShortDate(photo.activityDate)}</div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="hero-main-photo">
+                    <img src="${escapeAttribute(mainPhoto.url)}" alt="${escapeAttribute(mainPhoto.activityName)}" loading="lazy">
+                    <div class="hero-photo-caption">
+                        <strong>${escapeHtml(mainPhoto.activityName)}</strong>
+                        <span>${formatLongDate(mainPhoto.activityDate)}${mainCaption ? ` · ${mainCaption}` : ''}</span>
+                    </div>
+                </div>
+                <div class="hero-photo-stack">
+                    ${sideMarkup || `
+                        <div class="hero-side-photo">
+                            <div class="hero-visual-empty">
+                                <div class="hero-visual-empty-kicker">More from the route</div>
+                                <div class="hero-visual-empty-copy">Open the photo tab to browse the full archive.</div>
+                            </div>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderDashboardHero(rides) {
+            if (!rides.length) {
+                heroTitle.textContent = 'No commute data yet.';
+                heroDescription.textContent = 'Once rides are available, this space will summarize your recent rhythm and bring in route photos as the page anchor.';
+                heroFacts.innerHTML = '';
+                heroVisual.innerHTML = buildHeroPhotoMarkup();
+                heroSupportingNote.textContent = 'Connect ride data to build the dashboard story.';
+                return;
+            }
+
+            const recent30 = getRidesLastNDays(rides, 30);
+            const windowRides = recent30.length ? recent30 : rides.slice(0, Math.min(30, rides.length));
+            const recentDistance = windowRides.reduce((sum, ride) => sum + ride.distanceKm, 0);
+            const recentSavings = calculateTubeSavings(windowRides).totalSavings;
+            const recentStoppedMin = windowRides.length
+                ? windowRides.reduce((sum, ride) => sum + (ride.stoppedDurationSec / 60), 0) / windowRides.length
+                : 0;
+            const anchorDays = getAnchorDaysLabel(windowRides);
+            const latestRide = rides[0];
+            const windowSpeed = windowRides.length
+                ? windowRides.reduce((sum, ride) => sum + ride.avgSpeedKph, 0) / windowRides.length
+                : latestRide.avgSpeedKph;
+
+            const morningRides = windowRides.filter(ride => ride.commuteType === 'morning');
+            const eveningRides = windowRides.filter(ride => ride.commuteType === 'evening');
+            const morningAvgLeave = morningRides.length
+                ? formatTime(calculateCircularMean(morningRides.map(ride => ride.leaveMinutes)))
+                : null;
+            const eveningAvgArrive = eveningRides.length
+                ? formatTime(calculateCircularMean(eveningRides.map(ride => ride.arriveMinutes)))
+                : null;
+
+            heroTitle.textContent = `${windowRides.length} rides over the last month, with ${anchorDays} setting the rhythm.`;
+            heroDescription.textContent = `You covered ${formatNumber(recentDistance, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} km, saved £${recentSavings.toFixed(2)}, and held ${windowSpeed.toFixed(1)} km/h on average. ${morningAvgLeave && eveningAvgArrive ? `Mornings leave around ${morningAvgLeave} and evenings land around ${eveningAvgArrive}.` : 'Recent rides are ready for a deeper look below.'}`;
+
+            heroFacts.innerHTML = [
+                buildHeroFact(
+                    'Latest ride',
+                    formatLongDate(latestRide.startLocal),
+                    `${latestRide.name || 'Commute'} · ${latestRide.distanceKm.toFixed(1)} km`
+                ),
+                buildHeroFact(
+                    'Traffic friction',
+                    `${recentStoppedMin.toFixed(1)} min`,
+                    'Average time lost to stops per ride over the current window.'
+                ),
+                buildHeroFact(
+                    'Visual rhythm',
+                    anchorDays,
+                    'Your busiest weekday pattern in the recent commute block.'
+                )
+            ].join('');
+
+            heroVisual.innerHTML = buildHeroPhotoMarkup();
+            heroSupportingNote.textContent = allPhotos.length
+                ? 'Ride photos now lead the dashboard and the full archive stays available in the photo tab.'
+                : 'Ride photos are loading in the background so the dashboard can use the route itself as its main visual.';
+        }
+
         function renderDashboard() {
+            renderDashboardHero(normalizedRides);
             renderStats(normalizedRides);
             renderAllCharts(normalizedRides);
             renderTable(normalizedRides);
+        }
+
+        function flattenPhotoActivities(data) {
+            const photos = [];
+            data.forEach(activity => {
+                (activity.photos || []).forEach(photo => {
+                    const url = (photo.urls && (photo.urls['2048'] || photo.urls['600'])) || '';
+                    if (url) {
+                        photos.push({
+                            url,
+                            caption: photo.caption || '',
+                            activityName: activity.activityName,
+                            activityDate: activity.activityDate
+                        });
+                    }
+                });
+            });
+            return photos;
+        }
+
+        async function fetchRidePhotos(options = {}) {
+            const { force = false } = options;
+            if (photoFetchPromise && !force) return photoFetchPromise;
+
+            photoFetchPromise = (async () => {
+                const resp = await fetch('/api/get-ride-photos');
+                const data = await parseJsonResponse(resp);
+                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to load photos');
+
+                allPhotos = flattenPhotoActivities(data);
+                photosLoaded = true;
+                return allPhotos;
+            })();
+
+            try {
+                return await photoFetchPromise;
+            } catch (error) {
+                photoFetchPromise = null;
+                throw error;
+            }
+        }
+
+        function renderPhotoGrid() {
+            const grid = document.getElementById('photos-grid');
+            const empty = document.getElementById('photos-empty');
+
+            if (allPhotos.length === 0) {
+                empty.style.display = 'block';
+                grid.innerHTML = '';
+                return;
+            }
+
+            empty.style.display = 'none';
+            grid.innerHTML = allPhotos.map((p, idx) => {
+                const dateStr = formatLongDate(p.activityDate);
+                const safeName = escapeHtml(p.activityName);
+                return `
+                    <div class="photo-card" onclick="openLightbox(${idx})">
+                        <img src="${escapeAttribute(p.url)}" alt="${escapeAttribute(p.activityName)}" loading="lazy">
+                        <div class="photo-overlay">
+                            <div class="photo-overlay-name">${safeName}</div>
+                            <div class="photo-overlay-date">${dateStr}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function primeDashboardPhotos() {
+            fetchRidePhotos()
+                .then(() => {
+                    if (normalizedRides.length) {
+                        renderDashboardHero(normalizedRides);
+                    }
+                })
+                .catch(() => {
+                    if (normalizedRides.length) {
+                        renderDashboardHero(normalizedRides);
+                    }
+                });
         }
 
         async function parseJsonResponse(response) {
@@ -2135,11 +2754,12 @@
                 allRides = data.sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
                 normalizedRides = allRides.map(normalizeRide);
 
-                document.getElementById('section-tabs').style.display = 'flex';
+                document.getElementById('section-tabs').style.display = 'block';
                 updateRefreshStatusFromResponse(response);
 
                 // Render everything
                 renderDashboard();
+                primeDashboardPhotos();
             } catch (err) {
                 console.error('Error:', err);
                 loading.innerHTML = `<p>Something went wrong: ${err.message}</p>`;
@@ -3119,54 +3739,14 @@
         // ============================
         async function loadPhotos() {
             const loading = document.getElementById('photos-loading');
-            const grid = document.getElementById('photos-grid');
             const empty = document.getElementById('photos-empty');
             loading.style.display = 'block';
+            empty.style.display = 'none';
 
             try {
-                const resp = await fetch('/api/get-ride-photos');
-                const data = await parseJsonResponse(resp);
-                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to load photos');
-
-                allPhotos = [];
-                data.forEach(activity => {
-                    activity.photos.forEach(photo => {
-                        const url = (photo.urls && (photo.urls['2048'] || photo.urls['600'])) || '';
-                        if (url) {
-                            allPhotos.push({
-                                url: url,
-                                caption: photo.caption || '',
-                                activityName: activity.activityName,
-                                activityDate: activity.activityDate
-                            });
-                        }
-                    });
-                });
-
+                await fetchRidePhotos();
                 loading.style.display = 'none';
-
-                if (allPhotos.length === 0) {
-                    empty.style.display = 'block';
-                    return;
-                }
-
-                grid.innerHTML = allPhotos.map((p, idx) => {
-                    const dateStr = new Date(p.activityDate).toLocaleDateString('en-GB', {
-                        day: 'numeric', month: 'short', year: 'numeric'
-                    });
-                    const safeName = escapeHtml(p.activityName);
-                    return `
-                        <div class="photo-card" onclick="openLightbox(${idx})">
-                            <img src="${escapeHtml(p.url)}" alt="${safeName}" loading="lazy">
-                            <div class="photo-overlay">
-                                <div class="photo-overlay-name">${safeName}</div>
-                                <div class="photo-overlay-date">${dateStr}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                photosLoaded = true;
+                renderPhotoGrid();
             } catch (err) {
                 console.error('Photo load error:', err);
                 loading.innerHTML = '<p>Something went wrong: ' + escapeHtml(err.message) + '</p>';
