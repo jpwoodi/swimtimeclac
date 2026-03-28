@@ -977,6 +977,7 @@
             font-family: inherit;
             cursor: pointer;
             transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+            min-width: 92px;
         }
 
         .page-toolbar .section-tab:hover {
@@ -1091,7 +1092,7 @@
             font-weight: 600;
             color: var(--text);
             margin: 0;
-            max-width: 10ch;
+            max-width: 12ch;
         }
 
         .dashboard-hero-description {
@@ -1295,6 +1296,43 @@
             gap: 18px;
         }
 
+        .section-heading-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+            gap: 24px;
+            align-items: end;
+            margin: 8px 0 18px;
+        }
+
+        .analytics-heading-row {
+            margin-top: 22px;
+        }
+
+        .section-kicker {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            margin: 0;
+            font-size: 26px;
+            line-height: 1.02;
+            letter-spacing: -0.04em;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .section-note {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--text-muted);
+        }
+
         .dashboard-grid-top {
             grid-template-columns: repeat(4, minmax(0, 1fr));
             margin-bottom: 18px;
@@ -1316,6 +1354,36 @@
 
         .stat-card {
             padding: 26px 32px;
+            position: relative;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(246, 241, 232, 0.96)),
+                var(--surface);
+        }
+
+        #stats-row .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 4px;
+            background: rgba(25, 24, 22, 0.1);
+        }
+
+        #stats-row .stat-card:nth-child(2)::before,
+        #hill-stats .stat-card:nth-child(2)::before {
+            background: rgba(35, 127, 100, 0.5);
+        }
+
+        #stats-row .stat-card:nth-child(3)::before,
+        #hill-stats .stat-card:nth-child(3)::before {
+            background: rgba(62, 188, 170, 0.45);
+        }
+
+        #stats-row .stat-card:nth-child(4)::before,
+        #hill-stats .stat-card:nth-child(4)::before {
+            background: rgba(199, 122, 18, 0.5);
         }
 
         .stat-label {
@@ -1352,6 +1420,31 @@
 
         .dashboard-card {
             padding: 28px 36px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .card-kicker {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            margin-bottom: 8px;
+        }
+
+        .card-meta {
+            max-width: 220px;
+            text-align: right;
+            font-size: 12px;
+            line-height: 1.45;
+            color: var(--text-soft);
         }
 
         .timing-card {
@@ -1490,7 +1583,7 @@
 
         .dashboard-card-title,
         .table-title {
-            margin: 0 0 24px;
+            margin: 0;
             font-size: 17px;
             font-weight: 500;
             color: #3e3d39;
@@ -1501,6 +1594,7 @@
         .dashboard-inline-note {
             font-size: 13px;
             color: var(--text-muted);
+            margin-top: 14px;
         }
 
         .table-section {
@@ -1510,6 +1604,19 @@
 
         .table-header {
             border-bottom-color: #dfd8cc;
+            align-items: end;
+        }
+
+        .table-heading-copy {
+            min-width: 0;
+        }
+
+        .table-intro {
+            margin: 10px 0 0;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-muted);
+            max-width: 54ch;
         }
 
         .table-toggle-btn {
@@ -1714,6 +1821,20 @@
         }
 
         @media (max-width: 1024px) {
+            .section-heading-row {
+                grid-template-columns: 1fr;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: start;
+            }
+
+            .card-meta {
+                max-width: none;
+                text-align: left;
+            }
+
             .page-masthead-top,
             .dashboard-hero {
                 grid-template-columns: 1fr;
@@ -1789,6 +1910,10 @@
                 padding-right: 18px;
             }
 
+            .section-title {
+                font-size: 22px;
+            }
+
             .dashboard-hero {
                 padding: 18px;
                 border-radius: 24px;
@@ -1804,7 +1929,12 @@
             }
 
             .hero-facts {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .hero-fact:last-child {
+                grid-column: 1 / -1;
             }
 
             .hero-actions {
@@ -1829,15 +1959,20 @@
             .hero-photo-stack {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 grid-template-rows: none;
+                gap: 10px;
             }
 
             .hero-side-photo {
-                min-height: 140px;
+                min-height: 120px;
             }
 
             .refresh-status {
                 max-width: none;
                 text-align: left;
+            }
+
+            .table-intro {
+                font-size: 13px;
             }
 
             .stats-row,
@@ -1971,17 +2106,43 @@
             </div>
         </section>
 
+        <div class="section-heading-row">
+            <div>
+                <div class="section-kicker">At a glance</div>
+                <h2 class="section-title">The core commute numbers</h2>
+            </div>
+            <p class="section-note">Lifetime distance, rolling pace, and how much London traffic is still getting in your way.</p>
+        </div>
         <div class="stats-row" id="stats-row" style="display:none;"></div>
 
+        <div class="section-heading-row analytics-heading-row">
+            <div>
+                <div class="section-kicker">Recent patterns</div>
+                <h2 class="section-title">How the last few weeks are behaving</h2>
+            </div>
+            <p class="section-note">Targets, weekday rhythm, and speed trends pulled into one calmer read of the commute.</p>
+        </div>
         <div class="dashboard-grid dashboard-grid-top">
             <div class="chart-card dashboard-card timing-card">
-                <h3 class="dashboard-card-title">Timing targets</h3>
+                <div class="card-header">
+                    <div>
+                        <div class="card-kicker">30-day punctuality</div>
+                        <h3 class="dashboard-card-title">Timing targets</h3>
+                    </div>
+                    <div class="card-meta" id="timingMeta"></div>
+                </div>
                 <div id="boxPlotContainer"></div>
                 <div class="dashboard-inline-note" id="boxPlotInsights"></div>
             </div>
 
             <div class="chart-card dashboard-card heatmap-card">
-                <h3 class="dashboard-card-title">Weekly pattern</h3>
+                <div class="card-header">
+                    <div>
+                        <div class="card-kicker">Weekday consistency</div>
+                        <h3 class="dashboard-card-title">Weekly pattern</h3>
+                    </div>
+                    <div class="card-meta" id="heatmapMeta"></div>
+                </div>
                 <div class="chart-container heatmap-chart-container">
                     <div id="heatmapContainer"></div>
                 </div>
@@ -1990,7 +2151,13 @@
         </div>
 
         <div class="chart-card dashboard-card">
-            <h3 class="dashboard-card-title">Speed over time</h3>
+            <div class="card-header">
+                <div>
+                    <div class="card-kicker">Momentum</div>
+                    <h3 class="dashboard-card-title">Speed over time</h3>
+                </div>
+                <div class="card-meta" id="speedMeta"></div>
+            </div>
             <div class="chart-container dashboard-speed-chart">
                 <canvas id="speedTimeChart"></canvas>
             </div>
@@ -2002,7 +2169,11 @@
     <div class="table-section">
         <div class="table-card">
             <div class="table-header">
-                <h3 class="table-title">All commutes</h3>
+                <div class="table-heading-copy">
+                    <div class="card-kicker">Ride ledger</div>
+                    <h3 class="table-title">All commutes</h3>
+                    <p class="table-intro" id="table-summary">Loading the full commute log...</p>
+                </div>
                 <button class="table-toggle-btn" id="table-toggle-btn" type="button">Show table</button>
             </div>
             <div id="commute-table-wrapper" style="display:none;">
@@ -2178,6 +2349,10 @@
         const heroVisual = document.getElementById('dashboard-hero-visual');
         const heroSupportingNote = document.getElementById('hero-supporting-note');
         const heroViewPhotosButton = document.getElementById('hero-view-photos-btn');
+        const timingMeta = document.getElementById('timingMeta');
+        const heatmapMeta = document.getElementById('heatmapMeta');
+        const speedMeta = document.getElementById('speedMeta');
+        const tableSummary = document.getElementById('table-summary');
 
         function switchSection(section) {
             document.querySelectorAll('.section-tab').forEach(btn => {
@@ -3300,6 +3475,9 @@
             const last30DaysRides = getRidesLastNDays(rides, 30);
             const morningRides = last30DaysRides.filter(r => r.commuteType === 'morning');
             const eveningRides = last30DaysRides.filter(r => r.commuteType === 'evening');
+            timingMeta.textContent = last30DaysRides.length
+                ? `${last30DaysRides.length} rides in the last 30 days`
+                : 'Waiting on enough recent rides';
 
             if (!morningRides.length && !eveningRides.length) {
                 container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:40px;">No rides in the last 30 days</p>';
@@ -3425,6 +3603,7 @@
         function renderHeatmap(rides) {
             const container = document.getElementById('heatmapContainer');
             const insightsDiv = document.getElementById('heatmapInsights');
+            heatmapMeta.textContent = 'Last five ISO weeks';
 
             if (rides.length === 0) {
                 container.innerHTML = '<p style="text-align:center;color:#8792a2;padding:20px;">No data available</p>';
@@ -3494,6 +3673,9 @@
         // CHART 4: Speed Over Time with Rolling Average
         function renderSpeedOverTime(rides) {
             const insightsDiv = document.getElementById('speedInsights');
+            speedMeta.textContent = rides.length
+                ? `${rides.length} rides · 14-ride rolling average`
+                : 'No speed trend yet';
 
             if (chartInstances.speedTime) {
                 chartInstances.speedTime.destroy();
@@ -3693,6 +3875,13 @@
 
         function renderTable(rides) {
             const tbody = document.getElementById('commute-body');
+            if (rides.length) {
+                const latest = rides[0];
+                const oldest = rides[rides.length - 1];
+                tableSummary.textContent = `${rides.length} rides from ${formatLongDate(oldest.startLocal)} to ${formatLongDate(latest.startLocal)}. Latest commute: ${latest.name} at ${formatShortDate(latest.startLocal)}.`;
+            } else {
+                tableSummary.textContent = 'No commute rows available yet.';
+            }
             tbody.innerHTML = rides.map(r => {
                 const date = r.startLocal.toLocaleDateString('en-GB', {
                     day: 'numeric', month: 'short', year: 'numeric'
