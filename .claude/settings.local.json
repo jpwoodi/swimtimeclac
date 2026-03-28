@@ -27,7 +27,8 @@
       "Bash(npm show:*)",
       "Bash(node -e \"const f = require\\(''./c:/Users/j.woodnott/.vscode/Coding/swimtimeclac/.mcp.json''\\); console.log\\(JSON.stringify\\(f.mcpServers.stitch, null, 2\\)\\)\")",
       "Bash(node -e \"const f = require\\(''./.mcp.json''\\); console.log\\(JSON.stringify\\(f.mcpServers.stitch, null, 2\\)\\)\" --cwd \"C:/Users/j.woodnott/.vscode/Coding/swimtimeclac\")",
-      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\(''C:/Users/j.woodnott/.vscode/Coding/swimtimeclac/.mcp.json''\\).mcpServers.stitch, null, 2\\)\\)\")"
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\(''C:/Users/j.woodnott/.vscode/Coding/swimtimeclac/.mcp.json''\\).mcpServers.stitch, null, 2\\)\\)\")",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

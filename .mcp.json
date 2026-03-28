@@ -3,7 +3,7 @@
     "stitch": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "stitch-mcp"]
+      "args": ["-y", "@_davideast/stitch-mcp", "proxy"]
     }
   }
 }
