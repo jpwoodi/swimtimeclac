@@ -1,34 +1,67 @@
 const fetch = require('node-fetch');
 const { requireSiteAuth } = require('../lib/server-security');
 
-module.exports = async (req, res) => {
-    if (!requireSiteAuth(req, res)) {
-        return;
-    }
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+let cached = null;
+let cacheTimestamp = null;
 
-    const baseId = process.env.AIRTABLE_BASE_ID;
-    const token = process.env.AIRTABLE_TOKEN;
-    const tableName = 'SwimmingPools';
+// Airtable returns at most 100 records per request; follow the offset
+// token until the table is exhausted.
+async function fetchAllPoolRecords(baseId, token, tableName) {
+    const records = [];
+    let offset;
 
-    const url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
+    do {
+        const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableName}`);
+        if (offset) url.searchParams.set('offset', offset);
 
-    try {
-        const response = await fetch(url, {
+        const response = await fetch(url.toString(), {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
 
         if (!response.ok) {
-            return res.status(response.status).json({
-                error: `Failed to fetch data: ${response.statusText}`
-            });
+            const error = new Error(`Airtable request failed: ${response.statusText}`);
+            error.status = response.status;
+            throw error;
         }
 
         const data = await response.json();
-        res.status(200).json(data);
+        records.push(...(data.records || []));
+        offset = data.offset;
+    } while (offset);
+
+    return records;
+}
+
+module.exports = async (req, res) => {
+    if (!requireSiteAuth(req, res)) {
+        return;
+    }
+
+    const now = Date.now();
+    const forceRefresh = req.query?.refresh === 'true';
+
+    if (!forceRefresh && cached && cacheTimestamp !== null && now - cacheTimestamp < CACHE_DURATION) {
+        return res.status(200).json(cached);
+    }
+
+    try {
+        const records = await fetchAllPoolRecords(
+            process.env.AIRTABLE_BASE_ID,
+            process.env.AIRTABLE_TOKEN,
+            'SwimmingPools'
+        );
+
+        cached = { records };
+        cacheTimestamp = now;
+        res.status(200).json(cached);
     } catch (error) {
         console.error('Error fetching pools:', error);
-        res.status(500).json({ error: 'Failed to fetch pool data' });
+        if (cached) {
+            return res.status(200).json(cached);
+        }
+        res.status(error.status || 500).json({ error: 'Failed to fetch pool data' });
     }
 };

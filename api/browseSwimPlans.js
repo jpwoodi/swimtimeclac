@@ -97,6 +97,13 @@ function sortTemplates(templates, sortBy, sortOrder) {
     return sorted;
 }
 
+// List responses omit raw_text (the heaviest field) — the detail modal
+// fetches a single plan via ?action=getPlan&planId=...
+function toPlanSummary(template) {
+    const { raw_text, ...summary } = template;
+    return summary;
+}
+
 // Paginate results
 function paginateResults(templates, page, pageSize) {
     const totalCount = templates.length;
@@ -186,6 +193,15 @@ module.exports = async (req, res) => {
             });
         }
 
+        // Special endpoint to get a single full plan (including raw_text)
+        if (params.action === 'getPlan') {
+            const plan = allTemplates.find(t => t.plan_id === params.planId);
+            if (!plan) {
+                return res.status(404).json({ error: 'Plan not found' });
+            }
+            return res.status(200).json({ plan });
+        }
+
         // Build filters from query params
         const filters = {
             type: params.type,
@@ -213,7 +229,7 @@ module.exports = async (req, res) => {
 
         // Return results
         res.status(200).json({
-            plans: paginated.items,
+            plans: paginated.items.map(toPlanSummary),
             pagination: paginated.pagination,
             filters: filters
         });
@@ -222,7 +238,7 @@ module.exports = async (req, res) => {
         console.error('Browse error:', error.message);
         res.status(500).json({
             error: error.message,
-            hint: 'Make sure to run: npm run ingest-templates-v2'
+            hint: 'Make sure data/templates.v2.json exists. Regenerate it with: python3 swim_templates/scripts/ingest_v2.py'
         });
     }
 };

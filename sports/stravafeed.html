@@ -3,22 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Swim Feed</title>
+    <title>Swim Feed — Woodnott.com</title>
     <link rel="icon" href="/images/swimming_favicon.ico">
+    <meta name="description" content="Recent swim activities, monthly distance and pace, pulled from Strava.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/nav.css">
+    <link rel="stylesheet" href="/shared.css">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f6f9fc;
-            color: #1a1f36;
-            min-height: 100vh;
             padding: 124px 0 40px;
         }
 
@@ -208,21 +200,6 @@
             font-size: 14px;
         }
 
-        .loading .spinner {
-            border: 3px solid #e3e8ee;
-            border-top: 3px solid #635bff;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .stats-row {
@@ -290,16 +267,24 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" integrity="sha384-T/4KgSWuZEPozpPz7rnnp/5lDSnpY1VPJCojf1S81uTHS1E38qgLfMgVsAeRCWc4" crossorigin="anonymous"></script>
 
     <script>
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         function fetchSwims() {
             fetch('/api/get-swims')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
                         document.getElementById('swim-feed').innerHTML =
-                            '<div class="loading">Error loading swims: ' + data.error + '</div>';
+                            '<div class="loading">Error loading swims: ' + escapeHtml(data.error) + '</div>';
                         return;
                     }
 
@@ -353,7 +338,7 @@
                         row.className = 'swim-row';
                         row.innerHTML = `
                             <div class="swim-name">
-                                <h4>${swim.name}</h4>
+                                <h4>${escapeHtml(swim.name)}</h4>
                                 <div class="swim-date">${dateStr}</div>
                             </div>
                             <div class="swim-stats">
@@ -376,7 +361,7 @@
                 .catch(error => {
                     console.error('Error fetching swims:', error);
                     document.getElementById('swim-feed').innerHTML =
-                        '<div class="loading">Something went wrong: ' + error.message + '</div>';
+                        '<div class="loading">Something went wrong: ' + escapeHtml(error.message) + '</div>';
                 });
         }
 

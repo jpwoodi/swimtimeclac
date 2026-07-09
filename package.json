@@ -1,12 +1,11 @@
 {
   "name": "swimtimecalc",
   "version": "1.0.0",
-  "scripts": {
-    "check-template-bundle": "node scripts/check-template-bundle.js"
-  },
   "dependencies": {
     "@vercel/blob": "^2.3.1",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
     "vercel": "^28.18.5"
   }
 }

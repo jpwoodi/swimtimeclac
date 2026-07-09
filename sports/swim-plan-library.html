@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swim Plan Library</title>
+    <title>Swim Plan Library — Woodnott.com</title>
     <link rel="icon" href="/images/swimming_favicon.ico">
     <meta name="description" content="Browse 1000+ real masters swim training plans. Filter by distance, difficulty, and session type.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/nav.css">
+    <link rel="stylesheet" href="/shared.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f6f9fc;
-            color: #1a1f36;
-            min-height: 100vh;
             padding: 124px 0 60px;
         }
 
@@ -213,6 +208,11 @@
             transform: translateY(-2px);
         }
 
+        .plan-card:focus-visible {
+            outline: 2px solid #635bff;
+            outline-offset: 2px;
+        }
+
         .plan-card-header {
             display: flex;
             justify-content: space-between;
@@ -315,11 +315,6 @@
             height: 40px;
             animation: spin 0.8s linear infinite;
             margin: 0 auto 16px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         /* Pagination */
@@ -526,7 +521,7 @@
 
     <div class="page-header">
         <h1>Swim Plan Library</h1>
-        <p>Browse 1000+ real masters swim training plans</p>
+        <p>Browse 400+ real masters swim training plans</p>
         <div class="stats-bar" id="stats-bar">
             <div class="stat">Loading...</div>
         </div>
@@ -754,7 +749,7 @@
             const focusAreas = plan.metadata.focus_areas || [];
 
             return `
-                <div class="plan-card" onclick="showPlanDetails(${index})">
+                <div class="plan-card" role="button" tabindex="0" onclick="showPlanDetails(${index})" onkeydown="handleCardKeydown(event, ${index})">
                     <div class="plan-card-header">
                         <span class="plan-type-badge badge-${escapeAttr(plan.plan_type_key)}">
                             ${formatPlanType(plan.plan_type_key)}
@@ -804,7 +799,17 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function showPlanDetails(index) {
+        const planDetailCache = {};
+        let lastFocusedElement = null;
+
+        function handleCardKeydown(event, index) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showPlanDetails(index);
+            }
+        }
+
+        async function showPlanDetails(index) {
             const plan = currentPlans[index];
             if (!plan) return;
             const modal = document.getElementById('plan-modal');
@@ -839,13 +844,42 @@
                 </div>
             `;
 
-            content.textContent = plan.raw_text;
+            lastFocusedElement = document.activeElement;
             modal.classList.add('active');
+            modal.querySelector('.modal-close').focus();
+
+            try {
+                let fullText = plan.raw_text;
+                if (!fullText) {
+                    if (!(plan.plan_id in planDetailCache)) {
+                        content.textContent = 'Loading plan…';
+                        const response = await fetch(`/api/browseSwimPlans?action=getPlan&planId=${encodeURIComponent(plan.plan_id)}`);
+                        if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                        const data = await response.json();
+                        planDetailCache[plan.plan_id] = (data.plan && data.plan.raw_text) || '';
+                    }
+                    fullText = planDetailCache[plan.plan_id];
+                }
+                content.textContent = fullText;
+            } catch (error) {
+                console.error('Error loading plan detail:', error);
+                content.textContent = 'Could not load this plan. Please try again.';
+            }
         }
 
         function closeModal() {
             document.getElementById('plan-modal').classList.remove('active');
+            if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
         }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && document.getElementById('plan-modal').classList.contains('active')) {
+                closeModal();
+            }
+        });
 
         function closeModalOnBackdrop(event) {
             if (event.target.id === 'plan-modal') {
@@ -900,7 +934,8 @@
         }
 
         function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
+            const s = String(str || '');
+            return s.charAt(0).toUpperCase() + s.slice(1);
         }
 
         function formatTag(tag) {

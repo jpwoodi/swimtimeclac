@@ -14,6 +14,10 @@
     }
   ],
   "functions": {
+    "api/generateSwimPlan.js": {
+      "maxDuration": 60,
+      "includeFiles": "data/**"
+    },
     "api/get-segment-times.js": {
       "maxDuration": 60,
       "includeFiles": "data/**"

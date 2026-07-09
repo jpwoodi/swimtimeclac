@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSS Swim Speed Calculator</title>
+    <title>CSS Calculator — Woodnott.com</title>
     <link rel="icon" href="/images/swimming_favicon.ico">
     <meta name="description" content="Calculate your Critical Swim Speed from 200m and 400m time trial results.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/nav.css">
+    <link rel="stylesheet" href="/shared.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f6f9fc;
-            color: #1a1f36;
-            min-height: 100vh;
             padding: 124px 0 60px;
         }
 
@@ -68,23 +63,6 @@
         }
 
         .input-row input { flex: 1; }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e3e8ee;
-            border-radius: 6px;
-            font-size: 15px;
-            font-family: inherit;
-            color: #1a1f36;
-            transition: border-color 0.15s ease;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #635bff;
-            box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1);
-        }
 
         button {
             width: 100%;
@@ -181,9 +159,9 @@
             }
 
             const cssSpeed = (400 - 200) / (time400 - time200);
-            const cssPer100mTotal = 100 / cssSpeed;
+            const cssPer100mTotal = Math.round(100 / cssSpeed);
             const cssMins = Math.floor(cssPer100mTotal / 60);
-            const cssSecs = Math.round(cssPer100mTotal % 60);
+            const cssSecs = cssPer100mTotal % 60;
 
             resultEl.textContent = `${cssMins}:${cssSecs.toString().padStart(2, '0')} per 100m`;
             resultEl.style.display = 'block';
