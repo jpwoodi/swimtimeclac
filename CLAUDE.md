@@ -23,15 +23,16 @@ The sports section currently includes:
 ## Tech Stack
 
 - Frontend: vanilla HTML, CSS, and JavaScript
-- Backend: Node.js Vercel serverless functions
-- Deployment: Vercel
+- Backend: Node.js Vercel serverless functions, plus a Vercel Edge Middleware
+- Deployment: Vercel (daily crons refresh Strava snapshots into Vercel Blob)
 - External APIs:
   - Strava
   - OpenAI (`gpt-4o` in `api/generateSwimPlan.js`)
   - Airtable
-- Client-side libraries loaded by page where needed:
-  - Chart.js
-  - Leaflet
+  - Open-Meteo (weather enrichment for commute rides, no key required)
+- Client-side libraries loaded by page where needed (version-pinned with SRI):
+  - Chart.js 4.4.8
+  - Leaflet 1.9.4
   - Google Fonts (`Inter`)
 
 ## Repository Structure
@@ -41,8 +42,9 @@ The sports section currently includes:
 |-- index.html                       # Site landing page
 |-- login.html                       # Password entry page
 |-- auth.js                          # Client-side auth bootstrap and redirects
+|-- middleware.js                    # Edge Middleware enforcing the password gate on HTML pages
 |-- nav.css                          # Shared navigation styles
-|-- shared.css                       # Shared design tokens / styles
+|-- shared.css                       # Shared design tokens / base styles (linked by every page)
 |-- images/                          # Favicons, icons, map markers
 |
 |-- components/
@@ -69,18 +71,28 @@ The sports section currently includes:
 |
 |-- api/
 |   |-- auth.js                      # Auth endpoint: ?action=status|login|logout
-|   |-- browseSwimPlans.js           # Filter / sort / paginate swim plans
+|   |-- browseSwimPlans.js           # Filter / sort / paginate swim plans;
+|   |                                #   ?action=getPlan&planId= returns one full plan
 |   |-- generateSwimPlan.js          # OpenAI-backed plan generation
 |   |-- get-swims.js                 # Recent swim activities from Strava
-|   |-- get-rides.js                 # Commute rides from Strava
-|   |-- get-ride-photos.js           # Photos for commute rides
-|   |-- get-segment-times.js         # Segment efforts across commute rides
+|   |-- get-rides.js                 # Commute rides (blob snapshot with live fallback)
+|   |-- get-ride-photos.js           # Photos for commute rides (blob snapshot)
+|   |-- get-segment-times.js         # Segment efforts across commute rides (blob snapshot)
 |   |-- get-segment-detail.js        # Segment geometry / metadata
-|   |-- getPools.js                  # Pool data from Airtable
-|   `-- lib/
-|       |-- auth-utils.js            # Shared cookie / session helpers
-|       |-- strava.js                # Shared token refresh + pagination helpers
-|       `-- templates.js             # Shared loader for data/templates.v2.json
+|   |-- getPools.js                  # Pool data from Airtable (paginated, cached)
+|   |-- sync-commute-rides.js        # Cron: refresh commute ride snapshot in Blob
+|   |-- sync-ride-photos.js          # Cron: refresh ride photo snapshot in Blob
+|   `-- sync-segment-times.js        # Cron: refresh segment effort snapshot in Blob
+|
+|-- lib/                             # Shared server-side helpers (note: root-level, not api/lib/)
+|   |-- auth-utils.js                # Cookie / HMAC session token helpers
+|   |-- server-security.js           # requireSiteAuth, same-origin checks, login rate limiting
+|   |-- strava.js                    # Token refresh + pagination + shared handler factory
+|   |-- templates.js                 # Loader/cache for data/templates.v2.json
+|   |-- weather.js                   # Open-Meteo weather enrichment
+|   |-- commute-snapshot.js          # Blob snapshot read/write for commute rides
+|   |-- photo-snapshot.js            # Blob snapshot read/write for ride photos
+|   `-- segment-snapshot.js          # Blob snapshot read/write for segment efforts
 |
 |-- data/
 |   `-- templates.v2.json            # Checked-in swim plan dataset
@@ -92,9 +104,11 @@ The sports section currently includes:
 |   `-- scripts/                     # Python ingestion scripts
 |
 |-- scripts/
-|   `-- check-template-bundle.js     # Legacy Netlify/v1 checker; currently stale
+|   `-- ci-smoke.js                  # CI smoke test (also runnable locally)
 |
-|-- vercel.json                      # Vercel config
+|-- .github/workflows/ci.yml         # CI: syntax checks + smoke test
+|-- DEPLOYMENT_CHECKLIST.md          # Manual checklist for template-dataset deploys
+|-- vercel.json                      # Vercel config: crons, function limits, security headers
 `-- package.json                     # Node dependencies
 ```
 
@@ -105,31 +119,48 @@ The sports section currently includes:
 - Do not hand-write inline nav markup into pages
 - Sports pages get a second sub-nav automatically
 - Pages in the sports section should account for both nav bars with `padding-top: 124px`
+  (nav.js then adjusts body padding dynamically)
 - Non-sports pages use `padding-top: 80px`
 
 ### Authentication
-- The whole site is guarded by client-side auth bootstrap in `auth.js`
+- Two layers share the same HMAC-signed `__Host-` session cookie:
+  - `middleware.js` (Edge Middleware) redirects unauthenticated HTML page
+    requests to `/login.html`; static assets and `/api/*` pass through
+  - API routes verify the cookie server-side via `lib/server-security.js`
+    (`requireSiteAuth`)
+- `auth.js` provides the client-side bootstrap/redirect UX on top
 - Login page: `/login.html`
 - Auth API endpoint: `/api/auth?action=status|login|logout`
 - Auth can be disabled by setting `AUTH_ENABLED=false`
 
 ### Frontend
 - Pages are mostly self-contained HTML files with inline `<style>` and `<script>` blocks
+- Every page links `/shared.css` (design tokens, reset, base form/input/spinner styles);
+  page-specific styles stay inline and may override it
 - Cross-page dependencies are intentionally light
 - Absolute paths are preferred for links and assets:
   - `/sports/calculator.html`
   - `/nav.css`
   - `/images/...`
+- Page titles follow the pattern `Page — Woodnott.com`
+- CDN scripts/styles (Chart.js, Leaflet) are version-pinned with SRI hashes —
+  keep the pin and integrity attribute together when upgrading
 
 ### Backend
-- Vercel functions live in `api/`
-- Functions are CommonJS modules
+- Vercel functions live in `api/`; shared helpers live in root-level `lib/`
+- Functions are CommonJS modules; `middleware.js` is ESM (edge runtime)
 - Most functions proxy external APIs and add light filtering / caching
-- Reuse helpers in `api/lib/` instead of duplicating Strava or template-loading logic
+- Strava-backed endpoints prefer Vercel Blob snapshots (written by the daily
+  `api/sync-*` crons configured in `vercel.json`) and fall back to live Strava
+  calls, then to stale snapshots on error
+- Reuse helpers in `lib/` instead of duplicating Strava, auth, or
+  template-loading logic
 
 ### Swim Plan Data
 - `data/templates.v2.json` is the live bundle used by the swim plan library
-- `api/lib/templates.js` loads and caches that bundle
+- `lib/templates.js` loads and caches that bundle
+- Browse responses omit `raw_text`; the library modal fetches a single plan
+  via `/api/browseSwimPlans?action=getPlan&planId=...`
 - The checked-in dataset is generated from `.docx` files in `swim_templates/source/`
 - The current checked-in bundle was generated on `2026-02-10` and contains 401 plans
 
@@ -147,6 +178,13 @@ Run the site and serverless functions locally:
 vercel dev
 ```
 
+Run the CI smoke test (loads every module, validates the bundle, exercises
+`browseSwimPlans`):
+
+```bash
+node scripts/ci-smoke.js
+```
+
 ## Environment Variables
 
 Required for full functionality:
@@ -161,18 +199,22 @@ Required for full functionality:
 | `AIRTABLE_TOKEN` | Airtable personal access token |
 | `SITE_PASSWORD` | Password required to unlock the site |
 | `AUTH_SESSION_SECRET` | Secret used to sign auth session cookies |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token used by the snapshot sync endpoints |
+| `CRON_SECRET` | Bearer secret Vercel crons send to the `api/sync-*` endpoints |
 
 Optional:
 
 | Variable | Purpose |
 |----------|---------|
 | `AUTH_ENABLED` | Set to `false` to bypass the password gate |
+| `COMMUTE_SYNC_SECRET` | Additional bearer secret accepted by the sync endpoints |
+| `SWIM_PLAN_DEBUG_META` | Set to `true` to include template-selection metadata in plan responses |
 
 ## Code Conventions
 
 ### HTML Pages
 - Keep pages standalone and simple
-- Include `nav.css` and `components/nav.js` on navigable pages
+- Include `nav.css`, `shared.css`, and `components/nav.js` on navigable pages
 - Do not add a page-local `toggleMenu()` implementation; the nav component owns that behavior
 
 ### JavaScript
@@ -184,16 +226,18 @@ Optional:
 - Use `node-fetch` v2 for outbound requests
 - Respond with `res.status(...).json(...)` or `res.status(...).send(...)`
 - Module-scope caching is acceptable for expensive upstream calls
-- For Strava endpoints, prefer `api/lib/strava.js`
-- For template data, prefer `api/lib/templates.js`
+- For Strava endpoints, prefer `lib/strava.js`
+- For template data, prefer `lib/templates.js`
+- Gate new endpoints with `requireSiteAuth` from `lib/server-security.js`
 
 ## Common Tasks
 
 ### Add a new sports page
 1. Create the HTML file in `sports/`
-2. Link `/nav.css` and `/components/nav.js`
+2. Link `/nav.css`, `/shared.css`, and `/components/nav.js`
 3. Use `padding-top: 124px`
 4. Add the page to `sportsSubLinks` in `components/nav.js`
+5. Add a matching tool card to `sports/index.html`
 
 ### Add a new work article
 1. Create a file in `work/articles/` using the `YYYY-MM-DD-slug.html` pattern
@@ -214,9 +258,4 @@ python3 swim_templates/scripts/ingest_v2.py
 
 3. Confirm `data/templates.v2.json` was updated as expected
 4. Test `/sports/swim-plan-library.html` and `/api/browseSwimPlans`
-
-## Notes on Stale Artifacts
-
-- `scripts/check-template-bundle.js` still references the older Netlify / `templates.v1.json` setup
-- The live site uses Vercel, `api/`, and `data/templates.v2.json`
-- If you need to touch template tooling, prefer the v2 ingestion flow unless explicitly asked to revive the legacy path
+5. See `DEPLOYMENT_CHECKLIST.md` for the full manual checklist
