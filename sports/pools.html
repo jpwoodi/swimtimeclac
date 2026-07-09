@@ -147,6 +147,11 @@
 
         tr { cursor: pointer; }
 
+        tbody tr:focus-visible {
+            outline: 2px solid #635bff;
+            outline-offset: -2px;
+        }
+
         tr.status-row { cursor: default; }
         tr.status-row td {
             color: #697386;
