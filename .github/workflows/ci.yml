@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install runtime dependencies
+        run: npm install --omit=dev
+
+      - name: Syntax-check JavaScript
+        run: |
+          for f in api/*.js lib/*.js scripts/*.js components/*.js auth.js work/articles.js; do
+            node --check "$f"
+          done
+          node --check --input-type=module < middleware.js
+
+      - name: Smoke test
+        run: node scripts/ci-smoke.js
