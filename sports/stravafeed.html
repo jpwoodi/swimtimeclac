@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Swim Feed</title>
     <link rel="icon" href="/images/swimming_favicon.ico">
+    <meta name="description" content="Recent swim activities, monthly distance and pace, pulled from Strava.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/nav.css">
     <style>
@@ -293,13 +294,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" integrity="sha384-T/4KgSWuZEPozpPz7rnnp/5lDSnpY1VPJCojf1S81uTHS1E38qgLfMgVsAeRCWc4" crossorigin="anonymous"></script>
 
     <script>
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         function fetchSwims() {
             fetch('/api/get-swims')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
                         document.getElementById('swim-feed').innerHTML =
-                            '<div class="loading">Error loading swims: ' + data.error + '</div>';
+                            '<div class="loading">Error loading swims: ' + escapeHtml(data.error) + '</div>';
                         return;
                     }
 
@@ -353,7 +362,7 @@
                         row.className = 'swim-row';
                         row.innerHTML = `
                             <div class="swim-name">
-                                <h4>${swim.name}</h4>
+                                <h4>${escapeHtml(swim.name)}</h4>
                                 <div class="swim-date">${dateStr}</div>
                             </div>
                             <div class="swim-stats">
@@ -376,7 +385,7 @@
                 .catch(error => {
                     console.error('Error fetching swims:', error);
                     document.getElementById('swim-feed').innerHTML =
-                        '<div class="loading">Something went wrong: ' + error.message + '</div>';
+                        '<div class="loading">Something went wrong: ' + escapeHtml(error.message) + '</div>';
                 });
         }
 
