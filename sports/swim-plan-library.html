@@ -900,7 +900,8 @@
         }
 
         function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
+            const s = String(str || '');
+            return s.charAt(0).toUpperCase() + s.slice(1);
         }
 
         function formatTag(tag) {

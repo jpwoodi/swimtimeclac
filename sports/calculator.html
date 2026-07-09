@@ -256,7 +256,7 @@
                 return;
             }
 
-            if ((mode === 'pace' && !validateInputs(timeHours, timeMins, timeSecs)) || (mode === 'time' && (!validateSeconds(paceMins) || !validateSeconds(paceSecs)))) {
+            if ((mode === 'pace' && !validateInputs(timeHours, timeMins, timeSecs)) || (mode === 'time' && (!validateInputs(0, paceMins, paceSecs) || !validateSeconds(paceSecs)))) {
                 errorMessage.innerText = "Please enter a valid pace or time.";
                 errorMessage.classList.remove('hidden');
                 resultEl.style.display = 'none';
@@ -267,11 +267,11 @@
 
             if (mode === 'time') {
                 let totalPace = (parseInt(paceMins) * 60) + parseFloat(paceSecs);
-                let totalTime = (distance / 100) * totalPace;
+                let totalTime = Math.round((distance / 100) * totalPace);
                 let hours = Math.floor(totalTime / 3600);
                 totalTime %= 3600;
                 let mins = Math.floor(totalTime / 60);
-                let secs = (totalTime % 60).toFixed(0);
+                let secs = totalTime % 60;
 
                 let resultText = hours > 0 ? `${hours}h ` : "";
                 resultText += `${mins}m ${secs}s`;
@@ -279,9 +279,9 @@
                 resultEl.style.display = 'block';
             } else if (mode === 'pace') {
                 let totalTime = (parseInt(timeHours) * 3600) + (parseInt(timeMins) * 60) + parseFloat(timeSecs);
-                let totalPace = totalTime / (distance / 100);
+                let totalPace = Math.round(totalTime / (distance / 100));
                 let pMins = Math.floor(totalPace / 60);
-                let pSecs = (totalPace % 60).toFixed(0);
+                let pSecs = totalPace % 60;
                 resultEl.innerText = `${pMins}:${pSecs.toString().padStart(2, '0')} /100m`;
                 resultEl.style.display = 'block';
             }

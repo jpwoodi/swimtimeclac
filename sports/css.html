@@ -181,9 +181,9 @@
             }
 
             const cssSpeed = (400 - 200) / (time400 - time200);
-            const cssPer100mTotal = 100 / cssSpeed;
+            const cssPer100mTotal = Math.round(100 / cssSpeed);
             const cssMins = Math.floor(cssPer100mTotal / 60);
-            const cssSecs = Math.round(cssPer100mTotal % 60);
+            const cssSecs = cssPer100mTotal % 60;
 
             resultEl.textContent = `${cssMins}:${cssSecs.toString().padStart(2, '0')} per 100m`;
             resultEl.style.display = 'block';

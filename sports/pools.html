@@ -152,6 +152,13 @@
 
         tr { cursor: pointer; }
 
+        tr.status-row { cursor: default; }
+        tr.status-row td {
+            color: #697386;
+            text-align: center;
+            padding: 24px 12px;
+        }
+
         .scrollable-body::-webkit-scrollbar { width: 6px; }
         .scrollable-body::-webkit-scrollbar-thumb {
             background-color: rgba(0, 0, 0, 0.15);
@@ -253,7 +260,9 @@
                             <th onclick="sortTable(2)">Borough</th>
                         </tr>
                     </thead>
-                    <tbody id="pool-table-body"></tbody>
+                    <tbody id="pool-table-body">
+                        <tr class="status-row"><td colspan="3">Loading pools&hellip;</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -319,20 +328,23 @@
         });
 
         fetch('/api/getPools')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                return response.json();
+            })
             .then(data => {
-                dataRecords = data.records;
+                dataRecords = data.records || [];
 
                 const tableBody = document.getElementById('pool-table-body');
-                tableBody.innerHTML = data.records.map(record => `
-                    <tr data-id="${escapeHtml(record.id)}" data-type="${escapeHtml(record.fields.Type.toLowerCase())}">
+                tableBody.innerHTML = dataRecords.map(record => `
+                    <tr data-id="${escapeHtml(record.id)}" data-type="${escapeHtml((record.fields.Type || 'pool').toLowerCase())}" tabindex="0">
                         <td>${escapeHtml(record.fields.Name)}</td>
                         <td>${escapeHtml(record.fields.Length)}</td>
                         <td>${escapeHtml(record.fields.Borough)}</td>
                     </tr>
                 `).join('');
 
-                allMarkers = data.records.map(record => {
+                allMarkers = dataRecords.map(record => {
                     if (record.fields.Latitude && record.fields.Longitude) {
                         const type = record.fields.Type ? record.fields.Type.toLowerCase() : 'pool';
                         let icon = type === 'open_water' ? openWaterIcon : (type === 'private_pool' ? privatePoolIcon : poolIcon);
@@ -350,9 +362,19 @@
 
                 document.querySelectorAll('#pool-table-body tr').forEach(row => {
                     row.addEventListener('click', () => focusOnMarker(row.getAttribute('data-id')));
+                    row.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            focusOnMarker(row.getAttribute('data-id'));
+                        }
+                    });
                 });
             })
-            .catch(error => console.error('Error fetching data:', error));
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                document.getElementById('pool-table-body').innerHTML =
+                    '<tr class="status-row"><td colspan="3">Could not load pools. Refresh the page to try again.</td></tr>';
+            });
 
         function focusOnMarker(id) {
             if (lastFocusedMarker) {
