@@ -754,7 +754,7 @@
             const focusAreas = plan.metadata.focus_areas || [];
 
             return `
-                <div class="plan-card" onclick="showPlanDetails(${index})">
+                <div class="plan-card" role="button" tabindex="0" onclick="showPlanDetails(${index})" onkeydown="handleCardKeydown(event, ${index})">
                     <div class="plan-card-header">
                         <span class="plan-type-badge badge-${escapeAttr(plan.plan_type_key)}">
                             ${formatPlanType(plan.plan_type_key)}
@@ -804,7 +804,17 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function showPlanDetails(index) {
+        const planDetailCache = {};
+        let lastFocusedElement = null;
+
+        function handleCardKeydown(event, index) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showPlanDetails(index);
+            }
+        }
+
+        async function showPlanDetails(index) {
             const plan = currentPlans[index];
             if (!plan) return;
             const modal = document.getElementById('plan-modal');
@@ -839,13 +849,42 @@
                 </div>
             `;
 
-            content.textContent = plan.raw_text;
+            lastFocusedElement = document.activeElement;
             modal.classList.add('active');
+            modal.querySelector('.modal-close').focus();
+
+            try {
+                let fullText = plan.raw_text;
+                if (!fullText) {
+                    if (!(plan.plan_id in planDetailCache)) {
+                        content.textContent = 'Loading plan…';
+                        const response = await fetch(`/api/browseSwimPlans?action=getPlan&planId=${encodeURIComponent(plan.plan_id)}`);
+                        if (!response.ok) throw new Error(`Request failed (${response.status})`);
+                        const data = await response.json();
+                        planDetailCache[plan.plan_id] = (data.plan && data.plan.raw_text) || '';
+                    }
+                    fullText = planDetailCache[plan.plan_id];
+                }
+                content.textContent = fullText;
+            } catch (error) {
+                console.error('Error loading plan detail:', error);
+                content.textContent = 'Could not load this plan. Please try again.';
+            }
         }
 
         function closeModal() {
             document.getElementById('plan-modal').classList.remove('active');
+            if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
         }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && document.getElementById('plan-modal').classList.contains('active')) {
+                closeModal();
+            }
+        });
 
         function closeModalOnBackdrop(event) {
             if (event.target.id === 'plan-modal') {
