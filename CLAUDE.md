@@ -18,6 +18,9 @@ The sports section currently includes:
 - a Strava swim feed
 - an AI swim plan generator
 - a swim plan library backed by a checked-in template dataset
+- a race training block generator: natural-language goal parsing plus a
+  deterministic, periodized, CSS-personalized multi-week plan built from
+  the same template dataset
 - a cycle commute dashboard with charts, photos, and segment analysis
 
 ## Tech Stack
@@ -27,7 +30,7 @@ The sports section currently includes:
 - Deployment: Vercel (daily crons refresh Strava snapshots into Vercel Blob)
 - External APIs:
   - Strava
-  - OpenAI (`gpt-4o` in `api/generateSwimPlan.js`)
+  - OpenAI (`gpt-4o` in `api/generateSwimPlan.js` and `api/trainingBlock.js`)
   - Airtable
   - Open-Meteo (weather enrichment for commute rides, no key required)
 - Client-side libraries loaded by page where needed (version-pinned with SRI):
@@ -67,28 +70,35 @@ The sports section currently includes:
 |   |-- stravafeed.html              # Strava swim feed
 |   |-- swim-plan-generator.html     # AI swim plan generator
 |   |-- swim-plan-library.html       # Browseable swim plan library
+|   |-- training-block.html          # Race training block: NL goal -> periodized plan
 |   `-- cyclecommute.html            # Cycle commute dashboard
 |
 |-- api/
 |   |-- auth.js                      # Auth endpoint: ?action=status|login|logout
 |   |-- browseSwimPlans.js           # Filter / sort / paginate swim plans;
 |   |                                #   ?action=getPlan&planId= returns one full plan
-|   |-- generateSwimPlan.js          # OpenAI-backed plan generation
+|   |-- generateSwimPlan.js          # OpenAI-backed single-session plan generation
+|   |-- trainingBlock.js             # ?action=parseGoal (OpenAI NL extraction) |
+|   |                                #   generate (deterministic periodized block, no LLM)
 |   |-- get-swims.js                 # Recent swim activities from Strava
 |   |-- get-rides.js                 # Commute rides (blob snapshot with live fallback)
 |   |-- get-ride-photos.js           # Photos for commute rides (blob snapshot)
 |   |-- get-segment-times.js         # Segment efforts across commute rides (blob snapshot)
 |   |-- get-segment-detail.js        # Segment geometry / metadata
 |   |-- getPools.js                  # Pool data from Airtable (paginated, cached)
-|   |-- sync-commute-rides.js        # Cron: refresh commute ride snapshot in Blob
-|   |-- sync-ride-photos.js          # Cron: refresh ride photo snapshot in Blob
-|   `-- sync-segment-times.js        # Cron: refresh segment effort snapshot in Blob
+|   `-- sync.js                      # Cron: ?target=commute-rides|ride-photos|segment-times
+|                                     #   refreshes the matching Blob snapshot
 |
 |-- lib/                             # Shared server-side helpers (note: root-level, not api/lib/)
 |   |-- auth-utils.js                # Cookie / HMAC session token helpers
 |   |-- server-security.js           # requireSiteAuth, same-origin checks, login rate limiting
 |   |-- strava.js                    # Token refresh + pagination + shared handler factory
 |   |-- templates.js                 # Loader/cache for data/templates.v2.json
+|   |-- templateSelection.js         # Corpus scoring/selection (shared by both plan generators)
+|   |-- cssPacing.js                 # CSS zone math, interval rewriting (shared by both plan generators)
+|   |-- periodization.js             # Weeks-until-race -> base/build/peak/taper week-by-week plan
+|   |-- raceSpecificSet.js           # Goal-pace session generator for peak/taper weeks
+|   |-- trainingBlockComposer.js     # Fills a periodization plan with real + race-pace sessions
 |   |-- weather.js                   # Open-Meteo weather enrichment
 |   |-- commute-snapshot.js          # Blob snapshot read/write for commute rides
 |   |-- photo-snapshot.js            # Blob snapshot read/write for ride photos
@@ -151,10 +161,17 @@ The sports section currently includes:
 - Functions are CommonJS modules; `middleware.js` is ESM (edge runtime)
 - Most functions proxy external APIs and add light filtering / caching
 - Strava-backed endpoints prefer Vercel Blob snapshots (written by the daily
-  `api/sync-*` crons configured in `vercel.json`) and fall back to live Strava
-  calls, then to stale snapshots on error
+  `api/sync.js` crons, one per `?target=` configured in `vercel.json`) and
+  fall back to live Strava calls, then to stale snapshots on error
 - Reuse helpers in `lib/` instead of duplicating Strava, auth, or
   template-loading logic
+- **This deploy is on Vercel's Hobby plan: max 12 serverless functions**
+  (every file directly in `api/` counts as one, regardless of size). Before
+  adding a new `api/*.js` file, check `ls api/*.js | wc -l` — if it's
+  already at 12, add an `?action=`/`?target=`-style route to an existing
+  file instead (see `api/auth.js`, `api/browseSwimPlans.js`,
+  `api/trainingBlock.js`, `api/sync.js` for the pattern), don't just add a
+  new file
 
 ### Swim Plan Data
 - `data/templates.v2.json` is the live bundle used by the swim plan library
@@ -163,6 +180,50 @@ The sports section currently includes:
   via `/api/browseSwimPlans?action=getPlan&planId=...`
 - The checked-in dataset is generated from `.docx` files in `swim_templates/source/`
 - The current checked-in bundle was generated on `2026-02-10` and contains 401 plans
+- The corpus is a curated bank of real dated sessions spanning 2021-2026, evenly
+  split across the four `plan_type_key` categories — it is **not** a continuous
+  training log, so week-over-week progression can't be mined from it (see
+  "Race Training Block" below)
+- Two format quirks to know before writing code that reads `raw_text` or
+  `metadata.distance_meters`:
+  - For `pool_type: "SCY"` templates, `metadata.distance_meters` is actually
+    the raw yardage — the ingestion pipeline never converts it. Use
+    `lib/templateSelection.js`'s `trueDistanceMeters()` instead of the raw field.
+  - Interval times in `raw_text` are mostly expressed as a row of tab-separated
+    times for several generic ability groups (e.g. `"3 x 100 Drill\t1:35\t1:45\t2:00\t2:15\t:20 Rest"`),
+    not the `on TIME` / `@ TIME` phrasing `lib/cssPacing.js`'s `normalizeSetIntervals`
+    expects. Use `convertPaceTableText` first to collapse those to one
+    swimmer-specific sendoff.
+
+### Race Training Block
+`sports/training-block.html` takes a free-text race goal ("I'm racing the
+Dart 10k in 2 months...") and produces a periodized, CSS-personalized
+multi-week plan. It's a two-step pipeline, and only the first step uses an LLM:
+
+1. **`api/trainingBlock.js?action=parseGoal`** (OpenAI, `gpt-4o`, temperature 0)
+   extracts structured fields (race distance, weeks until race, target time,
+   CSS, sessions/week, session duration) from the free text. Every field is
+   type-coerced and range-checked server-side before being returned — nothing
+   the model outputs is trusted verbatim. The frontend shows the extracted
+   fields as editable form inputs, not as a fait accompli.
+2. **`api/trainingBlock.js?action=generate`** takes those structured fields
+   and builds the actual plan with **no LLM involved**:
+   - `lib/periodization.js` turns weeks-until-race into a week-by-week
+     base/build/peak/taper schedule (volume ramps, deload every 4th week,
+     per-week session-type mix) — this is coaching structure, not something
+     extracted from the corpus.
+   - `lib/trainingBlockComposer.js` fills each week: base/build sessions pull
+     a real corpus session close to that week's target distance (CSS-rewritten
+     via `lib/cssPacing.js`, deduplicated across the block); peak/taper "fast"
+     slots use `lib/raceSpecificSet.js` to generate a goal-pace-specific
+     session instead, since the corpus has nothing written for a specific
+     race goal. Goal pace comes from a supplied target time, or a CSS-based
+     fade-factor estimate (flagged as `estimated: true`) if none was given.
+
+The design rationale (why deterministic composition instead of routing
+everything through GPT like `api/generateSwimPlan.js` does) is that real
+masters coaches already wrote good sets — the value is precise selection and
+CSS-correct adaptation, not an LLM paraphrasing them.
 
 ## Running Locally
 
@@ -179,7 +240,8 @@ vercel dev
 ```
 
 Run the CI smoke test (loads every module, validates the bundle, exercises
-`browseSwimPlans`):
+`browseSwimPlans`, checks periodization invariants, and exercises
+`trainingBlock?action=generate`):
 
 ```bash
 node scripts/ci-smoke.js

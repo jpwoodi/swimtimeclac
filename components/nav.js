@@ -18,6 +18,7 @@
     { href: '/sports/stravafeed.html', label: 'Swim Feed' },
     { href: '/sports/swim-plan-generator.html', label: 'AI Swim Plan' },
     { href: '/sports/swim-plan-library.html', label: 'Swim Plans' },
+    { href: '/sports/training-block.html', label: 'Training Block' },
     { href: '/sports/cyclecommute.html', label: 'Cycle Commute' },
   ];
 

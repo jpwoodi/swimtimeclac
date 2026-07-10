@@ -1,6 +1,6 @@
 // CI smoke test: loads every serverless function and lib module, validates
-// the checked-in template bundle, and exercises the browseSwimPlans handler
-// end-to-end. Exits non-zero on the first failure.
+// the checked-in template bundle, and exercises the browseSwimPlans and
+// trainingBlock handlers end-to-end. Exits non-zero on the first failure.
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -70,6 +70,59 @@ function mockRes() {
   assert.strictEqual(res.statusCode, 404, 'unknown plan returns 404');
 
   console.log('browseSwimPlans smoke ok');
+
+  // 5. Periodization invariants: session/week counts and phase contiguity
+  // hold across a spread of block lengths and weekly session counts.
+  const { buildPeriodizationPlan } = require(path.join(root, 'lib', 'periodization'));
+  for (const weeks of [1, 2, 3, 6, 8, 16, 26]) {
+    for (const sessionsPerWeek of [2, 4, 6]) {
+      const plan = buildPeriodizationPlan({ weeksUntilRace: weeks, sessionsPerWeek });
+      assert.strictEqual(plan.weeks.length, weeks, `week count for ${weeks}w`);
+      plan.weeks.forEach((w) => {
+        assert.strictEqual(w.sessionTypes.length, sessionsPerWeek, `session count for ${weeks}w/${sessionsPerWeek}spw`);
+        assert(w.volumeMultiplier > 0, 'positive volume multiplier');
+      });
+      const phaseSum = plan.phases.reduce((sum, p) => sum + p.length, 0);
+      assert.strictEqual(phaseSum, weeks, `phase lengths sum for ${weeks}w`);
+    }
+  }
+  console.log('periodization invariants ok');
+
+  // 6. trainingBlock ?action=generate handler end-to-end (fully
+  // deterministic, no external API call).
+  const trainingBlock = require(path.join(root, 'api', 'trainingBlock'));
+  const reqHeaders = { origin: 'http://localhost', host: 'localhost' };
+
+  res = mockRes();
+  await trainingBlock({
+    method: 'POST',
+    headers: reqHeaders,
+    query: { action: 'generate' },
+    body: {
+      raceDistanceM: 10000,
+      weeksUntilRace: 8,
+      sessionsPerWeek: 4,
+      sessionDurationMin: 60,
+      cssMinutes: 1,
+      cssSeconds: 35,
+      targetTimeSeconds: 2.5 * 3600,
+    },
+  }, res);
+  assert.strictEqual(res.statusCode, 200, 'training block generates');
+  assert.strictEqual(res.body.weeks.length, 8, 'training block has 8 weeks');
+  assert.strictEqual(res.body.weeks[0].sessions.length, 4, 'each week has 4 sessions');
+  assert(res.body.weeks.every((w) => w.sessions.every((s) => s.main_set && s.main_set.length > 0)), 'every session has content');
+  assert(res.body.goalPace && res.body.goalPace.estimated === false, 'goal pace uses supplied target time');
+
+  res = mockRes();
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: { action: 'generate' }, body: {} }, res);
+  assert.strictEqual(res.statusCode, 400, 'missing fields rejected');
+
+  res = mockRes();
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: {}, body: {} }, res);
+  assert.strictEqual(res.statusCode, 400, 'missing action rejected');
+
+  console.log('trainingBlock smoke ok');
   console.log('ALL CHECKS PASSED');
 })().catch((error) => {
   console.error(error);

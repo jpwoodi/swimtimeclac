@@ -2855,7 +2855,7 @@
             setRefreshStatus('Updating commute snapshot...');
 
             try {
-                const response = await fetch('/api/sync-commute-rides', {
+                const response = await fetch('/api/sync?target=commute-rides', {
                     method: 'POST',
                     credentials: 'same-origin'
                 });
