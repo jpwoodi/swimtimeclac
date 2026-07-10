@@ -30,7 +30,7 @@ The sports section currently includes:
 - Deployment: Vercel (daily crons refresh Strava snapshots into Vercel Blob)
 - External APIs:
   - Strava
-  - OpenAI (`gpt-4o` in `api/generateSwimPlan.js` and `api/parseTrainingGoal.js`)
+  - OpenAI (`gpt-4o` in `api/generateSwimPlan.js` and `api/trainingBlock.js`)
   - Airtable
   - Open-Meteo (weather enrichment for commute rides, no key required)
 - Client-side libraries loaded by page where needed (version-pinned with SRI):
@@ -78,17 +78,16 @@ The sports section currently includes:
 |   |-- browseSwimPlans.js           # Filter / sort / paginate swim plans;
 |   |                                #   ?action=getPlan&planId= returns one full plan
 |   |-- generateSwimPlan.js          # OpenAI-backed single-session plan generation
-|   |-- parseTrainingGoal.js         # OpenAI-backed NL race-goal extraction
-|   |-- generateTrainingBlock.js     # Deterministic periodized training block (no LLM)
+|   |-- trainingBlock.js             # ?action=parseGoal (OpenAI NL extraction) |
+|   |                                #   generate (deterministic periodized block, no LLM)
 |   |-- get-swims.js                 # Recent swim activities from Strava
 |   |-- get-rides.js                 # Commute rides (blob snapshot with live fallback)
 |   |-- get-ride-photos.js           # Photos for commute rides (blob snapshot)
 |   |-- get-segment-times.js         # Segment efforts across commute rides (blob snapshot)
 |   |-- get-segment-detail.js        # Segment geometry / metadata
 |   |-- getPools.js                  # Pool data from Airtable (paginated, cached)
-|   |-- sync-commute-rides.js        # Cron: refresh commute ride snapshot in Blob
-|   |-- sync-ride-photos.js          # Cron: refresh ride photo snapshot in Blob
-|   `-- sync-segment-times.js        # Cron: refresh segment effort snapshot in Blob
+|   `-- sync.js                      # Cron: ?target=commute-rides|ride-photos|segment-times
+|                                     #   refreshes the matching Blob snapshot
 |
 |-- lib/                             # Shared server-side helpers (note: root-level, not api/lib/)
 |   |-- auth-utils.js                # Cookie / HMAC session token helpers
@@ -162,10 +161,17 @@ The sports section currently includes:
 - Functions are CommonJS modules; `middleware.js` is ESM (edge runtime)
 - Most functions proxy external APIs and add light filtering / caching
 - Strava-backed endpoints prefer Vercel Blob snapshots (written by the daily
-  `api/sync-*` crons configured in `vercel.json`) and fall back to live Strava
-  calls, then to stale snapshots on error
+  `api/sync.js` crons, one per `?target=` configured in `vercel.json`) and
+  fall back to live Strava calls, then to stale snapshots on error
 - Reuse helpers in `lib/` instead of duplicating Strava, auth, or
   template-loading logic
+- **This deploy is on Vercel's Hobby plan: max 12 serverless functions**
+  (every file directly in `api/` counts as one, regardless of size). Before
+  adding a new `api/*.js` file, check `ls api/*.js | wc -l` — if it's
+  already at 12, add an `?action=`/`?target=`-style route to an existing
+  file instead (see `api/auth.js`, `api/browseSwimPlans.js`,
+  `api/trainingBlock.js`, `api/sync.js` for the pattern), don't just add a
+  new file
 
 ### Swim Plan Data
 - `data/templates.v2.json` is the live bundle used by the swim plan library
@@ -194,14 +200,14 @@ The sports section currently includes:
 Dart 10k in 2 months...") and produces a periodized, CSS-personalized
 multi-week plan. It's a two-step pipeline, and only the first step uses an LLM:
 
-1. **`api/parseTrainingGoal.js`** (OpenAI, `gpt-4o`, temperature 0) extracts
-   structured fields (race distance, weeks until race, target time, CSS,
-   sessions/week, session duration) from the free text. Every field is
+1. **`api/trainingBlock.js?action=parseGoal`** (OpenAI, `gpt-4o`, temperature 0)
+   extracts structured fields (race distance, weeks until race, target time,
+   CSS, sessions/week, session duration) from the free text. Every field is
    type-coerced and range-checked server-side before being returned — nothing
    the model outputs is trusted verbatim. The frontend shows the extracted
    fields as editable form inputs, not as a fait accompli.
-2. **`api/generateTrainingBlock.js`** takes those structured fields and builds
-   the actual plan with **no LLM involved**:
+2. **`api/trainingBlock.js?action=generate`** takes those structured fields
+   and builds the actual plan with **no LLM involved**:
    - `lib/periodization.js` turns weeks-until-race into a week-by-week
      base/build/peak/taper schedule (volume ramps, deload every 4th week,
      per-week session-type mix) — this is coaching structure, not something
@@ -235,7 +241,7 @@ vercel dev
 
 Run the CI smoke test (loads every module, validates the bundle, exercises
 `browseSwimPlans`, checks periodization invariants, and exercises
-`generateTrainingBlock`):
+`trainingBlock?action=generate`):
 
 ```bash
 node scripts/ci-smoke.js

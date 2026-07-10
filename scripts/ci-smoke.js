@@ -1,7 +1,6 @@
 // CI smoke test: loads every serverless function and lib module, validates
 // the checked-in template bundle, and exercises the browseSwimPlans and
-// generateTrainingBlock handlers end-to-end. Exits non-zero on the first
-// failure.
+// trainingBlock handlers end-to-end. Exits non-zero on the first failure.
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -89,16 +88,16 @@ function mockRes() {
   }
   console.log('periodization invariants ok');
 
-  // 6. generateTrainingBlock handler end-to-end (fully deterministic, no
-  // external API call).
-  const generateTrainingBlock = require(path.join(root, 'api', 'generateTrainingBlock'));
+  // 6. trainingBlock ?action=generate handler end-to-end (fully
+  // deterministic, no external API call).
+  const trainingBlock = require(path.join(root, 'api', 'trainingBlock'));
   const reqHeaders = { origin: 'http://localhost', host: 'localhost' };
 
   res = mockRes();
-  await generateTrainingBlock({
+  await trainingBlock({
     method: 'POST',
     headers: reqHeaders,
-    query: {},
+    query: { action: 'generate' },
     body: {
       raceDistanceM: 10000,
       weeksUntilRace: 8,
@@ -116,10 +115,14 @@ function mockRes() {
   assert(res.body.goalPace && res.body.goalPace.estimated === false, 'goal pace uses supplied target time');
 
   res = mockRes();
-  await generateTrainingBlock({ method: 'POST', headers: reqHeaders, query: {}, body: {} }, res);
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: { action: 'generate' }, body: {} }, res);
   assert.strictEqual(res.statusCode, 400, 'missing fields rejected');
 
-  console.log('generateTrainingBlock smoke ok');
+  res = mockRes();
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: {}, body: {} }, res);
+  assert.strictEqual(res.statusCode, 400, 'missing action rejected');
+
+  console.log('trainingBlock smoke ok');
   console.log('ALL CHECKS PASSED');
 })().catch((error) => {
   console.error(error);

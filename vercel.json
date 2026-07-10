@@ -1,15 +1,15 @@
 {
   "crons": [
     {
-      "path": "/api/sync-commute-rides",
+      "path": "/api/sync?target=commute-rides",
       "schedule": "0 4 * * *"
     },
     {
-      "path": "/api/sync-segment-times",
+      "path": "/api/sync?target=segment-times",
       "schedule": "15 4 * * *"
     },
     {
-      "path": "/api/sync-ride-photos",
+      "path": "/api/sync?target=ride-photos",
       "schedule": "30 4 * * *"
     }
   ],
@@ -18,17 +18,15 @@
       "maxDuration": 60,
       "includeFiles": "data/**"
     },
-    "api/parseTrainingGoal.js": {
-      "maxDuration": 30
-    },
-    "api/generateTrainingBlock.js": {
+    "api/trainingBlock.js": {
+      "maxDuration": 30,
       "includeFiles": "data/**"
     },
     "api/get-segment-times.js": {
       "maxDuration": 60,
       "includeFiles": "data/**"
     },
-    "api/sync-segment-times.js": {
+    "api/sync.js": {
       "maxDuration": 300,
       "includeFiles": "data/**"
     },

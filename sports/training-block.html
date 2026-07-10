@@ -566,7 +566,7 @@
             statusEl.className = 'parse-status';
 
             try {
-                const response = await fetch('/api/parseTrainingGoal', {
+                const response = await fetch('/api/trainingBlock?action=parseGoal', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text }),
@@ -644,7 +644,7 @@
             document.getElementById('loading-spinner').style.display = 'block';
 
             try {
-                const response = await fetch('/api/generateTrainingBlock', {
+                const response = await fetch('/api/trainingBlock?action=generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
