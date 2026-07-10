@@ -18,6 +18,12 @@
       "maxDuration": 60,
       "includeFiles": "data/**"
     },
+    "api/parseTrainingGoal.js": {
+      "maxDuration": 30
+    },
+    "api/generateTrainingBlock.js": {
+      "includeFiles": "data/**"
+    },
     "api/get-segment-times.js": {
       "maxDuration": 60,
       "includeFiles": "data/**"
