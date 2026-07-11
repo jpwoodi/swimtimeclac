@@ -123,6 +123,51 @@ function mockRes() {
   assert.strictEqual(res.statusCode, 400, 'missing action rejected');
 
   console.log('trainingBlock smoke ok');
+
+  // 7. Post-set analysis math: build a race-pace session, synthesize laps
+  // that match it almost exactly, and confirm the comparison reports a
+  // clean on-target result. This guards the rep-grouping/pace-comparison
+  // logic specifically - both bugs found while building it (chunk
+  // boundaries drifting on coarse lap sizes, and comparing against the
+  // whole session's pace instead of the isolated main set) would silently
+  // reappear here if regressed.
+  const { buildRacePaceSession } = require(path.join(root, 'lib', 'raceSpecificSet'));
+  const { compareSessionToPrescription, generateAdvisorySuggestions } = require(path.join(root, 'lib', 'setAnalysis'));
+
+  const prescribed = { session_type: 'fast', source: 'race-pace', ...buildRacePaceSession({
+    raceDistanceM: 10000, paceSecondsPer100: 90, cssSecondsPer100: 95, sessionDurationMin: 60, phase: 'peak',
+  }) };
+
+  const syntheticLaps = (() => {
+    const laps = [];
+    let t = 0;
+    const start = new Date('2026-01-01T09:00:00Z').getTime();
+    const addBlock = (totalDist, totalTime, poolLength = 25) => {
+      const lengths = Math.round(totalDist / poolLength);
+      const perLen = totalTime / lengths;
+      for (let l = 0; l < lengths; l++) {
+        laps.push({ distance: poolLength, moving_time: perLen, elapsed_time: perLen, start_date: new Date(start + t * 1000).toISOString(), lap_index: laps.length + 1 });
+        t += perLen;
+      }
+    };
+    addBlock(prescribed.prescribedLeadInDistanceM, prescribed.prescribedLeadInDistanceM / 100 * 130);
+    for (let r = 0; r < prescribed.prescribedReps; r++) {
+      addBlock(prescribed.prescribedDistancePerRep, prescribed.prescribedSwimSecondsPerRep);
+      t += prescribed.prescribedRestSeconds;
+    }
+    addBlock(prescribed.prescribedLeadOutDistanceM, prescribed.prescribedLeadOutDistanceM / 100 * 130);
+    return laps;
+  })();
+
+  const comparison = compareSessionToPrescription({ rawStravaLaps: syntheticLaps, prescribedSession: prescribed, cssSecondsPer100: 95 });
+  assert.strictEqual(comparison.repAnalysis.repCount, prescribed.prescribedReps, 'rep grouping matches prescribed rep count exactly');
+  assert(Math.abs(comparison.repAnalysis.avgRestSeconds - prescribed.prescribedRestSeconds) <= 1, 'rest detection matches prescribed rest');
+  assert(Math.abs(comparison.paceDeltaSecondsPer100) < 1, 'on-target synthetic swim should show ~0 pace delta');
+
+  const suggestions = generateAdvisorySuggestions(comparison, { cssSecondsPer100: 95, raceDistanceM: 10000 });
+  assert(suggestions.some((s) => s.id === 'on-track'), 'on-target session should suggest on-track, not a CSS change');
+
+  console.log('setAnalysis smoke ok');
   console.log('ALL CHECKS PASSED');
 })().catch((error) => {
   console.error(error);
