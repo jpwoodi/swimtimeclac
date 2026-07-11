@@ -1,27 +1,46 @@
 const fetch = require("node-fetch");
+const crypto = require("crypto");
 const { loadTemplates } = require("../lib/templates");
 const { requireSameOriginWrite, requireSiteAuth } = require("../lib/server-security");
 const { buildPeriodizationPlan } = require("../lib/periodization");
 const { computeGoalPaceSecondsPer100 } = require("../lib/raceSpecificSet");
 const { composeTrainingBlock } = require("../lib/trainingBlockComposer");
 const { cssSecondsPer100FromParts, formatSecondsToTime } = require("../lib/cssPacing");
+const { getAccessToken, fetchActivityLaps, buildRateLimitMessage, getNextQuarterHourIso } = require("../lib/strava");
+const {
+  buildTrainingBlockSnapshot,
+  readActiveTrainingBlock,
+  writeActiveTrainingBlock,
+  findPrescribedSession,
+  appendSessionAnalysis,
+} = require("../lib/trainingBlockSnapshot");
+const { readSwimmerProfile, applyCssAdjustment } = require("../lib/swimmerProfile");
+const { compareSessionToPrescription, generateAdvisorySuggestions } = require("../lib/setAnalysis");
 
 const MAX_TEXT_CHARS = 2000;
+
+const ACTION_HANDLERS = {
+  parseGoal: handleParseGoal,
+  generate: handleGenerate,
+  getActiveBlock: handleGetActiveBlock,
+  getProfile: handleGetProfile,
+  analyzeSession: handleAnalyzeSession,
+  applyAdjustment: handleApplyAdjustment,
+};
 
 module.exports = async (req, res) => {
   if (req.method === "OPTIONS") {
     return res.status(200).json({ ok: true });
   }
 
-  const action = req.query.action;
-
-  if (action === "parseGoal") {
-    return handleParseGoal(req, res);
-  } else if (action === "generate") {
-    return handleGenerate(req, res);
+  const handler = ACTION_HANDLERS[req.query.action];
+  if (!handler) {
+    return res.status(400).json({
+      error: "Invalid action. Use ?action=parseGoal|generate|getActiveBlock|getProfile|analyzeSession|applyAdjustment",
+    });
   }
 
-  return res.status(400).json({ error: "Invalid action. Use ?action=parseGoal|generate" });
+  return handler(req, res);
 };
 
 // ---- ?action=parseGoal — free text -> structured race-goal fields (OpenAI) ----
@@ -180,7 +199,7 @@ function toPositiveInt(value) {
   return n === null ? null : Math.round(n);
 }
 
-function handleGenerate(req, res) {
+async function handleGenerate(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -238,7 +257,7 @@ function handleGenerate(req, res) {
     paceInfo,
   });
 
-  res.status(200).json({
+  const responseBody = {
     ...block,
     raceDistanceM,
     targetTimeSeconds: targetTimeSeconds || null,
@@ -247,5 +266,186 @@ function handleGenerate(req, res) {
       formatted: formatSecondsToTime(paceInfo.paceSecondsPer100),
       estimated: paceInfo.estimated,
     },
-  });
+  };
+
+  // Persisting the block is what makes ?action=analyzeSession possible later
+  // (it needs to know what was actually prescribed). Best-effort: a swimmer
+  // without Blob configured still gets their plan, just can't analyze
+  // against it yet.
+  try {
+    const snapshot = buildTrainingBlockSnapshot(
+      { raceDistanceM, weeksUntilRace, sessionsPerWeek, sessionDurationMin, cssMinutes, cssSeconds, targetTimeSeconds: targetTimeSeconds || null },
+      responseBody
+    );
+    await writeActiveTrainingBlock(snapshot);
+    responseBody.persisted = true;
+  } catch (error) {
+    console.error("Could not persist training block:", error.message);
+    responseBody.persisted = false;
+  }
+
+  res.status(200).json(responseBody);
+}
+
+// ---- ?action=getActiveBlock — the most recently generated + persisted block ----
+
+async function handleGetActiveBlock(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res)) {
+    return;
+  }
+
+  try {
+    const snapshot = await readActiveTrainingBlock();
+    if (!snapshot) {
+      return res.status(200).json({ active: false });
+    }
+    return res.status(200).json({ active: true, ...snapshot });
+  } catch (error) {
+    console.error("Error reading active training block:", error.message);
+    return res.status(500).json({ error: "Failed to read the active training block." });
+  }
+}
+
+// ---- ?action=getProfile — persisted swimmer CSS baseline, for pre-filling the form ----
+
+async function handleGetProfile(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res)) {
+    return;
+  }
+
+  try {
+    const profile = await readSwimmerProfile();
+    return res.status(200).json({ profile });
+  } catch (error) {
+    console.error("Error reading swimmer profile:", error.message);
+    return res.status(500).json({ error: "Failed to read the swimmer profile." });
+  }
+}
+
+// ---- ?action=analyzeSession — compare a recorded Strava swim to what was prescribed ----
+
+function toPositiveIntOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
+async function handleAnalyzeSession(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res) || !requireSameOriginWrite(req, res)) {
+    return;
+  }
+
+  const body = req.body || {};
+  const weekNumber = toPositiveIntOrNull(body.weekNumber);
+  const session = toPositiveIntOrNull(body.session);
+  const stravaActivityId = body.stravaActivityId;
+
+  if (!weekNumber || !session || !stravaActivityId) {
+    return res.status(400).json({ error: "weekNumber, session, and stravaActivityId are required." });
+  }
+
+  let activeBlock;
+  try {
+    activeBlock = await readActiveTrainingBlock();
+  } catch (error) {
+    console.error("Error reading active training block:", error.message);
+    return res.status(500).json({ error: "Failed to read the active training block." });
+  }
+
+  if (!activeBlock) {
+    return res.status(404).json({ error: "No active training block. Generate one first." });
+  }
+
+  const prescribedSession = findPrescribedSession(activeBlock, weekNumber, session);
+  if (!prescribedSession) {
+    return res.status(404).json({ error: `Week ${weekNumber} Session ${session} was not found in the active block.` });
+  }
+
+  const cssSecondsPer100 = cssSecondsPer100FromParts(activeBlock.input?.cssMinutes, activeBlock.input?.cssSeconds);
+
+  let rawLaps;
+  try {
+    const accessToken = await getAccessToken();
+    rawLaps = await fetchActivityLaps(accessToken, stravaActivityId);
+  } catch (error) {
+    console.error("Error fetching Strava laps:", error.message);
+    if (error && error.code === "STRAVA_RATE_LIMIT") {
+      res.setHeader("Retry-After", new Date(getNextQuarterHourIso()).toUTCString());
+      return res.status(429).json({ error: buildRateLimitMessage() });
+    }
+    return res.status(502).json({ error: "Failed to fetch lap data from Strava for that activity." });
+  }
+
+  const comparison = compareSessionToPrescription({ rawStravaLaps: rawLaps, prescribedSession, cssSecondsPer100 });
+  const suggestions = generateAdvisorySuggestions(comparison, { cssSecondsPer100 });
+
+  const analysisRecord = {
+    id: crypto.randomUUID(),
+    weekNumber,
+    session,
+    stravaActivityId,
+    analyzedAt: new Date().toISOString(),
+    comparison,
+    suggestions,
+  };
+
+  try {
+    await appendSessionAnalysis(analysisRecord);
+  } catch (error) {
+    // The analysis itself is still useful even if it couldn't be saved —
+    // return it, just flag that it won't be there on next page load.
+    console.error("Could not persist session analysis:", error.message);
+    analysisRecord.persisted = false;
+    return res.status(200).json(analysisRecord);
+  }
+
+  analysisRecord.persisted = true;
+  res.status(200).json(analysisRecord);
+}
+
+// ---- ?action=applyAdjustment — write an advisory suggestion into the swimmer profile ----
+
+async function handleApplyAdjustment(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res) || !requireSameOriginWrite(req, res)) {
+    return;
+  }
+
+  const body = req.body || {};
+  if (body.type !== "updateCss") {
+    return res.status(400).json({ error: "Only type='updateCss' adjustments are supported." });
+  }
+
+  const cssMinutes = Number(body.cssMinutes);
+  const cssSeconds = Number(body.cssSeconds);
+
+  if (cssSecondsPer100FromParts(cssMinutes, cssSeconds) === null || cssMinutes > 10) {
+    return res.status(400).json({ error: "cssMinutes/cssSeconds must describe a valid CSS pace." });
+  }
+
+  try {
+    const profile = await applyCssAdjustment({
+      cssMinutes,
+      cssSeconds,
+      reason: typeof body.reason === "string" ? body.reason.slice(0, 300) : null,
+    });
+    res.status(200).json({ profile });
+  } catch (error) {
+    console.error("Could not apply adjustment:", error.message);
+    res.status(500).json({ error: "Failed to save the adjustment. " + error.message });
+  }
 }
