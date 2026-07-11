@@ -79,7 +79,8 @@ The sports section currently includes:
 |   |                                #   ?action=getPlan&planId= returns one full plan
 |   |-- generateSwimPlan.js          # OpenAI-backed single-session plan generation
 |   |-- trainingBlock.js             # ?action=parseGoal (OpenAI NL extraction) |
-|   |                                #   generate (deterministic periodized block, no LLM)
+|   |                                #   generate (deterministic periodized block, no LLM) |
+|   |                                #   getActiveBlock | getProfile | analyzeSession | applyAdjustment
 |   |-- get-swims.js                 # Recent swim activities from Strava
 |   |-- get-rides.js                 # Commute rides (blob snapshot with live fallback)
 |   |-- get-ride-photos.js           # Photos for commute rides (blob snapshot)
@@ -99,6 +100,9 @@ The sports section currently includes:
 |   |-- periodization.js             # Weeks-until-race -> base/build/peak/taper week-by-week plan
 |   |-- raceSpecificSet.js           # Goal-pace session generator for peak/taper weeks
 |   |-- trainingBlockComposer.js     # Fills a periodization plan with real + race-pace sessions
+|   |-- setAnalysis.js               # Recorded swim vs prescribed session -> advisory suggestions
+|   |-- trainingBlockSnapshot.js     # Blob snapshot read/write for the active training block
+|   |-- swimmerProfile.js            # Blob snapshot read/write for the persisted CSS baseline
 |   |-- weather.js                   # Open-Meteo weather enrichment
 |   |-- commute-snapshot.js          # Blob snapshot read/write for commute rides
 |   |-- photo-snapshot.js            # Blob snapshot read/write for ride photos
@@ -225,6 +229,43 @@ everything through GPT like `api/generateSwimPlan.js` does) is that real
 masters coaches already wrote good sets — the value is precise selection and
 CSS-correct adaptation, not an LLM paraphrasing them.
 
+### Post-Set Analysis (closing the loop)
+Generating a plan used to be a dead end — nothing checked how a prescribed
+session actually went. Now:
+
+1. **`?action=generate` persists the block** to Vercel Blob
+   (`lib/trainingBlockSnapshot.js`, mirrors the commute/photo/segment
+   snapshot pattern) so there's something to compare a recorded swim
+   against later. Best-effort: without `BLOB_READ_WRITE_TOKEN` the swimmer
+   still gets their plan, they just can't analyze against it yet.
+2. **`?action=analyzeSession`** takes `{weekNumber, session,
+   stravaActivityId}` — Garmin devices sync to Strava already, so this is
+   just `lib/strava.js`'s `fetchActivityLaps()` plus
+   `lib/setAnalysis.js`'s comparison logic. Two tiers of confidence:
+   - *Session-level* (any session): total distance and overall pace vs a
+     reference pace.
+   - *Rep-level* (race-pace sessions only): those are the only sessions
+     with an exact machine-known structure — `lib/raceSpecificSet.js`
+     emits `prescribedReps` / `prescribedDistancePerRep` /
+     `prescribedSwimSecondsPerRep` / `prescribedRestSeconds` /
+     `prescribedLeadInDistanceM` / `prescribedLeadOutDistanceM` alongside
+     the human-readable text, so analysis never re-parses its own
+     generated prose. The lead-in/lead-out distances isolate the main-set
+     laps out of a full recorded session (which also includes warm-up/
+     build/cool-down) before grouping them into reps.
+   - A CSS suggestion computed from a race-pace session inverts the same
+     fade-factor relationship `lib/raceSpecificSet.js` used to derive goal
+     pace from CSS in the first place (`impliedCss = actualPace /
+     fadeFactor(raceDistanceM)`) — goal pace and CSS are different
+     reference frames, so a naive `currentCss + paceDelta` overstates the
+     implied CSS change substantially.
+3. **Suggestions are advisory only** — nothing is auto-applied.
+   **`?action=applyAdjustment`** writes a CSS update into
+   `lib/swimmerProfile.js` only when the swimmer explicitly clicks Apply.
+   That profile is what "future plans" means in practice: the training
+   block page pre-fills CSS from it on load. It never rewrites an
+   already-generated block.
+
 ## Running Locally
 
 Install dependencies:
@@ -240,8 +281,9 @@ vercel dev
 ```
 
 Run the CI smoke test (loads every module, validates the bundle, exercises
-`browseSwimPlans`, checks periodization invariants, and exercises
-`trainingBlock?action=generate`):
+`browseSwimPlans`, checks periodization invariants, exercises
+`trainingBlock?action=generate`, and verifies the post-set analysis math
+against a synthetic recorded swim):
 
 ```bash
 node scripts/ci-smoke.js

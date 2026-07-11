@@ -435,8 +435,153 @@
             color: #8792a2;
         }
 
+        /* Analyze a Session */
+        .analyze-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .analyze-card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 4px;
+        }
+
+        .analyze-card > .hint {
+            font-size: 13px;
+            color: #8792a2;
+            margin-bottom: 18px;
+        }
+
+        select#analyze-session-select,
+        select#analyze-swim-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e3e8ee;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #1a1f36;
+            background: #fff;
+        }
+
+        .active-block-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            max-width: 720px;
+            margin: 20px auto 0;
+            padding: 14px 20px;
+            background: #eef0ff;
+            border: 1px solid #d6d9ff;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #4f5b76;
+        }
+
+        .active-block-banner strong { color: #1a1f36; }
+
+        .comparison-card {
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-top: 16px;
+        }
+
+        .comparison-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .comparison-stats .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #697386;
+            margin-bottom: 4px;
+        }
+
+        .comparison-stats .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
+
+        .rep-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .rep-table th, .rep-table td {
+            padding: 6px 10px;
+            text-align: left;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        .rep-table th {
+            color: #8792a2;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .suggestion-card {
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .suggestion-card.info      { background: #eef0ff; color: #38316b; }
+        .suggestion-card.warning   { background: #fff3e0; color: #7a4a00; }
+        .suggestion-card.positive  { background: #e8f5e9; color: #1b5e20; }
+
+        .suggestion-card button {
+            width: auto;
+            padding: 7px 14px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .analysis-history {
+            margin-top: 20px;
+        }
+
+        .analysis-history h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #697386;
+            margin-bottom: 10px;
+        }
+
+        .analysis-history-item {
+            font-size: 12px;
+            color: #8792a2;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f3f7;
+        }
+
+        .analysis-history-item strong { color: #1a1f36; }
+
         @media (max-width: 768px) {
-            .card, .results-section { margin: 24px 16px 0; padding-left: 20px; padding-right: 20px; }
+            .card, .results-section, .analyze-card { margin: 24px 16px 0; padding-left: 20px; padding-right: 20px; }
             .page-header h1 { font-size: 22px; }
         }
     </style>
@@ -448,6 +593,11 @@
     <div class="page-header">
         <h1>Race Training Block</h1>
         <p>Describe your race goal in your own words — get a periodized plan built from real masters swim sessions, personalized to your CSS.</p>
+    </div>
+
+    <div class="active-block-banner" id="active-block-banner">
+        <span id="active-block-text"></span>
+        <button type="button" class="btn-secondary" style="width:auto;" onclick="loadActiveBlockIntoView()">View it</button>
     </div>
 
     <div class="card">
@@ -526,6 +676,32 @@
     <div class="results-section" id="results-section">
         <div class="summary-card" id="summary-card"></div>
         <div id="weeks-container"></div>
+
+        <div class="analyze-card">
+            <h2>Analyze a Session</h2>
+            <p class="hint">Recorded a prescribed set on your watch? Pick the session and the matching swim (synced in via Strava) to see how it went.</p>
+
+            <div class="fields-grid">
+                <div class="form-group">
+                    <label for="analyze-session-select">Prescribed session</label>
+                    <select id="analyze-session-select"></select>
+                </div>
+                <div class="form-group">
+                    <label for="analyze-swim-select">Recorded swim</label>
+                    <select id="analyze-swim-select"></select>
+                </div>
+            </div>
+
+            <button type="button" class="btn-secondary" id="analyze-btn" onclick="analyzeSession()">Analyze</button>
+            <div id="analyze-status" class="parse-status"></div>
+
+            <div id="analyze-result-container"></div>
+
+            <div class="analysis-history" id="analysis-history" style="display:none;">
+                <h3>Previous analyses on this block</h3>
+                <div id="analysis-history-list"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -663,6 +839,8 @@
                 renderResults(data);
                 document.getElementById('results-section').style.display = 'block';
                 document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                onBlockReady(data, []);
+                document.getElementById('active-block-banner').style.display = 'none';
             } catch (error) {
                 errorEl.textContent = 'Something went wrong: ' + error.message;
                 errorEl.classList.remove('hidden');
@@ -784,6 +962,252 @@
                 </div>
             `).join('');
         }
+
+        // ---- Post-set analysis: prescribed session vs a recorded Strava swim ----
+
+        let currentBlock = null;
+        let currentAnalyses = [];
+
+        async function onBlockReady(block, analyses) {
+            currentBlock = block;
+            currentAnalyses = Array.isArray(analyses) ? analyses : [];
+            populateSessionDropdown(block.weeks);
+            renderAnalysisHistory(currentAnalyses);
+            document.getElementById('analyze-result-container').innerHTML = '';
+            document.getElementById('analyze-status').textContent = '';
+            await loadRecentSwims();
+        }
+
+        function populateSessionDropdown(weeks) {
+            const select = document.getElementById('analyze-session-select');
+            const options = [];
+            weeks.forEach((week) => {
+                week.sessions.forEach((session) => {
+                    const label = `Week ${week.weekNumber} · Session ${session.session} (${(session.session_type || '').replace('_', ' ')}${week.phaseLabel ? ', ' + week.phaseLabel : ''})`;
+                    options.push(`<option value="${week.weekNumber}:${session.session}">${escapeHtml(label)}</option>`);
+                });
+            });
+            select.innerHTML = options.join('');
+        }
+
+        async function loadRecentSwims() {
+            const select = document.getElementById('analyze-swim-select');
+            select.innerHTML = '<option>Loading your swims...</option>';
+            try {
+                const response = await fetch('/api/get-swims');
+                const data = await response.json();
+                if (!response.ok || data.error || !Array.isArray(data)) {
+                    select.innerHTML = '<option value="">Could not load swims</option>';
+                    return;
+                }
+                const sorted = [...data].sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local)).slice(0, 30);
+                if (!sorted.length) {
+                    select.innerHTML = '<option value="">No recent swims found</option>';
+                    return;
+                }
+                select.innerHTML = sorted.map((swim) => {
+                    const date = new Date(swim.start_date_local).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    const label = `${date} — ${swim.name} (${Number(swim.distance).toLocaleString()}m)`;
+                    return `<option value="${swim.id}">${escapeHtml(label)}</option>`;
+                }).join('');
+            } catch (error) {
+                select.innerHTML = '<option value="">Could not load swims</option>';
+            }
+        }
+
+        async function analyzeSession() {
+            const sessionValue = document.getElementById('analyze-session-select').value;
+            const stravaActivityId = document.getElementById('analyze-swim-select').value;
+            const statusEl = document.getElementById('analyze-status');
+            const btn = document.getElementById('analyze-btn');
+
+            if (!sessionValue || !stravaActivityId) {
+                statusEl.textContent = 'Pick both a prescribed session and a recorded swim.';
+                statusEl.className = 'parse-status err';
+                return;
+            }
+
+            const [weekNumber, session] = sessionValue.split(':').map(Number);
+
+            btn.disabled = true;
+            btn.textContent = 'Analyzing...';
+            statusEl.textContent = '';
+            statusEl.className = 'parse-status';
+
+            try {
+                const response = await fetch('/api/trainingBlock?action=analyzeSession', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ weekNumber, session, stravaActivityId }),
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    statusEl.textContent = data.error || 'Could not analyze that session.';
+                    statusEl.className = 'parse-status err';
+                    return;
+                }
+
+                renderAnalysisResult(data);
+                currentAnalyses = [...currentAnalyses, data];
+                renderAnalysisHistory(currentAnalyses);
+                statusEl.textContent = data.persisted ? '' : 'Analyzed — note: this result could not be saved for later.';
+                statusEl.className = 'parse-status';
+            } catch (error) {
+                statusEl.textContent = 'Something went wrong: ' + error.message;
+                statusEl.className = 'parse-status err';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Analyze';
+            }
+        }
+
+        function formatPaceDelta(seconds) {
+            if (seconds === null || seconds === undefined) return 'n/a';
+            const sign = seconds < 0 ? 'faster' : 'slower';
+            return `${Math.abs(seconds).toFixed(1)}s/100m ${sign}`;
+        }
+
+        function renderAnalysisResult(analysis) {
+            const container = document.getElementById('analyze-result-container');
+            const cmp = analysis.comparison;
+            const rep = cmp.repAnalysis;
+
+            const repTable = rep ? `
+                <table class="rep-table">
+                    <thead><tr><th>Reps swum</th><th>Prescribed</th><th>Avg pace</th><th>Consistency</th><th>Fade</th><th>Avg rest</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>${rep.repCount}</td>
+                            <td>${rep.prescribedRepCount ?? 'n/a'}</td>
+                            <td>${rep.avgPaceSecondsPer100 ? rep.avgPaceSecondsPer100.toFixed(1) + 's/100m' : 'n/a'}</td>
+                            <td>${rep.consistencyStdevSeconds !== null ? '±' + rep.consistencyStdevSeconds.toFixed(1) + 's' : 'n/a'}</td>
+                            <td>${rep.fadeSecondsPer100 !== null ? rep.fadeSecondsPer100.toFixed(1) + 's/100m' : 'n/a'}</td>
+                            <td>${rep.avgRestSeconds !== null ? rep.avgRestSeconds + 's (target ' + rep.prescribedRestSeconds + 's)' : 'n/a'}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            ` : '';
+
+            container.innerHTML = `
+                <div class="comparison-card">
+                    <div class="comparison-stats">
+                        <div>
+                            <div class="stat-label">Distance Completed</div>
+                            <div class="stat-value">${cmp.summary.totalDistanceM.toLocaleString()}m${cmp.completionRatio !== null ? ' (' + Math.round(cmp.completionRatio * 100) + '%)' : ''}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Overall Pace</div>
+                            <div class="stat-value">${cmp.summary.avgPaceSecondsPer100 ? cmp.summary.avgPaceSecondsPer100.toFixed(1) + 's/100m' : 'n/a'}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">${cmp.referenceType === 'goal-pace' ? 'vs Goal Pace' : 'vs Current CSS (approx.)'}</div>
+                            <div class="stat-value">${formatPaceDelta(cmp.paceDeltaSecondsPer100)}</div>
+                        </div>
+                    </div>
+                    ${repTable}
+                    ${analysis.suggestions.map(renderSuggestion).join('')}
+                </div>
+            `;
+        }
+
+        function renderSuggestion(suggestion) {
+            const applyButton = suggestion.type === 'updateCss'
+                ? `<button type="button" class="btn-secondary" onclick="applySuggestion(${suggestion.proposedCssMinutes}, ${suggestion.proposedCssSeconds}, this)">Apply — set CSS to ${suggestion.proposedCssMinutes}:${String(suggestion.proposedCssSeconds).padStart(2, '0')}</button>`
+                : '';
+            return `
+                <div class="suggestion-card ${suggestion.severity}">
+                    <span>${escapeHtml(suggestion.message)}</span>
+                    ${applyButton}
+                </div>
+            `;
+        }
+
+        async function applySuggestion(cssMinutes, cssSeconds, buttonEl) {
+            buttonEl.disabled = true;
+            buttonEl.textContent = 'Applying...';
+            try {
+                const response = await fetch('/api/trainingBlock?action=applyAdjustment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'updateCss', cssMinutes, cssSeconds, reason: 'Applied from post-set analysis' }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    buttonEl.textContent = 'Failed — try again';
+                    buttonEl.disabled = false;
+                    return;
+                }
+                document.getElementById('css-mins').value = cssMinutes;
+                document.getElementById('css-secs').value = cssSeconds;
+                buttonEl.textContent = `Applied — future plans will use ${cssMinutes}:${String(cssSeconds).padStart(2, '0')}`;
+            } catch (error) {
+                buttonEl.textContent = 'Failed — try again';
+                buttonEl.disabled = false;
+            }
+        }
+
+        function renderAnalysisHistory(analyses) {
+            const wrapper = document.getElementById('analysis-history');
+            const list = document.getElementById('analysis-history-list');
+            if (!analyses.length) {
+                wrapper.style.display = 'none';
+                return;
+            }
+            wrapper.style.display = 'block';
+            list.innerHTML = [...analyses].reverse().map((a) => {
+                const date = new Date(a.analyzedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                const delta = formatPaceDelta(a.comparison?.paceDeltaSecondsPer100);
+                return `<div class="analysis-history-item"><strong>Week ${a.weekNumber} Session ${a.session}</strong> — ${date} — ${delta}</div>`;
+            }).join('');
+        }
+
+        // ---- Startup: pre-fill CSS from a saved profile, offer to reload the active block ----
+
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/trainingBlock?action=getProfile');
+                const data = await response.json();
+                if (response.ok && data.profile) {
+                    document.getElementById('css-mins').value = data.profile.cssMinutes;
+                    document.getElementById('css-secs').value = data.profile.cssSeconds;
+                }
+            } catch (error) {
+                // No saved profile yet — not an error the swimmer needs to see.
+            }
+        }
+
+        let pendingActiveBlock = null;
+
+        async function checkActiveBlock() {
+            try {
+                const response = await fetch('/api/trainingBlock?action=getActiveBlock');
+                const data = await response.json();
+                if (response.ok && data.active) {
+                    pendingActiveBlock = data;
+                    const generatedDate = new Date(data.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                    document.getElementById('active-block-text').innerHTML =
+                        `You have an active training block generated <strong>${generatedDate}</strong> (${data.block.totalWeeks} weeks).`;
+                    document.getElementById('active-block-banner').style.display = 'flex';
+                }
+            } catch (error) {
+                // No active block yet, or Blob isn't configured — quietly do nothing.
+            }
+        }
+
+        function loadActiveBlockIntoView() {
+            if (!pendingActiveBlock) return;
+            renderResults(pendingActiveBlock.block);
+            document.getElementById('results-section').style.display = 'block';
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            onBlockReady(pendingActiveBlock.block, pendingActiveBlock.analyses || []);
+            document.getElementById('active-block-banner').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+            checkActiveBlock();
+        });
     </script>
 </body>
 </html>

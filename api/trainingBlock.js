@@ -388,7 +388,10 @@ async function handleAnalyzeSession(req, res) {
   }
 
   const comparison = compareSessionToPrescription({ rawStravaLaps: rawLaps, prescribedSession, cssSecondsPer100 });
-  const suggestions = generateAdvisorySuggestions(comparison, { cssSecondsPer100 });
+  const suggestions = generateAdvisorySuggestions(comparison, {
+    cssSecondsPer100,
+    raceDistanceM: toPositiveNumber(activeBlock.input?.raceDistanceM),
+  });
 
   const analysisRecord = {
     id: crypto.randomUUID(),
