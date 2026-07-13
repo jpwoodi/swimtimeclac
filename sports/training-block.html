@@ -754,12 +754,26 @@
         .history-item .history-main { color: #1a1f36; font-weight: 600; }
         .history-item .history-sub { color: #8792a2; font-size: 12px; margin-top: 2px; }
 
+        .history-item-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
         .history-item button {
             width: auto;
             padding: 6px 14px;
             font-size: 12px;
             flex-shrink: 0;
         }
+
+        .history-item .btn-danger {
+            background: #fff;
+            border: 1px solid #f5c2c7;
+            color: #b02a37;
+        }
+
+        .history-item .btn-danger:hover { background: #fdf1f2; }
 
         .comparison-card {
             border: 1px solid #e3e8ee;
@@ -1620,20 +1634,32 @@
             }
         }
 
+        let currentHistoryBlocks = [];
+        let viewingHistoryId = null;
+
         function renderBlockHistory(blocks) {
+            currentHistoryBlocks = blocks;
             const list = document.getElementById('block-history-list');
             list.innerHTML = blocks.map((entry) => {
                 const generatedDate = new Date(entry.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                 const pace = entry.goalPace
                     ? `${escapeHtml(entry.goalPace.formatted)}/100m${entry.goalPace.estimated ? ' (est.)' : ''}`
                     : '';
+                const distanceWeeks = `${Number(entry.raceDistanceM).toLocaleString()}m &middot; ${entry.totalWeeks} weeks`;
+                const generatedLine = `Generated ${generatedDate}${pace ? ' &middot; goal pace ' + pace : ''}`;
+                const mainLine = entry.label ? escapeHtml(entry.label) : distanceWeeks;
+                const subLine = entry.label ? `${distanceWeeks} &middot; ${generatedLine}` : generatedLine;
                 return `
                     <div class="history-item">
                         <div>
-                            <div class="history-main">${Number(entry.raceDistanceM).toLocaleString()}m &middot; ${entry.totalWeeks} weeks</div>
-                            <div class="history-sub">Generated ${generatedDate}${pace ? ' &middot; goal pace ' + pace : ''}</div>
+                            <div class="history-main">${mainLine}</div>
+                            <div class="history-sub">${subLine}</div>
                         </div>
-                        <button type="button" class="btn-secondary" onclick="viewHistoryBlock('${entry.id}')">View</button>
+                        <div class="history-item-actions">
+                            <button type="button" class="btn-secondary" onclick="viewHistoryBlock('${entry.id}')">View</button>
+                            <button type="button" class="btn-secondary" onclick="renameHistoryBlock('${entry.id}')">Rename</button>
+                            <button type="button" class="btn-secondary btn-danger" onclick="deleteHistoryBlock('${entry.id}')">Delete</button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -1656,16 +1682,79 @@
                 document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 const generatedDate = new Date(data.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                const label = data.label ? ` (${escapeHtml(data.label)})` : '';
                 document.getElementById('archived-block-text').innerHTML =
-                    `Viewing an archived block generated <strong>${generatedDate}</strong>. Session analysis works against your current active block only.`;
+                    `Viewing an archived block generated <strong>${generatedDate}</strong>${label}. Session analysis works against your current active block only.`;
                 document.getElementById('archived-block-banner').style.display = 'flex';
                 document.getElementById('active-block-banner').style.display = 'none';
+                viewingHistoryId = id;
             } catch (error) {
                 statusEl.textContent = 'Something went wrong loading that block.';
             }
         }
 
+        async function renameHistoryBlock(id) {
+            const entry = currentHistoryBlocks.find((b) => b.id === id);
+            const currentLabel = entry && entry.label ? entry.label : '';
+            const label = window.prompt('Label for this plan (leave blank to clear):', currentLabel);
+            if (label === null) return; // cancelled
+
+            const statusEl = document.getElementById('history-status');
+            statusEl.textContent = 'Saving…';
+            try {
+                const response = await fetch('/api/trainingBlock?action=renameBlockInHistory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, label: label.trim() }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    statusEl.textContent = data.error || 'Could not rename that plan.';
+                    return;
+                }
+                statusEl.textContent = '';
+                loadBlockHistory();
+            } catch (error) {
+                statusEl.textContent = 'Something went wrong renaming that plan.';
+            }
+        }
+
+        async function deleteHistoryBlock(id) {
+            if (!window.confirm('Delete this archived plan? This cannot be undone.')) return;
+
+            const statusEl = document.getElementById('history-status');
+            statusEl.textContent = 'Deleting…';
+            try {
+                const response = await fetch('/api/trainingBlock?action=deleteBlockFromHistory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    statusEl.textContent = data.error || 'Could not delete that plan.';
+                    return;
+                }
+                statusEl.textContent = '';
+
+                if (Array.isArray(data.blocks) && data.blocks.length) {
+                    renderBlockHistory(data.blocks);
+                } else {
+                    currentHistoryBlocks = [];
+                    document.getElementById('history-card').style.display = 'none';
+                }
+
+                if (viewingHistoryId === id) {
+                    viewingHistoryId = null;
+                    returnToActiveBlock();
+                }
+            } catch (error) {
+                statusEl.textContent = 'Something went wrong deleting that plan.';
+            }
+        }
+
         function returnToActiveBlock() {
+            viewingHistoryId = null;
             document.getElementById('archived-block-banner').style.display = 'none';
             if (pendingActiveBlock) {
                 loadActiveBlockIntoView();

@@ -81,7 +81,8 @@ The sports section currently includes:
 |   |-- trainingBlock.js             # ?action=parseGoal (OpenAI NL extraction) |
 |   |                                #   generate (deterministic periodized block, no LLM) |
 |   |                                #   getActiveBlock | getProfile | analyzeSession |
-|   |                                #   applyAdjustment | listBlockHistory | getBlockFromHistory
+|   |                                #   applyAdjustment | listBlockHistory | getBlockFromHistory |
+|   |                                #   deleteBlockFromHistory | renameBlockInHistory
 |   |-- get-swims.js                 # Recent swim activities from Strava
 |   |-- get-rides.js                 # Commute rides (blob snapshot with live fallback)
 |   |-- get-ride-photos.js           # Photos for commute rides (blob snapshot)
@@ -247,7 +248,11 @@ session actually went. Now:
    archived block. Viewing an archived block on `training-block.html` is
    read-only: session analysis always runs against whichever block is
    currently active, not an arbitrary archived one, since that's the only
-   one `?action=analyzeSession` can look sessions up against.
+   one `?action=analyzeSession` can look sessions up against. Archived
+   blocks can be labeled (`?action=renameBlockInHistory`) and removed
+   (`?action=deleteBlockFromHistory`) independently of the active block —
+   the two are separate Blob objects, so managing history never touches
+   what `?action=analyzeSession` reads from.
 2. **`?action=analyzeSession`** takes `{weekNumber, session,
    stravaActivityId}` — Garmin devices sync to Strava already, so this is
    just `lib/strava.js`'s `fetchActivityLaps()` plus

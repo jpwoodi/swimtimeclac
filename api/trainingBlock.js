@@ -17,6 +17,8 @@ const {
   archiveTrainingBlock,
   summarizeHistoryEntry,
   findHistoryBlockById,
+  deleteTrainingBlockFromHistory,
+  renameTrainingBlockInHistory,
 } = require("../lib/trainingBlockSnapshot");
 const { readSwimmerProfile, applyCssAdjustment } = require("../lib/swimmerProfile");
 const { compareSessionToPrescription, generateAdvisorySuggestions } = require("../lib/setAnalysis");
@@ -32,6 +34,8 @@ const ACTION_HANDLERS = {
   applyAdjustment: handleApplyAdjustment,
   listBlockHistory: handleListBlockHistory,
   getBlockFromHistory: handleGetBlockFromHistory,
+  deleteBlockFromHistory: handleDeleteBlockFromHistory,
+  renameBlockInHistory: handleRenameBlockInHistory,
 };
 
 module.exports = async (req, res) => {
@@ -43,7 +47,7 @@ module.exports = async (req, res) => {
   if (!handler) {
     return res.status(400).json({
       error:
-        "Invalid action. Use ?action=parseGoal|generate|getActiveBlock|getProfile|analyzeSession|applyAdjustment|listBlockHistory|getBlockFromHistory",
+        "Invalid action. Use ?action=parseGoal|generate|getActiveBlock|getProfile|analyzeSession|applyAdjustment|listBlockHistory|getBlockFromHistory|deleteBlockFromHistory|renameBlockInHistory",
     });
   }
 
@@ -375,6 +379,60 @@ async function handleGetBlockFromHistory(req, res) {
   } catch (error) {
     console.error("Error reading archived training block:", error.message);
     return res.status(500).json({ error: "Failed to read the archived training block." });
+  }
+}
+
+// ---- ?action=deleteBlockFromHistory — remove one archived block ----
+
+async function handleDeleteBlockFromHistory(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res) || !requireSameOriginWrite(req, res)) {
+    return;
+  }
+
+  const id = typeof (req.body || {}).id === "string" ? req.body.id : "";
+  if (!id) {
+    return res.status(400).json({ error: "id is required." });
+  }
+
+  try {
+    const remaining = await deleteTrainingBlockFromHistory(id);
+    return res.status(200).json({ blocks: remaining.reverse() }); // most recent first
+  } catch (error) {
+    console.error("Error deleting archived training block:", error.message);
+    return res.status(500).json({ error: "Failed to delete the archived training block. " + error.message });
+  }
+}
+
+// ---- ?action=renameBlockInHistory — set/clear a custom label on an archived block ----
+
+async function handleRenameBlockInHistory(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res) || !requireSameOriginWrite(req, res)) {
+    return;
+  }
+
+  const body = req.body || {};
+  const id = typeof body.id === "string" ? body.id : "";
+  if (!id) {
+    return res.status(400).json({ error: "id is required." });
+  }
+
+  const label = typeof body.label === "string" ? body.label.trim().slice(0, 80) : "";
+
+  try {
+    const summary = await renameTrainingBlockInHistory(id, label);
+    return res.status(200).json({ block: summary });
+  } catch (error) {
+    console.error("Error renaming archived training block:", error.message);
+    const status = /no archived block/i.test(error.message) ? 404 : 500;
+    return res.status(status).json({ error: error.message });
   }
 }
 
