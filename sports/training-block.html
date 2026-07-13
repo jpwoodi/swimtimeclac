@@ -253,6 +253,177 @@
             line-height: 1.4;
         }
 
+        /* Volume overview chart */
+        .volume-chart-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 20px 24px 16px;
+            margin-bottom: 20px;
+        }
+
+        .volume-chart-card h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 2px;
+        }
+
+        .volume-chart-card .hint {
+            font-size: 12px;
+            color: #8792a2;
+            margin-bottom: 16px;
+        }
+
+        .volume-chart {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 110px;
+            padding-top: 16px;
+            border-bottom: 1px solid #c3c9d4;
+        }
+
+        .volume-chart .chart-gridline {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #e3e8ee;
+            font-size: 10px;
+            color: #8792a2;
+        }
+
+        .volume-chart .chart-gridline span {
+            position: absolute;
+            right: 0;
+            top: -14px;
+            background: #fff;
+            padding-left: 4px;
+        }
+
+        .volume-bar {
+            flex: 1 1 0;
+            min-width: 2px;
+            max-width: 24px;
+            background: #2a78d6;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            transition: background 0.1s ease;
+        }
+
+        .volume-bar:hover { background: #184f95; }
+        .volume-bar.is-deload { background: #90b8e6; }
+        .volume-bar.is-deload:hover { background: #184f95; }
+
+        .volume-phase-strip {
+            display: flex;
+            gap: 2px;
+            margin-top: 4px;
+            height: 6px;
+        }
+
+        .volume-phase-strip span {
+            flex-grow: 1;
+        }
+
+        .volume-phase-strip span.base  { background: #c8e6c9; }
+        .volume-phase-strip span.build { background: #bbdefb; }
+        .volume-phase-strip span.peak  { background: #ffe0b2; }
+        .volume-phase-strip span.taper { background: #e1bee7; }
+
+        .volume-week-ticks {
+            display: flex;
+            margin-top: 4px;
+            font-size: 10px;
+            color: #8792a2;
+            height: 12px;
+        }
+
+        .volume-week-ticks span {
+            flex: 1 1 0;
+            position: relative;
+        }
+
+        .volume-week-ticks span em {
+            font-style: normal;
+            position: absolute;
+            left: 0;
+            transform: translateX(-50%);
+        }
+
+        .volume-week-ticks span:first-child em { transform: none; }
+        .volume-week-ticks span:last-child em { transform: translateX(-100%); }
+
+        /* Phase-grouped week sections */
+        .phase-section {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .phase-section-header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 14px 20px;
+            background: #f6f9fc;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+        }
+
+        .phase-section-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .phase-section-swatch.base  { background: #2e7d32; }
+        .phase-section-swatch.build { background: #1565c0; }
+        .phase-section-swatch.peak  { background: #ef6c00; }
+        .phase-section-swatch.taper { background: #6a1b9a; }
+
+        .phase-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
+
+        .phase-section-range {
+            font-size: 12px;
+            color: #697386;
+        }
+
+        .phase-section-desc {
+            font-size: 12px;
+            color: #8792a2;
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+
+        .phase-section-header .chevron {
+            font-size: 12px;
+            color: #8792a2;
+            transition: transform 0.15s ease;
+            margin-left: auto;
+        }
+
+        .phase-section.expanded .phase-section-header .chevron { transform: rotate(90deg); }
+
+        .phase-section-body {
+            display: none;
+            padding: 16px 20px;
+        }
+
+        .phase-section.expanded .phase-section-body { display: block; }
+
         /* Week accordion */
         .week-block {
             background: #fff;
@@ -261,6 +432,8 @@
             margin-bottom: 12px;
             overflow: hidden;
         }
+
+        .week-block:last-child { margin-bottom: 0; }
 
         .week-toggle {
             width: 100%;
@@ -360,7 +533,30 @@
         .source-badge {
             font-size: 11px;
             color: #8792a2;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
+
+        .set-more {
+            margin-top: 4px;
+        }
+
+        .set-more summary {
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: #635bff;
+            user-select: none;
+            list-style: none;
+        }
+
+        .set-more summary::-webkit-details-marker { display: none; }
+        .set-more summary::before { content: '+ '; }
+        .set-more[open] summary::before { content: '\2212 '; }
+
+        .set-more .set-items { margin-top: 6px; }
 
         .session-distance {
             margin-left: auto;
@@ -851,7 +1047,8 @@
 
         function renderResults(data) {
             renderSummary(data);
-            renderWeeks(data.weeks);
+            renderVolumeChart(data);
+            renderWeeks(data);
         }
 
         function renderSummary(data) {
@@ -893,13 +1090,21 @@
             return 'type-' + (type || 'mileage');
         }
 
+        const SET_BLOCK_VISIBLE_LINES = 6;
+
         function renderSetBlock(label, text) {
             if (!text) return '';
             const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-            const body = lines.length > 1
-                ? `<ul class="set-items">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>`
-                : `<span class="set-text">${escapeHtml(lines[0] || '')}</span>`;
-            return `<div class="set-block"><div class="set-label">${escapeHtml(label)}</div>${body}</div>`;
+            if (lines.length <= 1) {
+                return `<div class="set-block"><div class="set-label">${escapeHtml(label)}</div><span class="set-text">${escapeHtml(lines[0] || '')}</span></div>`;
+            }
+            const visible = lines.slice(0, SET_BLOCK_VISIBLE_LINES);
+            const rest = lines.slice(SET_BLOCK_VISIBLE_LINES);
+            const visibleHtml = `<ul class="set-items">${visible.map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>`;
+            const restHtml = rest.length
+                ? `<details class="set-more"><summary>${rest.length} more line${rest.length > 1 ? 's' : ''}</summary><ul class="set-items">${rest.map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul></details>`
+                : '';
+            return `<div class="set-block"><div class="set-label">${escapeHtml(label)}</div>${visibleHtml}${restHtml}</div>`;
         }
 
         function renderSession(session) {
@@ -915,7 +1120,7 @@
                     <div class="session-header">
                         <span class="session-title">Session ${session.session}</span>
                         <span class="type-badge ${badgeClass}">${escapeHtml((session.session_type || '').replace('_', ' '))}</span>
-                        <span class="source-badge">${escapeHtml(sourceLabel)}</span>
+                        <span class="source-badge" title="${escapeHtml(sourceLabel)}">${escapeHtml(sourceLabel)}</span>
                         ${session.total_distance_m ? `<span class="session-distance">${Number(session.total_distance_m).toLocaleString()}m</span>` : ''}
                     </div>
                     <div class="session-body">
@@ -945,13 +1150,16 @@
             if (block) block.classList.toggle('expanded');
         }
 
-        function renderWeeks(weeks) {
-            const container = document.getElementById('weeks-container');
-            container.innerHTML = weeks.map((week, index) => `
-                <div class="week-block${index === 0 ? ' expanded' : ''}" id="week-${week.weekNumber}">
+        function togglePhaseSection(phaseKey) {
+            const section = document.getElementById('phase-' + phaseKey);
+            if (section) section.classList.toggle('expanded');
+        }
+
+        function renderWeekBlock(week, expanded) {
+            return `
+                <div class="week-block${expanded ? ' expanded' : ''}" id="week-${week.weekNumber}">
                     <button type="button" class="week-toggle" onclick="toggleWeek(${week.weekNumber})">
                         <span class="week-num">Week ${week.weekNumber}</span>
-                        <span class="phase-badge ${week.phase}">${escapeHtml(week.phaseLabel)}</span>
                         ${week.isDeload ? '<span class="deload-badge">Deload</span>' : ''}
                         <span class="week-dist">~${Number(week.targetDistanceMeters).toLocaleString()}m/session</span>
                         <span class="chevron">&#9656;</span>
@@ -960,7 +1168,103 @@
                         ${week.sessions.map(renderSession).join('')}
                     </div>
                 </div>
+            `;
+        }
+
+        function renderWeeks(data) {
+            const container = document.getElementById('weeks-container');
+            container.innerHTML = data.phases.map((phase, phaseIndex) => {
+                const phaseWeeks = data.weeks.filter(w => w.phase === phase.phase);
+                return `
+                    <div class="phase-section${phaseIndex === 0 ? ' expanded' : ''}" id="phase-${phase.phase}">
+                        <button type="button" class="phase-section-header" onclick="togglePhaseSection('${phase.phase}')">
+                            <span class="phase-section-swatch ${phase.phase}"></span>
+                            <span class="phase-section-title">${escapeHtml(phase.label)}</span>
+                            <span class="phase-section-range">Weeks ${phase.startWeek}${phase.endWeek > phase.startWeek ? '–' + phase.endWeek : ''}</span>
+                            <span class="phase-section-desc">${escapeHtml(phase.description)}</span>
+                            <span class="chevron">&#9656;</span>
+                        </button>
+                        <div class="phase-section-body">
+                            ${phaseWeeks.map(week => renderWeekBlock(week, week.weekNumber === 1)).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function jumpToWeek(weekNumber) {
+            const week = (currentBlock && currentBlock.weeks || []).find(w => w.weekNumber === weekNumber);
+            if (!week) return;
+            const section = document.getElementById('phase-' + week.phase);
+            if (section) section.classList.add('expanded');
+            const block = document.getElementById('week-' + weekNumber);
+            if (block) {
+                block.classList.add('expanded');
+                block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function selectTickWeeks(weeks, phases) {
+            const total = weeks.length;
+            const minGap = Math.max(2, Math.round(total * 0.05));
+            const candidates = Array.from(new Set([
+                weeks[0].weekNumber,
+                ...phases.map(p => p.startWeek),
+                weeks[weeks.length - 1].weekNumber,
+            ])).sort((a, b) => a - b);
+
+            const chosen = [candidates[0]];
+            for (let i = 1; i < candidates.length; i++) {
+                const w = candidates[i];
+                const isLast = i === candidates.length - 1;
+                if (isLast) {
+                    if (chosen.length && w - chosen[chosen.length - 1] < minGap) chosen.pop();
+                    chosen.push(w);
+                } else if (w - chosen[chosen.length - 1] >= minGap) {
+                    chosen.push(w);
+                }
+            }
+            return new Set(chosen);
+        }
+
+        function renderVolumeChart(data) {
+            const container = document.getElementById('weeks-container').parentElement;
+            let card = document.getElementById('volume-chart-card');
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'volume-chart-card';
+                card.id = 'volume-chart-card';
+                container.insertBefore(card, document.getElementById('weeks-container'));
+            }
+
+            const weeks = data.weeks;
+            const maxDist = Math.max(...weeks.map(w => w.targetDistanceMeters), 1);
+
+            const bars = weeks.map(week => `
+                <div class="volume-bar${week.isDeload ? ' is-deload' : ''}"
+                     style="height: ${Math.max(4, Math.round((week.targetDistanceMeters / maxDist) * 100))}%"
+                     title="Week ${week.weekNumber} (${week.phaseLabel}${week.isDeload ? ', deload' : ''}): ~${Number(week.targetDistanceMeters).toLocaleString()}m/session"
+                     onclick="jumpToWeek(${week.weekNumber})"></div>
             `).join('');
+
+            const strip = data.phases.map(p => `<span class="${p.phase}" style="flex-grow:${p.endWeek - p.startWeek + 1}"></span>`).join('');
+
+            const tickWeeks = selectTickWeeks(weeks, data.phases);
+            const ticks = weeks.map(week => `
+                <span>${tickWeeks.has(week.weekNumber) ? `<em>${week.weekNumber}</em>` : ''}</span>
+            `).join('');
+
+            card.innerHTML = `
+                <h3>Session distance by week</h3>
+                <p class="hint">Target distance per session, week by week &mdash; hover a bar for detail, click to jump to that week.</p>
+                <div class="volume-chart">
+                    <div class="chart-gridline" style="top: 16px;"><span>${Number(maxDist).toLocaleString()}m</span></div>
+                    <div class="chart-gridline" style="bottom: 0;"><span>0m</span></div>
+                    ${bars}
+                </div>
+                <div class="volume-phase-strip">${strip}</div>
+                <div class="volume-week-ticks">${ticks}</div>
+            `;
         }
 
         // ---- Post-set analysis: prescribed session vs a recorded Strava swim ----
