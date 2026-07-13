@@ -146,6 +146,45 @@ function mockRes() {
 
   console.log('trainingBlock smoke ok');
 
+  // 7b. Training block history: every generated block is archived, not
+  // just the active one. Blob isn't configured in CI, so the endpoints
+  // must degrade gracefully (empty list, 404 for an unknown id) rather
+  // than error - and the pure summarize/find helpers are checked directly.
+  const { summarizeHistoryEntry, findHistoryBlockById } = require(path.join(root, 'lib', 'trainingBlockSnapshot'));
+
+  const fakeEntry = {
+    id: 'abc123',
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    input: { raceDistanceM: 5000 },
+    block: { totalWeeks: 12, sessionsPerWeek: 3, goalPace: { formatted: '1:30', estimated: true } },
+  };
+  const summary = summarizeHistoryEntry(fakeEntry);
+  assert.deepStrictEqual(summary, {
+    id: 'abc123',
+    generatedAt: '2026-01-01T00:00:00.000Z',
+    raceDistanceM: 5000,
+    totalWeeks: 12,
+    sessionsPerWeek: 3,
+    goalPace: { formatted: '1:30', estimated: true },
+  }, 'summarizeHistoryEntry pulls a lightweight summary, not the full block');
+  assert.strictEqual(findHistoryBlockById([fakeEntry], 'abc123'), fakeEntry, 'findHistoryBlockById finds a matching entry');
+  assert.strictEqual(findHistoryBlockById([fakeEntry], 'missing'), null, 'findHistoryBlockById returns null for an unknown id');
+
+  res = mockRes();
+  await trainingBlock({ method: 'GET', headers: reqHeaders, query: { action: 'listBlockHistory' } }, res);
+  assert.strictEqual(res.statusCode, 200, 'listBlockHistory returns 200 even without Blob configured');
+  assert.deepStrictEqual(res.body.blocks, [], 'listBlockHistory returns an empty list without Blob configured');
+
+  res = mockRes();
+  await trainingBlock({ method: 'GET', headers: reqHeaders, query: { action: 'getBlockFromHistory', id: 'nonexistent' } }, res);
+  assert.strictEqual(res.statusCode, 404, 'getBlockFromHistory 404s for an unknown id');
+
+  res = mockRes();
+  await trainingBlock({ method: 'GET', headers: reqHeaders, query: { action: 'getBlockFromHistory' } }, res);
+  assert.strictEqual(res.statusCode, 400, 'getBlockFromHistory requires an id');
+
+  console.log('trainingBlock history smoke ok');
+
   // 8. Post-set analysis math: build a race-pace session, synthesize laps
   // that match it almost exactly, and confirm the comparison reports a
   // clean on-target result. This guards the rep-grouping/pace-comparison

@@ -13,6 +13,10 @@ const {
   writeActiveTrainingBlock,
   findPrescribedSession,
   appendSessionAnalysis,
+  readTrainingBlockHistory,
+  archiveTrainingBlock,
+  summarizeHistoryEntry,
+  findHistoryBlockById,
 } = require("../lib/trainingBlockSnapshot");
 const { readSwimmerProfile, applyCssAdjustment } = require("../lib/swimmerProfile");
 const { compareSessionToPrescription, generateAdvisorySuggestions } = require("../lib/setAnalysis");
@@ -26,6 +30,8 @@ const ACTION_HANDLERS = {
   getProfile: handleGetProfile,
   analyzeSession: handleAnalyzeSession,
   applyAdjustment: handleApplyAdjustment,
+  listBlockHistory: handleListBlockHistory,
+  getBlockFromHistory: handleGetBlockFromHistory,
 };
 
 module.exports = async (req, res) => {
@@ -36,7 +42,8 @@ module.exports = async (req, res) => {
   const handler = ACTION_HANDLERS[req.query.action];
   if (!handler) {
     return res.status(400).json({
-      error: "Invalid action. Use ?action=parseGoal|generate|getActiveBlock|getProfile|analyzeSession|applyAdjustment",
+      error:
+        "Invalid action. Use ?action=parseGoal|generate|getActiveBlock|getProfile|analyzeSession|applyAdjustment|listBlockHistory|getBlockFromHistory",
     });
   }
 
@@ -272,16 +279,27 @@ async function handleGenerate(req, res) {
   // (it needs to know what was actually prescribed). Best-effort: a swimmer
   // without Blob configured still gets their plan, just can't analyze
   // against it yet.
+  const snapshot = buildTrainingBlockSnapshot(
+    { raceDistanceM, weeksUntilRace, sessionsPerWeek, sessionDurationMin, cssMinutes, cssSeconds, targetTimeSeconds: targetTimeSeconds || null },
+    responseBody
+  );
+
   try {
-    const snapshot = buildTrainingBlockSnapshot(
-      { raceDistanceM, weeksUntilRace, sessionsPerWeek, sessionDurationMin, cssMinutes, cssSeconds, targetTimeSeconds: targetTimeSeconds || null },
-      responseBody
-    );
     await writeActiveTrainingBlock(snapshot);
     responseBody.persisted = true;
   } catch (error) {
     console.error("Could not persist training block:", error.message);
     responseBody.persisted = false;
+  }
+
+  // Archiving is separate from (and best-effort independent of) becoming
+  // the active block - every generation should be kept, not just the
+  // latest, so a swimmer can look back at what an earlier plan actually
+  // prescribed.
+  try {
+    await archiveTrainingBlock(snapshot);
+  } catch (error) {
+    console.error("Could not archive training block:", error.message);
   }
 
   res.status(200).json(responseBody);
@@ -307,6 +325,56 @@ async function handleGetActiveBlock(req, res) {
   } catch (error) {
     console.error("Error reading active training block:", error.message);
     return res.status(500).json({ error: "Failed to read the active training block." });
+  }
+}
+
+// ---- ?action=listBlockHistory — lightweight list of every past generated block ----
+
+async function handleListBlockHistory(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res)) {
+    return;
+  }
+
+  try {
+    const history = await readTrainingBlockHistory();
+    const summaries = history.map(summarizeHistoryEntry).reverse(); // most recent first
+    return res.status(200).json({ blocks: summaries });
+  } catch (error) {
+    console.error("Error reading training block history:", error.message);
+    return res.status(500).json({ error: "Failed to read training block history." });
+  }
+}
+
+// ---- ?action=getBlockFromHistory — one full archived block by id ----
+
+async function handleGetBlockFromHistory(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireSiteAuth(req, res)) {
+    return;
+  }
+
+  const id = typeof req.query.id === "string" ? req.query.id : "";
+  if (!id) {
+    return res.status(400).json({ error: "id is required." });
+  }
+
+  try {
+    const history = await readTrainingBlockHistory();
+    const entry = findHistoryBlockById(history, id);
+    if (!entry) {
+      return res.status(404).json({ error: "No archived block found with that id." });
+    }
+    return res.status(200).json(entry);
+  } catch (error) {
+    console.error("Error reading archived training block:", error.message);
+    return res.status(500).json({ error: "Failed to read the archived training block." });
   }
 }
 

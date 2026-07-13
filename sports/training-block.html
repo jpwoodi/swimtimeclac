@@ -683,6 +683,69 @@
 
         .active-block-banner strong { color: #1a1f36; }
 
+        .archived-block-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            background: #fff3e0;
+            border: 1px solid #ffe0b2;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #7a4a00;
+        }
+
+        .archived-block-banner strong { color: #4a2e00; }
+
+        /* Past Training Blocks */
+        .history-card {
+            background: #fff;
+            border: 1px solid #e3e8ee;
+            border-radius: 8px;
+            padding: 20px 24px;
+            max-width: 720px;
+            margin: 20px auto 0;
+        }
+
+        .history-card h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 2px;
+        }
+
+        .history-card > .hint {
+            font-size: 13px;
+            color: #8792a2;
+            margin-bottom: 14px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f3f7;
+            font-size: 13px;
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .history-item .history-main { color: #1a1f36; font-weight: 600; }
+        .history-item .history-sub { color: #8792a2; font-size: 12px; margin-top: 2px; }
+
+        .history-item button {
+            width: auto;
+            padding: 6px 14px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
         .comparison-card {
             border: 1px solid #e3e8ee;
             border-radius: 8px;
@@ -796,6 +859,13 @@
         <button type="button" class="btn-secondary" style="width:auto;" onclick="loadActiveBlockIntoView()">View it</button>
     </div>
 
+    <div class="history-card" id="history-card" style="display:none;">
+        <h2>Past Training Blocks</h2>
+        <p class="hint">Every block you've generated is kept here, even after generating a new one.</p>
+        <div id="block-history-list"></div>
+        <div id="history-status" class="parse-status"></div>
+    </div>
+
     <div class="card">
         <div class="form-group">
             <label for="goal-text">Your race goal</label>
@@ -834,11 +904,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Your CSS (per 100m)</label>
+                    <label>Your current CSS (per 100m)</label>
                     <div class="input-row">
                         <input type="number" id="css-mins" min="0" placeholder="Min">
                         <input type="number" id="css-secs" min="0" max="59" placeholder="Sec">
                     </div>
+                    <div class="hint">Your fitness today, not a goal &mdash; used to set training paces and (if no target time) to estimate a goal race pace.</div>
                 </div>
 
                 <div class="form-group">
@@ -870,6 +941,10 @@
     </div>
 
     <div class="results-section" id="results-section">
+        <div class="archived-block-banner" id="archived-block-banner">
+            <span id="archived-block-text"></span>
+            <button type="button" class="btn-secondary" style="width:auto;" onclick="returnToActiveBlock()">Back to current block</button>
+        </div>
         <div class="summary-card" id="summary-card"></div>
         <div id="weeks-container"></div>
 
@@ -1032,11 +1107,13 @@
                     return;
                 }
 
+                document.getElementById('archived-block-banner').style.display = 'none';
                 renderResults(data);
                 document.getElementById('results-section').style.display = 'block';
                 document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 onBlockReady(data, []);
                 document.getElementById('active-block-banner').style.display = 'none';
+                loadBlockHistory();
             } catch (error) {
                 errorEl.textContent = 'Something went wrong: ' + error.message;
                 errorEl.classList.remove('hidden');
@@ -1501,6 +1578,7 @@
 
         function loadActiveBlockIntoView() {
             if (!pendingActiveBlock) return;
+            document.getElementById('archived-block-banner').style.display = 'none';
             renderResults(pendingActiveBlock.block);
             document.getElementById('results-section').style.display = 'block';
             document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1508,9 +1586,81 @@
             document.getElementById('active-block-banner').style.display = 'none';
         }
 
+        // ---- Past Training Blocks: every generated block, not just the active one ----
+
+        async function loadBlockHistory() {
+            try {
+                const response = await fetch('/api/trainingBlock?action=listBlockHistory');
+                const data = await response.json();
+                if (response.ok && Array.isArray(data.blocks) && data.blocks.length) {
+                    renderBlockHistory(data.blocks);
+                    document.getElementById('history-card').style.display = 'block';
+                } else {
+                    document.getElementById('history-card').style.display = 'none';
+                }
+            } catch (error) {
+                document.getElementById('history-card').style.display = 'none';
+            }
+        }
+
+        function renderBlockHistory(blocks) {
+            const list = document.getElementById('block-history-list');
+            list.innerHTML = blocks.map((entry) => {
+                const generatedDate = new Date(entry.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                const pace = entry.goalPace
+                    ? `${escapeHtml(entry.goalPace.formatted)}/100m${entry.goalPace.estimated ? ' (est.)' : ''}`
+                    : '';
+                return `
+                    <div class="history-item">
+                        <div>
+                            <div class="history-main">${Number(entry.raceDistanceM).toLocaleString()}m &middot; ${entry.totalWeeks} weeks</div>
+                            <div class="history-sub">Generated ${generatedDate}${pace ? ' &middot; goal pace ' + pace : ''}</div>
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="viewHistoryBlock('${entry.id}')">View</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function viewHistoryBlock(id) {
+            const statusEl = document.getElementById('history-status');
+            statusEl.textContent = 'Loading…';
+            try {
+                const response = await fetch('/api/trainingBlock?action=getBlockFromHistory&id=' + encodeURIComponent(id));
+                const data = await response.json();
+                if (!response.ok) {
+                    statusEl.textContent = data.error || 'Could not load that training block.';
+                    return;
+                }
+                statusEl.textContent = '';
+
+                renderResults(data.block);
+                document.getElementById('results-section').style.display = 'block';
+                document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                const generatedDate = new Date(data.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                document.getElementById('archived-block-text').innerHTML =
+                    `Viewing an archived block generated <strong>${generatedDate}</strong>. Session analysis works against your current active block only.`;
+                document.getElementById('archived-block-banner').style.display = 'flex';
+                document.getElementById('active-block-banner').style.display = 'none';
+            } catch (error) {
+                statusEl.textContent = 'Something went wrong loading that block.';
+            }
+        }
+
+        function returnToActiveBlock() {
+            document.getElementById('archived-block-banner').style.display = 'none';
+            if (pendingActiveBlock) {
+                loadActiveBlockIntoView();
+            } else {
+                document.getElementById('results-section').style.display = 'none';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadProfile();
             checkActiveBlock();
+            loadBlockHistory();
         });
     </script>
 </body>

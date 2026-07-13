@@ -80,7 +80,8 @@ The sports section currently includes:
 |   |-- generateSwimPlan.js          # OpenAI-backed single-session plan generation
 |   |-- trainingBlock.js             # ?action=parseGoal (OpenAI NL extraction) |
 |   |                                #   generate (deterministic periodized block, no LLM) |
-|   |                                #   getActiveBlock | getProfile | analyzeSession | applyAdjustment
+|   |                                #   getActiveBlock | getProfile | analyzeSession |
+|   |                                #   applyAdjustment | listBlockHistory | getBlockFromHistory
 |   |-- get-swims.js                 # Recent swim activities from Strava
 |   |-- get-rides.js                 # Commute rides (blob snapshot with live fallback)
 |   |-- get-ride-photos.js           # Photos for commute rides (blob snapshot)
@@ -101,7 +102,8 @@ The sports section currently includes:
 |   |-- raceSpecificSet.js           # Goal-pace session generator for peak/taper weeks
 |   |-- trainingBlockComposer.js     # Fills a periodization plan with real + race-pace sessions
 |   |-- setAnalysis.js               # Recorded swim vs prescribed session -> advisory suggestions
-|   |-- trainingBlockSnapshot.js     # Blob snapshot read/write for the active training block
+|   |-- trainingBlockSnapshot.js     # Blob snapshot read/write for the active training block,
+|   |                                #   plus a bounded archive of every generated block
 |   |-- swimmerProfile.js            # Blob snapshot read/write for the persisted CSS baseline
 |   |-- weather.js                   # Open-Meteo weather enrichment
 |   |-- commute-snapshot.js          # Blob snapshot read/write for commute rides
@@ -237,7 +239,15 @@ session actually went. Now:
    (`lib/trainingBlockSnapshot.js`, mirrors the commute/photo/segment
    snapshot pattern) so there's something to compare a recorded swim
    against later. Best-effort: without `BLOB_READ_WRITE_TOKEN` the swimmer
-   still gets their plan, they just can't analyze against it yet.
+   still gets their plan, they just can't analyze against it yet. Every
+   generation is also archived independently (`archiveTrainingBlock`,
+   bounded to the most recent 30) so earlier blocks aren't lost the moment
+   a new one is generated — `?action=listBlockHistory` returns lightweight
+   summaries and `?action=getBlockFromHistory&id=` returns one full
+   archived block. Viewing an archived block on `training-block.html` is
+   read-only: session analysis always runs against whichever block is
+   currently active, not an arbitrary archived one, since that's the only
+   one `?action=analyzeSession` can look sessions up against.
 2. **`?action=analyzeSession`** takes `{weekNumber, session,
    stravaActivityId}` — Garmin devices sync to Strava already, so this is
    just `lib/strava.js`'s `fetchActivityLaps()` plus
