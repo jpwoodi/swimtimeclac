@@ -15,6 +15,7 @@ const {
   appendSessionAnalysis,
   readTrainingBlockHistory,
   archiveTrainingBlock,
+  backfillActiveBlockIntoHistory,
   summarizeHistoryEntry,
   findHistoryBlockById,
   deleteTrainingBlockFromHistory,
@@ -325,6 +326,16 @@ async function handleGetActiveBlock(req, res) {
     if (!snapshot) {
       return res.status(200).json({ active: false });
     }
+
+    // Self-heals blocks generated before archiving existed - best-effort,
+    // and awaited (not fire-and-forget) so the swimmer sees it in their
+    // history on this same page load rather than needing to reload once.
+    try {
+      await backfillActiveBlockIntoHistory(snapshot);
+    } catch (error) {
+      console.error("Could not backfill active block into history:", error.message);
+    }
+
     return res.status(200).json({ active: true, ...snapshot });
   } catch (error) {
     console.error("Error reading active training block:", error.message);

@@ -1763,9 +1763,13 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             loadProfile();
-            checkActiveBlock();
+            // checkActiveBlock backfills a legacy active block (one
+            // generated before archiving existed) into history server-side
+            // - await it first so that backfilled entry shows up in this
+            // same load instead of needing a second page visit.
+            await checkActiveBlock();
             loadBlockHistory();
         });
     </script>

@@ -233,6 +233,19 @@ function mockRes() {
   await trainingBlock({ method: 'POST', headers: reqHeaders, query: { action: 'renameBlockInHistory' }, body: { label: 'Test' } }, res);
   assert.strictEqual(res.statusCode, 400, 'renameBlockInHistory requires an id');
 
+  // Backfill: a block generated before archiving existed (or from any
+  // other partial-write gap) has no matching history entry - it should
+  // get archived automatically the next time it's read as the active
+  // block, rather than sitting there forever un-archived. A no-op when
+  // there's no active block to backfill in the first place.
+  const { backfillActiveBlockIntoHistory } = require(path.join(root, 'lib', 'trainingBlockSnapshot'));
+  assert.strictEqual(await backfillActiveBlockIntoHistory(null), null, 'backfill is a no-op when there is no active block');
+
+  res = mockRes();
+  await trainingBlock({ method: 'GET', headers: reqHeaders, query: { action: 'getActiveBlock' } }, res);
+  assert.strictEqual(res.statusCode, 200, 'getActiveBlock returns 200 even without Blob configured');
+  assert.deepStrictEqual(res.body, { active: false }, 'getActiveBlock reports inactive without Blob configured');
+
   console.log('trainingBlock history smoke ok');
 
   // 8. Post-set analysis math: build a race-pace session, synthesize laps
