@@ -194,7 +194,9 @@ function mockRes() {
     totalWeeks: 12,
     sessionsPerWeek: 3,
     goalPace: { formatted: '1:30', estimated: true },
+    label: null,
   }, 'summarizeHistoryEntry pulls a lightweight summary, not the full block');
+  assert.strictEqual(summarizeHistoryEntry({ ...fakeEntry, label: 'Dart 10k prep' }).label, 'Dart 10k prep', 'summarizeHistoryEntry carries a custom label through');
   assert.strictEqual(findHistoryBlockById([fakeEntry], 'abc123'), fakeEntry, 'findHistoryBlockById finds a matching entry');
   assert.strictEqual(findHistoryBlockById([fakeEntry], 'missing'), null, 'findHistoryBlockById returns null for an unknown id');
 
@@ -210,6 +212,26 @@ function mockRes() {
   res = mockRes();
   await trainingBlock({ method: 'GET', headers: reqHeaders, query: { action: 'getBlockFromHistory' } }, res);
   assert.strictEqual(res.statusCode, 400, 'getBlockFromHistory requires an id');
+
+  // Managing history (rename/delete): without Blob configured, delete is a
+  // no-op success (nothing to delete) and rename correctly 404s (nothing
+  // to rename), rather than throwing.
+  res = mockRes();
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: { action: 'deleteBlockFromHistory' }, body: { id: 'nonexistent' } }, res);
+  assert.strictEqual(res.statusCode, 200, 'deleteBlockFromHistory is a no-op success for an unknown id');
+  assert.deepStrictEqual(res.body.blocks, [], 'deleteBlockFromHistory returns the (empty) remaining list');
+
+  res = mockRes();
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: { action: 'deleteBlockFromHistory' }, body: {} }, res);
+  assert.strictEqual(res.statusCode, 400, 'deleteBlockFromHistory requires an id');
+
+  res = mockRes();
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: { action: 'renameBlockInHistory' }, body: { id: 'nonexistent', label: 'Test' } }, res);
+  assert.strictEqual(res.statusCode, 404, 'renameBlockInHistory 404s for an unknown id');
+
+  res = mockRes();
+  await trainingBlock({ method: 'POST', headers: reqHeaders, query: { action: 'renameBlockInHistory' }, body: { label: 'Test' } }, res);
+  assert.strictEqual(res.statusCode, 400, 'renameBlockInHistory requires an id');
 
   console.log('trainingBlock history smoke ok');
 
