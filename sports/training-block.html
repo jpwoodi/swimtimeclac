@@ -279,7 +279,6 @@
             position: relative;
             display: flex;
             align-items: flex-end;
-            gap: 2px;
             height: 110px;
             padding-top: 16px;
             border-bottom: 1px solid #c3c9d4;
@@ -302,10 +301,26 @@
             padding-left: 4px;
         }
 
-        .volume-bar {
+        /* Each week gets an equal-width slot spanning the full chart width,
+           same as .volume-week-ticks/.volume-phase-strip below it - the bar
+           itself is capped and centered inside its slot rather than the
+           slot being sized to the bar. Otherwise, whenever there are few
+           enough weeks that capped bars don't fill the container, the
+           strip/ticks (which have no cap) stretch past the last bar and
+           the two rows go out of alignment. */
+        .volume-bar-slot {
             flex: 1 1 0;
-            min-width: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 100%;
+            padding: 0 1px;
+        }
+
+        .volume-bar {
+            width: 100%;
             max-width: 24px;
+            min-height: 4px;
             background: #2a78d6;
             border-radius: 4px 4px 0 0;
             cursor: pointer;
@@ -1318,10 +1333,12 @@
             const maxDist = Math.max(...weeks.map(w => w.targetDistanceMeters), 1);
 
             const bars = weeks.map(week => `
-                <div class="volume-bar${week.isDeload ? ' is-deload' : ''}"
-                     style="height: ${Math.max(4, Math.round((week.targetDistanceMeters / maxDist) * 100))}%"
-                     title="Week ${week.weekNumber} (${week.phaseLabel}${week.isDeload ? ', deload' : ''}): ~${Number(week.targetDistanceMeters).toLocaleString()}m/session"
-                     onclick="jumpToWeek(${week.weekNumber})"></div>
+                <div class="volume-bar-slot">
+                    <div class="volume-bar${week.isDeload ? ' is-deload' : ''}"
+                         style="height: ${Math.max(4, Math.round((week.targetDistanceMeters / maxDist) * 100))}%"
+                         title="Week ${week.weekNumber} (${week.phaseLabel}${week.isDeload ? ', deload' : ''}): ~${Number(week.targetDistanceMeters).toLocaleString()}m/session"
+                         onclick="jumpToWeek(${week.weekNumber})"></div>
+                </div>
             `).join('');
 
             const strip = data.phases.map(p => `<span class="${p.phase}" style="flex-grow:${p.endWeek - p.startWeek + 1}"></span>`).join('');
