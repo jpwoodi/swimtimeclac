@@ -90,25 +90,53 @@ function mockRes() {
 
   // 6. Corpus footnote/legend extraction: real source docs run a "Notes
   // for this set:" header straight into the preceding line with no line
-  // break (e.g. "Cool DownNote for this set:"), and many sessions have
-  // rep-numbering legend lines ("Odds = Kick", "#4 = Swim - Easy") with no
-  // header at all. Both must end up in the notes side, not stuck in the
-  // visible main set - this is exactly the corpus bug found via a real
-  // generated session's cluttered output.
+  // break (e.g. "Cool DownNote for this set:") - that must end up in the
+  // notes side, not stuck in the visible main set. Term/abbreviation
+  // definitions with no header at all ("DPS = Distance Per Stroke") get
+  // the same treatment. But a per-rep instruction ("#1, 4 = Build",
+  // "Odds = Kick") is real set content, not a footnote, and must NOT be
+  // extracted - it tells the swimmer what specific reps actually do.
   const { splitTrailingNotes, extractLegendLines } = require(path.join(root, 'lib', 'trainingBlockComposer'));
 
   const merged = splitTrailingNotes('1 x 100 Easy\nCool DownNote for this set:\nDPS = Distance Per Stroke');
   assert.strictEqual(merged.main, '1 x 100 Easy\nCool Down', 'merged header line splits at the header, keeping real content');
   assert.strictEqual(merged.notes, 'DPS = Distance Per Stroke', 'merged header line moves the definition to notes');
 
-  const legend = extractLegendLines('10 x 50 Kick\n#1-3 = Descend\n#4 = Swim - Easy\nCool Down');
-  assert.strictEqual(legend.main, '10 x 50 Kick\nCool Down', 'header-less legend lines are pulled out even when sandwiched between real content');
-  assert.strictEqual(legend.legendNotes, '#1-3 = Descend\n#4 = Swim - Easy', 'extracted legend lines preserve original order');
+  const definitions = extractLegendLines('4 x 50 IMO - Drill / Swim by 25 on :15 Rest\nDPS = Distance Per Stroke\nIMO = Individual Medley Order');
+  assert.strictEqual(definitions.main, '4 x 50 IMO - Drill / Swim by 25 on :15 Rest', 'header-less term definitions are pulled out of the main set');
+  assert.strictEqual(definitions.legendNotes, 'DPS = Distance Per Stroke\nIMO = Individual Medley Order', 'extracted definitions preserve original order');
+
+  const repInstructions = extractLegendLines('8 x 50 Swim - Speed Play on 1:00\n#1, 4 = Build\nOdds = Kick\n1 x 50 Easy');
+  assert.strictEqual(
+    repInstructions.main,
+    '8 x 50 Swim - Speed Play on 1:00\n#1, 4 = Build\nOdds = Kick\n1 x 50 Easy',
+    'per-rep instructions ("#1, 4 = Build", "Odds = Kick") stay visible - they are real set content, not footnotes'
+  );
+  assert.strictEqual(repInstructions.legendNotes, '', 'per-rep instructions are never mistaken for legend definitions');
 
   const realInterval = extractLegendLines('4 x 100 Free - Rotate FAST 25 on 1:40\nCool Down');
   assert.strictEqual(realInterval.legendNotes, '', 'a real interval line is never mistaken for a legend line');
 
   console.log('corpus footnote/legend extraction ok');
+
+  // 6b. Pace-table conversion carries a rep-count/distance anchor forward
+  // to sub-rows that split those same reps into pace groups without
+  // restating the distance (e.g. "10 x 50 Free" followed by
+  // "#1 -> 3 = Descend\t1:00\t1:05\t1:15\t1:20\t[:20 Rest]"). Without the
+  // fallback, those sub-rows fell through unconverted and showed raw
+  // generic-ability-group times instead of one CSS-personalized sendoff -
+  // exactly the bug surfaced by a real generated session.
+  const { convertPaceTableText } = require(path.join(root, 'lib', 'cssPacing'));
+  const subGroupText = [
+    '10 x 50 Free',
+    '#1 -> 3 = Descend \t1:00\t1:05\t1:15\t1:20\t[:20 Rest]',
+    '#5 -> 7 = Fast in the Black\t0:55\t1:00\t1:10\t[1:15]\t[:20 Rest]',
+  ].join('\n');
+  const converted = convertPaceTableText(subGroupText, 'main_set', 95).text;
+  assert(!/\d:\d\d\t/.test(converted), 'pace sub-group rows no longer leak raw tab-separated generic times');
+  assert(/#1 -> 3 = Descend on \d:\d\d/.test(converted), 'pace sub-group row gets one CSS-personalized sendoff, inheriting distance from the "10 x 50" line above it');
+
+  console.log('pace-table distance carry-through ok');
 
   // 7. trainingBlock ?action=generate handler end-to-end (fully
   // deterministic, no external API call).
