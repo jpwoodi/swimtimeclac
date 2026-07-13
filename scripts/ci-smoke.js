@@ -88,7 +88,29 @@ function mockRes() {
   }
   console.log('periodization invariants ok');
 
-  // 6. trainingBlock ?action=generate handler end-to-end (fully
+  // 6. Corpus footnote/legend extraction: real source docs run a "Notes
+  // for this set:" header straight into the preceding line with no line
+  // break (e.g. "Cool DownNote for this set:"), and many sessions have
+  // rep-numbering legend lines ("Odds = Kick", "#4 = Swim - Easy") with no
+  // header at all. Both must end up in the notes side, not stuck in the
+  // visible main set - this is exactly the corpus bug found via a real
+  // generated session's cluttered output.
+  const { splitTrailingNotes, extractLegendLines } = require(path.join(root, 'lib', 'trainingBlockComposer'));
+
+  const merged = splitTrailingNotes('1 x 100 Easy\nCool DownNote for this set:\nDPS = Distance Per Stroke');
+  assert.strictEqual(merged.main, '1 x 100 Easy\nCool Down', 'merged header line splits at the header, keeping real content');
+  assert.strictEqual(merged.notes, 'DPS = Distance Per Stroke', 'merged header line moves the definition to notes');
+
+  const legend = extractLegendLines('10 x 50 Kick\n#1-3 = Descend\n#4 = Swim - Easy\nCool Down');
+  assert.strictEqual(legend.main, '10 x 50 Kick\nCool Down', 'header-less legend lines are pulled out even when sandwiched between real content');
+  assert.strictEqual(legend.legendNotes, '#1-3 = Descend\n#4 = Swim - Easy', 'extracted legend lines preserve original order');
+
+  const realInterval = extractLegendLines('4 x 100 Free - Rotate FAST 25 on 1:40\nCool Down');
+  assert.strictEqual(realInterval.legendNotes, '', 'a real interval line is never mistaken for a legend line');
+
+  console.log('corpus footnote/legend extraction ok');
+
+  // 7. trainingBlock ?action=generate handler end-to-end (fully
   // deterministic, no external API call).
   const trainingBlock = require(path.join(root, 'api', 'trainingBlock'));
   const reqHeaders = { origin: 'http://localhost', host: 'localhost' };
@@ -124,7 +146,7 @@ function mockRes() {
 
   console.log('trainingBlock smoke ok');
 
-  // 7. Post-set analysis math: build a race-pace session, synthesize laps
+  // 8. Post-set analysis math: build a race-pace session, synthesize laps
   // that match it almost exactly, and confirm the comparison reports a
   // clean on-target result. This guards the rep-grouping/pace-comparison
   // logic specifically - both bugs found while building it (chunk
